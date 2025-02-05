@@ -1,0 +1,46 @@
+FULL CRUD FEATURES:
+1.  Portfolio
+    - user can purchase a stock - C
+    - user can view the stocks they own - R
+    - user can add more buying power - U
+    - user can remove buying power - D
+
+2. Watch list
+   - user can create new watch list - C
+   - user can view their watchlist - R
+   - user can add more stocks to their watchlist - U
+   - user can delete stocks from their list - D
+
+3. Stock details
+- user can purchase a stock - C
+- users can read info on a stock - R
+- user can update shares/dollars- U
+- user can sell their shares - D
+
+
+
+-----------------------------
+
+
+
+PARTIAL CRUD FEATURES:
+1. Search 
+- user can create a search (typing in the search bar)
+- user can read the stocks that come up
+
+
+user clicks the plus Sign
+user types in name
+user clicks create list
+
+==> backend
+
+have a watch list table for the current user
+    -columns
+    - tablename
+
+
+
+
+
+
