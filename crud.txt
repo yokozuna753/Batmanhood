@@ -152,6 +152,10 @@ PARTIAL CRUD FEATURES:
 * As a logged in user, I can view my portfolio performance chart on at "/current" ******************
 * As a logged in user with stock, I can view a list of my owned stocks at "/current" and "watchlist/:*" **************
 
+### Delete Portfolio
+* As a logged in user, my portfolio is deleted once I delete my account via nav
+    * My account/portfolio can not be deleted if I currently own stock
+
 
 
 
