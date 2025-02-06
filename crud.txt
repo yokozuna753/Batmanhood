@@ -34,10 +34,7 @@ PARTIAL CRUD FEATURES:
 
 # User Stories
 
-## Users
-
 ### Log in
-
 * As a registered and unauthorized user, I want to be able to log in to the website via a login page.
   * When I'm on the `/login` page:
     * I would like to be able to enter my email and password on a clearly laid out form.
@@ -49,8 +46,8 @@ PARTIAL CRUD FEATURES:
       * So that I can try again without needing to refill forms I entered valid data into.
 * As unregistered user, I want to click a "create an account" link that directes me to the '/signup/ page
 
-### Sign Up
 
+### Sign Up
 * As an unregistered and unauthorized user, I want to be able to sign up for the website via a signup form page.
     * When I'm on the `/signup` page:
         * I will use a signup form presented on the '/signup' page.
@@ -67,40 +64,34 @@ PARTIAL CRUD FEATURES:
 
 
 ### Demo User
-
 * As an unregistered and unauthorized user, I would like an easy to find and clear button on both the `/signup` and `/login` pages to allow me to visit the site as a guest without signing up or logging in.
   * When I'm on either the `/signup` or `/login` pages:
     * I can click on a Demo User button to log me in and allow me access as a normal user, with dummy cash to buy stocks.
       * So that I can test the site's features and functionality without needing to stop and enter credentials.
 
-### Log Out
 
+### Log Out
 * As a logged in user, I want to click an easy to find logout button via the navigation bar
   * While on any page of the site:
     * I can log out of my account and be redirected to the '/login' form page.
       * So that I can easily log out to keep my information secure.
 
 
-
 ## Search
 
 ### Create Search
-
 * As a logged in user, I want to be able to search for a stock using the navigation bar
   * While on any page of the site:
       * I can search for a stock.
 
 ### View Seach results
-
 * As a logged in user, I want to view a list of stocks aligned with my search
   * While in the search bar:
       * I can view about 5 stocks aligned with my search.
       * I can click "see all link" that can open a larger list of stocks
 
 
-
 ## Stocks Details
-
 ### View Stock Details
 * As a logged in user, I can view a dedicated information page to inform investment decisions of any stock at '/stocks/stockid:"
     * While on a stock's id page:
@@ -118,14 +109,13 @@ PARTIAL CRUD FEATURES:
 * As a logged in user, I can sell all of my stock at '/stocks/stockid:'
 
 
-
 ## Watchlist
 
 ### Creating a watchlist
 * As a logged in user, I can create a watchlist.
 
 ### Viewing Stock Details
-* As a logged in user, I can view a watchlist at '/watchlist/:watchlistid" and at "/current" *********************
+* As a logged in user, I can view a watchlist at '/watchlist/:watchlistid" and at "/portfolio" *********************
 * While on a page that displays watchlist:
     * I can toggle a button that displays stocks in a list
 
@@ -135,7 +125,6 @@ PARTIAL CRUD FEATURES:
 
 ### Deleting A stock detail of interest
 * As a logged in user, I can delete a watchlist '/watchlist/:watchlistid' 
-
 
 
 ## Portfolio 
@@ -149,7 +138,7 @@ PARTIAL CRUD FEATURES:
 
 ### View Portfolio
 * As a logged in user, my portfolio value is easily visible 
-* As a logged in user, I can view my portfolio performance chart on at "/current" ******************
+* As a logged in user, I can view my portfolio performance chart on at "/portfolio" ******************
 * As a logged in user with stock, I can view a list of my owned stocks at "/current" and "watchlist/:*" **************
 
 ### Delete Portfolio
