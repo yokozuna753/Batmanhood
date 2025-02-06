@@ -1,0 +1,212 @@
+FULL CRUD FEATURES:
+1.  Portfolio
+    - user can purchase a stock - C
+    - user can view the stocks they own - R
+    - user can add more buying power - U
+    - user can remove buying power - D
+
+2. Watch list
+   - user can create new watch list - C
+   - user can view their watchlist - R
+   - user can add more stocks to their watchlist - U
+   - user can delete stocks from their list - D
+
+3. Stock details
+- user can purchase a stock - C
+- users can read info on a stock - R
+- user can update shares/dollars- U
+- user can sell their shares - D
+
+
+
+-----------------------------
+
+
+
+PARTIAL CRUD FEATURES:
+1. Search 
+- user can create a search (typing in the search bar)
+- user can read the stocks that come up
+
+
+
+
+
+# User Stories
+
+### Log in
+* As a registered and unauthorized user, I want to be able to log in to the website via a login page.
+  * When I'm on the `/login` page:
+    * I would like to be able to enter my email and password on a clearly laid out form.
+    * I would like the website to log me in upon successful completion of the log-in form.
+      * So that I can seamlessly access the site's functionality
+      * Once loged in, I want to land on the '/portfolio' page to check on my investments
+  * When I enter invalid data on the log-up form:
+    * I would like the website to inform me of the validations I failed to pass, and repopulate the form with my valid entries (except my password).
+      * So that I can try again without needing to refill forms I entered valid data into.
+* As unregistered user, I want to click a "create an account" link that directes me to the '/signup/ page
+
+
+### Sign Up
+* As an unregistered and unauthorized user, I want to be able to sign up for the website via a signup form page.
+    * When I'm on the `/signup` page:
+        * I will use a signup form presented on the '/signup' page.
+        * When the page loads, I will see a form:
+            * I would like to be able to enter my email, username, and preferred password on a clearly laid out form.
+            * I would like the website to log me in upon successful completion of the sign-up form.
+            * So that I can seamlessly access the site's functionality
+            * Once loged in, i want to land on the "/portfolio" page
+            * I would also like an interactive demo of how the site works
+        * When I enter invalid data on the sign-up form:
+            * I would like the website to inform me of the validations I failed to pass, and repopulate the form with my valid entries (except my password).
+            * So that I can try again without needing to refill forms I entered valid data into.
+* As a registed and unauthorized user, I want to click a "log in" link that directes me to the '/login' page
+
+
+### Demo User
+* As an unregistered and unauthorized user, I would like an easy to find and clear button on both the `/signup` and `/login` pages to allow me to visit the site as a guest without signing up or logging in.
+  * When I'm on either the `/signup` or `/login` pages:
+    * I can click on a Demo User button to log me in and allow me access as a normal user, with dummy cash to buy stocks.
+      * So that I can test the site's features and functionality without needing to stop and enter credentials.
+
+
+### Log Out
+* As a logged in user, I want to click an easy to find logout button via the navigation bar
+  * While on any page of the site:
+    * I can log out of my account and be redirected to the '/login' form page.
+      * So that I can easily log out to keep my information secure.
+
+
+## Search
+
+### Create Search
+* As a logged in user, I want to be able to search for a stock using the navigation bar
+  * While on any page of the site:
+      * I can search for a stock.
+
+### View Seach results
+* As a logged in user, I want to view a list of stocks aligned with my search
+  * While in the search bar:
+      * I can view about 5 stocks aligned with my search.
+      * I can click "see all link" that can open a larger list of stocks
+
+
+## Stocks Details
+### View Stock Details
+* As a logged in user, I can view a dedicated information page to inform investment decisions of any stock at '/stocks/stockid:"
+    * While on a stock's id page:
+        * I can read a description of the stock
+        * I can see key financial details
+        * I can view a stock performance chart
+
+### Creating a stock detail of interest
+* As a logged in user, I can open a stock postion
+
+### Updating a Stock Detail of interest
+* As a logged in user, i want to purchase or sell some stock at '/stocks/:stockid'
+
+### Deteting A stock detail of interest
+* As a logged in user, I can sell all of my stock at '/stocks/stockid:'
+
+
+## Watchlist
+
+### Creating a watchlist
+* As a logged in user, I can create a watchlist.
+
+### Viewing Stock Details
+* As a logged in user, I can view a watchlist at '/watchlist/:watchlistid" and at "/portfolio" *********************
+* While on a page that displays watchlist:
+    * I can toggle a button that displays stocks in a list
+
+### Updating Stock Details of interest
+* As a logged in user, I can click a button that adds a stock to my watch list from a spot's detail page at '/stocks/:stockid' 
+* As a logged in user, I can click a button that removes a stock from a watch list
+
+### Deleting A stock detail of interest
+* As a logged in user, I can delete a watchlist '/watchlist/:watchlistid' 
+
+
+## Portfolio 
+
+### Create Portfolio
+* A newly registered user assumes an (empty) portfolio on sign up authorization.
+
+### Update Portfolio
+* As a logged in user, I can add cash (purcashing power) to my portfolio at '<path>' ***************
+* As a logged in user, buying or selling a stock of interest at '/stocks/:stockid' will update my portfolio.
+
+### View Portfolio
+* As a logged in user, my portfolio value is easily visible 
+* As a logged in user, I can view my portfolio performance chart on at "/portfolio" ******************
+* As a logged in user with stock, I can view a list of my owned stocks at "/current" and "watchlist/:*" **************
+
+### Delete Portfolio
+* As a logged in user, my portfolio is deleted once I delete my account via nav
+    * My account/portfolio can not be deleted if I currently own stock
+
+
+
+
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+ 
+User Stories
+
+Auth
+1. Logged out User wants to log into the app at root page
+2. Logged out user wants to see a stock's detail page
+3. Logged out user cant see a portfolio
+
+1. Logged in user can log out from any page using the nav
+2. Logged in user can manage money through the account dropdown menu, available from any page
+3. Logges in user can view transaction history
+
+Transactions
+1. Logged in user can buy/sell stock from the stock detail page per price or share 
+2. Logged in user can execute a market order/sell of limit order/sell
+3. All users can see spot detail information
+4. Logged in users can execute limit transactions pre-during-and post market hours
+5. Logged in users can't execute market order outside of market hours
+6. Logged in users can see an estimate amount of shares pending before confirming market order
+7. Logged in users can see the estimated cost of pending purchase and corresponding bid/ask prices  
+8. User wants to be notified when they dont have sufficient funds.
+9. User wants an option to add money to account when purchasing stocks and dont have enough money.
+
+Search
+1. User wants to search by ticker or name on any page
+2. User wants auto completed results
