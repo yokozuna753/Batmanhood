@@ -141,7 +141,7 @@ PARTIAL CRUD FEATURES:
 ## Portfolio 
 
 ### Create Portfolio
-* As a signed up user, the user assumes a (empty) portfolio.
+* A newly registered user assumes an (empty) portfolio on sign up authorization.
 
 ### Update Portfolio
 * As a logged in user, I can add cash (purcashing power) to my portfolio at '<path>' ***************
