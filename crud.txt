@@ -27,3 +27,31 @@ PARTIAL CRUD FEATURES:
 1. Search 
 - user can create a search (typing in the search bar)
 - user can read the stocks that come up
+
+
+
+User Stories
+
+Auth
+1. Logged out User wants to log into the app at root page
+2. Logged out user wants to see a stock's detail page
+3. Logged out user cant see a portfolio
+
+1. Logged in user can log out from any page using the nav
+2. Logged in user can manage money through the account dropdown menu, available from any page
+3. Logges in user can view transaction history
+
+Transactions
+1. Logged in user can buy/sell stock from the stock detail page per price or share 
+2. Logged in user can execute a market order/sell of limit order/sell
+3. All users can see spot detail information
+4. Logged in users can execute limit transactions pre-during-and post market hours
+5. Logged in users can't execute market order outside of market hours
+6. Logged in users can see an estimate amount of shares pending before confirming market order
+7. Logged in users can see the estimated cost of pending purchase and corresponding bid/ask prices  
+8. User wants to be notified when they dont have sufficient funds.
+9. User wants an option to add money to account when purchasing stocks and dont have enough money.
+
+Search
+1. User wants to search by ticker or name on any page
+2. User wants auto completed results
