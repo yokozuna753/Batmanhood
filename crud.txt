@@ -140,12 +140,18 @@ PARTIAL CRUD FEATURES:
 
 ## Portfolio 
 
-### View Portfolio
-* As a logged in user, I can view my portfolio performance chart on at "/current" ******************
-* As a logged in user with stock, I can view a list of my owned stocks at "/current" and "watchlist/:*" **************
+### Create Portfolio
+* As a signed up user, the user assumes a (empty) portfolio.
 
 ### Update Portfolio
 * As a logged in user, I can add cash (purcashing power) to my portfolio at '<path>' ***************
+* As a logged in user, buying or selling a stock of interest at '/stocks/:stockid' will update my portfolio.
+
+### View Portfolio
+* As a logged in user, my portfolio value is easily visible 
+* As a logged in user, I can view my portfolio performance chart on at "/current" ******************
+* As a logged in user with stock, I can view a list of my owned stocks at "/current" and "watchlist/:*" **************
+
 
 
 
