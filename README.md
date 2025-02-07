@@ -1,10 +1,12 @@
 # Batmanhood - !!!!!CHANGE THE DB SCHEMA AND UPDATE README
 
-## Database Schema Design
+## Database Schema Design - ADD SHARES TO STOCKS OWNED TABLE
+
+FIGURE OUT THE GRAPH
 
 ![Batmanhood-api-schema]
 
-[Batmanhood-api-schema]: ./static/images/Screenshot%202025-02-06%20at%207.00.21 PM.png
+[Batmanhood-api-schema]: ./static/images/Screenshot%202025-02-07%20at%2012.01.24 PM.png
 
 ## API Documentation
 
@@ -552,7 +554,7 @@ Adds fake money to account
 - Require Authentication: true
 - Request
 
-  - Method: POST
+  - Method: PUT
   - Route path: /api/:userId/account
   - Headers:
     - Content-Type: application/json
@@ -561,15 +563,12 @@ Adds fake money to account
      ```json
     {
       "id": 1,
-      "shares": 20,
-      "market_price": 50,
-      "estimated_cost": 40,
-      "buying_power_available": 70,
-      "order_type": "limit/market",
+      "dollar_amount": 500,
+
     }
     ```
 
-- Successful Response - redirect the user to the stock detail page
+- Successful Response - exit out of the modal and update user funds
 
   - Status Code: 201
   - Headers:
@@ -590,7 +589,7 @@ Adds fake money to account
         "firstName": "John",
         "lastName": "Smith",
       "createdAt": "2021-11-19 20:39:36",
-      "updatedAt": "2021-11-19 20:39:36"
+      "updatedAt": "2021-11-19 20:39:3"6
       }
     }
     ```
