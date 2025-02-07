@@ -4,7 +4,7 @@
 
 ![Batmanhood-api-schema]
 
-[Batmanhood-api-schema]: ./static/images/Screenshot%202025-02-05%20at%206.05.00 PM.png
+[Batmanhood-api-schema]: ./static/images/Screenshot%202025-02-06%20at%207.00.21 PM.png
 
 ## API Documentation
 
