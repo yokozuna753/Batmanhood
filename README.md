@@ -268,18 +268,18 @@ Returns all the investments of the current user.
           "id": 1,
           "ownerId": 1,
           "shares": 35.34,
-          "ticker": "AAPL",
-          "price": 54.98,
-          "percent_gain_loss": 5.02
+          "symbol": "AAPL",
+          "regularMarketPrice": 192.58,
+          "profit/loss": 300.00
         },
         {
           "id": 1,
           "ownerId": 1,
           "shares": 35.34,
-          "ticker": "NFLX",
-          "price": 102.23,
-          "percent_gain_loss": 3.02
-        }
+          "symbol": "AAPL",
+          "regularMarketPrice": 192.58,
+          "profit/loss": 300.00
+        },
       ],
       "portfolio_value": 0,
       "buying_power": 7000
@@ -309,38 +309,28 @@ Returns all the stocks (paginated). The user starts typing a letter and results 
       "Stocks": [
         {
           "id": 1,
-          "shares": 35.34,
-          "ticker": "AAPL",
-          "price": 54.98,
-          "percent_gain_loss": 5.02
+          "symbol": "AAPL",
+          "displayName":"Apple"
         },
         {
           "id": 1,
-          "shares": 35.34,
-          "ticker": "NFLX",
-          "price": 54.98,
-          "percent_gain_loss": 5.02
+          "symbol": "AAPL",
+          "displayName":"Apple"
         },
         {
           "id": 1,
-          "shares": 35.34,
-          "ticker": "AAPL",
-          "price": 54.98,
-          "percent_gain_loss": 5.02
+          "symbol": "AAPL",
+          "displayName":"Apple"
         },
         {
           "id": 1,
-          "shares": 35.34,
-          "ticker": "AAPL",
-          "price": 54.98,
-          "percent_gain_loss": 5.02
+          "symbol": "AAPL",
+          "displayName":"Apple"
         },
         {
           "id": 1,
-          "shares": 35.34,
-          "ticker": "AAPL",
-          "price": 54.98,
-          "percent_gain_loss": 5.02
+          "symbol": "AAPL",
+          "displayName":"Apple"
         },
 
       ]
@@ -369,22 +359,30 @@ Returns the details of a stock specified by its id.
     {
       "id": 1,
       "ownerId": 1,
-      "week_high": 50,
-      "week_low": 40,
-      "year_high": 70,
+      "regularMarketPrice": 192.58,
+      "marketCap":2435122987008,
+      "regularMarketDayHigh":195.1709,
+      "fiftyTwoWeekHigh":198.23,
+      "regularMarketDayLow":326.3551,
+      "fiftyTwoWeekLow":213.43,
+      "regularMarketOpen":195.04,
+      "regularMarketVolume":49656509,
+      "averageDailyVolume10Day":48162430,
       "News": [
         {
           "id": 1,
-          "url": "image url",
-          "preview": true
+          "link":"https://finance.yahoo.com/news/cramer-weighs-united-airlines-nvidia-203428365.html",
+          "source":"Benzinga",
+          "title":"Cramer Weighs In On United Airlines, NVIDIA, JD, Fastly And More",
         },
         {
-          "id": 2,
-          "url": "image url",
-          "preview": false
-        }
+          "id": 1,
+          "link":"https://finance.yahoo.com/news/cramer-weighs-united-airlines-nvidia-203428365.html",
+          "source":"Benzinga",
+          "title":"Cramer Weighs In On United Airlines, NVIDIA, JD, Fastly And More",
+        },
       ],
-      "Owner": {
+      "Owner": { ---IF THE USER OWNS THE STOCK
         "id": 1,
         "firstName": "John",
         "lastName": "Smith"
@@ -440,11 +438,11 @@ Creates and returns a new stock.
       ```json
     {
       "id": 1,
-      "ticker": "AAPL",
+      "symbol": "AAPL",
       "shares_owned": 10,
       "market_price": 232.49,
       "market_value": 2320.49,
-      "avg_cost": 232.49,
+      "total_return": 100.00,
       "owner": {
         "id": 1,
         "firstName": "John",
@@ -491,7 +489,7 @@ Creates a sell order and
     {
       "id": 1,
       "shares": 20,
-      "dollars_amount": 0,
+      "dollars_amount": 100,
       "market_price": 50,
       "estimated_cost": 40,
       "buying_power_available": 70,
@@ -510,7 +508,7 @@ Creates a sell order and
       ```json
     {
       "id": 1,
-      "ticker": "AAPL",
+      "symbol": "AAPL",
       "shares_sold": 10,
       "avg_price_per_share": 232.49,
       "total_credit": 2320.49,
@@ -555,7 +553,7 @@ Adds fake money to account
 - Request
 
   - Method: PUT
-  - Route path: /api/:userId/account
+  - Route path: /api/:userId/account/add
   - Headers:
     - Content-Type: application/json
   - Body:
@@ -568,29 +566,17 @@ Adds fake money to account
     }
     ```
 
-- Successful Response - exit out of the modal and update user funds
+- Successful Response - exit out of the modal and update user funds -- REDIRECT TO PORTFOLIO PAGE
 
   - Status Code: 201
   - Headers:
     - Content-Type: application/json
   - Body:
 
-    ```json
       ```json
     {
       "id": 1,
-      "ticker": "AAPL",
-      "shares_owned": 10,
-      "market_price": 232.49,
-      "market_value": 2320.49,
-      "avg_cost": 232.49,
-      "owner": {
-        "id": 1,
-        "firstName": "John",
-        "lastName": "Smith",
-      "createdAt": "2021-11-19 20:39:36",
-      "updatedAt": "2021-11-19 20:39:3"6
-      }
+      "account_balance": 500.00
     }
     ```
 
@@ -605,9 +591,7 @@ Adds fake money to account
     {
       "message": "Bad Request", // (or "Validation error" if generated by Sequelize),
       "errors": {
-        "order_type": "Order type is required",
-        "shares": "Amount of shares is required",
-        "buying_power": "Buying power must be greater than or equal to stock price",
+        "money": "Funds must be greater than 0.",
       }
     }
     ```
@@ -619,8 +603,22 @@ Creates and returns a new stock.
 - Require Authentication: true
 - Request
 
-  - Method: POST
-  - Route path: /api/:userId/account
+  - Method: PUT
+  - Route path: /api/:userId/account/remove
+  - Headers:
+    - Content-Type: application/json
+  - Body:
+
+    ```json
+    {
+      "id": 1,
+      "dollar_amount": 500,
+    }
+    ```
+
+- Successful Response - redirect the user to the portfolio page
+
+  - Status Code: 201
   - Headers:
     - Content-Type: application/json
   - Body:
@@ -628,37 +626,7 @@ Creates and returns a new stock.
      ```json
     {
       "id": 1,
-      "shares": 20,
-      "market_price": 50,
-      "estimated_cost": 40,
-      "buying_power_available": 70,
-      "order_type": "limit/market",
-    }
-    ```
-
-- Successful Response - redirect the user to the stock detail page
-
-  - Status Code: 201
-  - Headers:
-    - Content-Type: application/json
-  - Body:
-
-    ```json
-      ```json
-    {
-      "id": 1,
-      "ticker": "AAPL",
-      "shares_owned": 10,
-      "market_price": 232.49,
-      "market_value": 2320.49,
-      "avg_cost": 232.49,
-      "owner": {
-        "id": 1,
-        "firstName": "John",
-        "lastName": "Smith",
-      "createdAt": "2021-11-19 20:39:36",
-      "updatedAt": "2021-11-19 20:39:36"
-      }
+      "account_balance": 0.00
     }
     ```
 
@@ -673,9 +641,7 @@ Creates and returns a new stock.
     {
       "message": "Bad Request", // (or "Validation error" if generated by Sequelize),
       "errors": {
-        "order_type": "Order type is required",
-        "shares": "Amount of shares is required",
-        "buying_power": "Buying power must be greater than or equal to stock price",
+        "money": "Cannot remove funds with $0 account balance",
       }
     }
     ```
