@@ -1,6 +1,7 @@
 from flask.cli import AppGroup
 from .users import seed_users, undo_users
 from .watchlists import seed_watchlist, undo_watchlist
+from .stocks_owned import seed_stocks_owned, undo_stocks_owned
 
 from app.models.db import db, environment, SCHEMA
 
@@ -19,8 +20,10 @@ def seed():
         # Make sure to add all your other model's undo functions below
         undo_users()
         undo_watchlist()
+        undo_stocks_owned()
     seed_users()
     seed_watchlist()
+    seed_stocks_owned()
     # Add other seed functions here
 
 
@@ -29,4 +32,5 @@ def seed():
 def undo():
     undo_users()
     undo_watchlist()
+    undo_stocks_owned()
     # Add other undo functions here
