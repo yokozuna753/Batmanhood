@@ -8,7 +8,7 @@ class WatchlistStock(db.Model):
         __table_args__ = {"schema": SCHEMA}
 
     id = db.Column(db.Integer, primary_key=True)
-    watchlist_id = db.Column(db.Integer, nullable=False)
+    watchlist_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('watchlists.id')), nullable=False)
     ticker = db.Column(db.String(100), nullable=False)
 
     watchlist = db.relationship(
