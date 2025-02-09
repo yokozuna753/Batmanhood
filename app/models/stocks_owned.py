@@ -16,5 +16,5 @@ class StocksOwned(db.Model):
         "User", back_populates="stocks_owned", cascade="save-update"
     )
 
-    def __repr__(self):
-        return f"<Stock Owned Ticker {self.ticker}>"
+    # def __repr__(self):
+    #     return f"<Stock Owned Ticker {self.ticker}, Owner ID: {self.owner_id}>"
