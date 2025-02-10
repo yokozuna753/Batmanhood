@@ -66,7 +66,11 @@ def get_stocks_in_watchlist(watchlist_id):
 @login_required
 def add_stock_to_watchlists(symbol):
     data = request.json
-    watchlist_ids = data.get('watchlist_ids', [])
+    watchlist_ids = data.get('watchlist_ids', []) # Save request body to failsafe array if empty
+
+    # Ensure watchlist_ids is a list
+    if not isinstance(watchlist_ids, list):
+        return jsonify({"error": "Invalid data format, expected a list"}), 400
 
     for watchlist_id in watchlist_ids:
         existing_entry = WatchlistStock.query.filter_by(
@@ -92,7 +96,7 @@ def remove_stock_from_watchlists(symbol):
 
     # Ensure watchlist_ids is a list to prevent NoneType errors. Can't filter 'in' an object of NO type
     if not isinstance(watchlist_ids, list):
-        return jsonify({"error": "Invalid watchlist_ids format"}), 400
+        return jsonify({"error": "Invalid watchlist_ids format, expected a list"}), 400
     
     # Return early if not watchlist_ids selected for deletion
     if not watchlist_ids: 
