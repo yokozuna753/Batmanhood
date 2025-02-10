@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify
 from flask_login import current_user, login_required
-from app.models import db, Watchlist
+from app.models import db, Watchlist, WatchlistStock
 
 watchlists = Blueprint("watchlists", __name__)
 
@@ -23,3 +23,13 @@ def delete_watchlist(id):
     db.session.commit()
     return jsonify({"message": "Watchlist dropped successfully"})
 
+# GET all stocks in a watchlist
+@watchlists.route('/<int:watchlist_id>/stocks', methods=['GET'])
+@login_required
+def get_stocks_in_watchlist(watchlist_id):
+    watchlist_stocks = WatchlistStock.query.filter_by(watchlist_id=watchlist_id).all()
+    stock_ids = [ws.stock_id for ws in watchlist_stocks]
+
+    stock_data = [fetch_stock_data_from_api(symbol) for symbol in stock_ids]
+    
+    return jsonify(stock_data)
