@@ -5,6 +5,11 @@ from app.models.user import User
 from app.models.db import db
 from app.forms.transaction_form import TransactionForm
 import yfinance as yf
+import logging
+
+# Configure logging
+logging.basicConfig(level=logging.INFO)
+logger = logging.getLogger(__name__)
 
 stock_details_routes = Blueprint("stock_details", __name__)
 
@@ -22,37 +27,64 @@ def validation_errors_to_error_messages(validation_errors):
 
 @stock_details_routes.route("/auto-login")
 def auto_login():
+    """
+    Automatically log in the first user in the database for testing purposes
+    """
     user = User.query.first()
     if user:
         login_user(user)
+        logger.info(f"Auto-logged in as {user.first_name}")
         return jsonify({"message": f"Logged in as {user.first_name}"})
+    logger.warning("No users found for auto-login")
     return jsonify({"message": "No users found"}), 404
-
-
-# @stock_details_routes.route("/<int:stockId>", methods=["GET"])
-# @login_required
-# def get_stock_details(stockId):
-#     # Temporary auto-login
-#     user = User.query.first()
-#     if user:
-#         login_user(user)
 
 
 @stock_details_routes.route("/<int:stockId>", methods=["GET"])
 @login_required
 def get_stock_details(stockId):
     """
-    Get details of a stock by its ID
+    Get details of a stock by its ID with comprehensive error handling
     """
+    logger.info(f"Attempting to fetch stock details for stockId: {stockId}")
+    logger.info(f"Current User ID: {current_user.id}")
+
+    # Debugging: List all stocks owned by current user
+    all_user_stocks = StocksOwned.query.filter_by(owner_id=current_user.id).all()
+    logger.info("All user stocks:")
+    for stock in all_user_stocks:
+        logger.info(
+            f"Stock ID: {stock.id}, Ticker: {stock.ticker}, Shares: {stock.shares_owned}"
+        )
+
+    # Find the specific stock
     stock = StocksOwned.query.get(stockId)
 
     if not stock:
+        logger.warning(f"No stock found with ID: {stockId}")
         return jsonify({"message": "Stock couldn't be found"}), 404
+
+    # Verify stock ownership
+    if stock.owner_id != current_user.id:
+        logger.warning(f"Stock {stockId} does not belong to current user")
+        return jsonify({"message": "Unauthorized access to stock"}), 403
 
     try:
         # Get real-time stock data using yfinance
         ticker = yf.Ticker(stock.ticker)
-        market_data = ticker.info
+
+        # Enhanced error handling for market data
+        try:
+            market_data = ticker.info
+            if not market_data:
+                logger.error(f"No market data found for ticker: {stock.ticker}")
+                return jsonify({"message": "Unable to fetch market data"}), 500
+        except Exception as data_error:
+            logger.error(f"Error fetching market data: {data_error}")
+            return jsonify(
+                {"message": "Error fetching market data", "error": str(data_error)}
+            ), 500
+
+        # Fetch news
         news = ticker.news[:2]
 
         # Get owner information
@@ -65,6 +97,7 @@ def get_stock_details(stockId):
                 "lastName": owner_data.last_name,
             }
 
+        # Construct response with comprehensive stock details
         response = {
             "id": stock.id,
             "ownerId": stock.owner_id,
@@ -93,10 +126,14 @@ def get_stock_details(stockId):
             "Owner": owner,
         }
 
+        logger.info(f"Successfully retrieved stock details for {stock.ticker}")
         return jsonify(response)
 
     except Exception as e:
-        return jsonify({"message": "Error fetching stock data", "error": str(e)}), 500
+        logger.error(f"Unexpected error in get_stock_details: {e}")
+        return jsonify(
+            {"message": "Unexpected error fetching stock data", "error": str(e)}
+        ), 500
 
 
 @stock_details_routes.route("/<int:stockId>/trade", methods=["POST"])
@@ -109,6 +146,7 @@ def trade_stock(stockId):
     form["csrf_token"].data = request.cookies["csrf_token"]
 
     if not form.validate_on_submit():
+        logger.warning(f"Validation errors in trade_stock: {form.errors}")
         return {"errors": validation_errors_to_error_messages(form.errors)}, 400
 
     stock = StocksOwned.query.get(stockId)
@@ -122,8 +160,10 @@ def trade_stock(stockId):
         # Handle limit orders
         if form.order_type.data == "Limit Order":
             if form.limit_price.data > current_price:  # for sell orders
+                logger.warning("Market price is below limit price")
                 return jsonify({"message": "Market price is below limit price"}), 400
             if form.limit_price.data < current_price:  # for buy orders
+                logger.warning("Market price is above limit price")
                 return jsonify({"message": "Market price is above limit price"}), 400
 
         # Calculate shares based on dollars if needed
@@ -138,6 +178,7 @@ def trade_stock(stockId):
         if stock and stock.owner_id == current_user.id:
             # Selling logic
             if shares_to_trade > stock.shares_owned:
+                logger.warning("Cannot sell more shares than owned")
                 return jsonify({"message": "Cannot sell more shares than owned"}), 400
 
             # Update user balance and stock position
@@ -156,6 +197,7 @@ def trade_stock(stockId):
         else:
             # Buying logic
             if transaction_value > current_user.account_balance:
+                logger.warning("Insufficient funds for transaction")
                 return jsonify({"message": "Insufficient funds"}), 400
 
             # Create new position if doesn't exist
@@ -174,6 +216,7 @@ def trade_stock(stockId):
             stock.estimated_cost += transaction_value
 
         db.session.commit()
+        logger.info(f"Transaction successful: {shares_to_trade} shares traded")
         return jsonify(
             {
                 "message": "Transaction successful",
@@ -185,6 +228,7 @@ def trade_stock(stockId):
 
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Error processing transaction: {e}")
         return jsonify(
             {"message": "Error processing transaction", "error": str(e)}
         ), 500
@@ -198,6 +242,7 @@ def sell_all_shares(stockId):
     """
     stock = StocksOwned.query.get(stockId)
     if not stock or stock.owner_id != current_user.id:
+        logger.warning(f"Stock not found or not owned: {stockId}")
         return jsonify({"message": "Stock couldn't be found"}), 404
 
     try:
@@ -213,10 +258,12 @@ def sell_all_shares(stockId):
         db.session.delete(stock)
         db.session.commit()
 
+        logger.info(f"Successfully sold all shares of {stock.ticker}")
         return jsonify(
             {"message": "Successfully sold all shares", "proceeds": sale_proceeds}
         )
 
     except Exception as e:
         db.session.rollback()
+        logger.error(f"Error processing sale: {e}")
         return jsonify({"message": "Error processing sale", "error": str(e)}), 500
