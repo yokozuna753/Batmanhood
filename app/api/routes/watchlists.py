@@ -59,9 +59,9 @@ def get_stocks_in_watchlist(watchlist_id):
     return jsonify(stock_data)
 
 
-# POST stock to a user's watchlist(s)
-## POST data-> { "watchlist_ids": [1, 3, 4] }
-## POST response-> {"message": "Stock added to watchlists successfully"}
+# POST stock to a session user's watchlist(s)
+## request data-> { "watchlist_ids": [1, 3, 4] }
+## response data-> {"message": "Stock added to watchlists successfully"}
 @watchlists.route('/stocks/<string:symbol>', methods=['POST'])
 @login_required
 def add_stock_to_watchlists(symbol):
@@ -79,6 +79,27 @@ def add_stock_to_watchlists(symbol):
 
     db.session.commit()
     return jsonify({"message": "Stock added to watchlists successfully"})
+
+
+# DELETE stock from a session user's watchlist(s)
+## request data-> { "watchlist_ids": [1, 3, 4] }
+## response data-> {"message": "Stock added to watchlists successfully"}
+@watchlists.route("/stocks/<string:symbol>", methods=["DELETE"])
+@login_required
+def remove_stock_from_watchlists(symbol):
+    data = request.json
+    watchlist_ids = data.get("watchlist_ids", []) # default empty ids to an empty, fail-safe array
+
+    WatchlistStock.query.filter(
+        WatchlistStock.watchlist_id.in_(watchlist_ids),
+        WatchlistStock.symbol == symbol
+    ).delete(synchronize_session=False)
+    # sync session false waits on the next query to reflect changes instead of updating
+    # at/around execution time for each delete, which should occur once a dependent
+    # component rerenders due to a slice of state change
+
+    db.session.commit()
+    return jsonify({"message": "Stock removed from watchlists successfully"})
 
 
 # GET all session user watchlists that contain a specific stock symbol
