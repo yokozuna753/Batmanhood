@@ -53,3 +53,22 @@ def get_stocks_in_watchlist(watchlist_id):
     stock_data = [fetch_stock_data(symbol) for symbol in stock_ids]
     
     return jsonify(stock_data)
+
+# GET all session user's watchlists that contain a specific stock symbol
+# Returns a list of the session user's watchlist that contain the targeted symbol
+@watchlists.route('/stocks/<string:symbol>', methods=['GET'])
+@login_required
+def get_watchlists_with_stock(symbol):
+    # Find all WatchlistStock entries containing a symbol matching the parameter value
+    watchlist_stocks = WatchlistStock.query.filter_by(symbol=symbol).all()
+
+    # Save the watchlist IDs of WatchlistStock entries containing the matching parameter
+    watchlist_ids = [ws.watchlist_id for ws in watchlist_stocks]
+
+    # Select the watchlists objects containing the matching symbol
+    target_watchlists = Watchlist.query.filter(
+        Watchlist.id.in_(watchlist_ids),
+        Watchlist.user_id == current_user.id
+    ).all()
+
+    return jsonify([watchlist.to_dict() for watchlist in target_watchlists])
