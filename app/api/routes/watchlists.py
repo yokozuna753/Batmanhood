@@ -2,26 +2,6 @@ from flask import Blueprint, request, jsonify
 from flask_login import current_user, login_required
 from app.models import db, Watchlist, WatchlistStock
 
-# Fetch stock details by id utility function
-# def fetch_stock_data(symbol):
-#     url = f"https://yahoo-finance15.p.rapidapi.com/api/v1/markets/quote?ticker={symbol}&type=STOCKS"
-
-#     headers = {
-#         "x-rapidapi-host": "yahoo-finance15.p.rapidapi.com",
-#         "x-rapidapi-key": <get api key>
-#     }
-
-#     response = requests.get(url, headers=headers)
-
-#     if response.status_code == 200:
-#         stock_data = response.json()
-#         if stock_data and isinstance(stock_data, list):  # Ensure data is a list
-#             return stock_data[0]  # Return first stock object
-#         return None
-#     else:
-#         print(f"Error fetching stock data: {response.status_code}, {response.text}")
-#         return None
-
 
 watchlists = Blueprint("watchlists", __name__)
 
@@ -54,7 +34,7 @@ def get_stocks_in_watchlist(watchlist_id):
     watchlist_stocks = WatchlistStock.query.filter_by(watchlist_id=watchlist_id).all()
     stock_ids = [ws.stock_id for ws in watchlist_stocks]
 
-    stock_data = [fetch_stock_data(symbol) for symbol in stock_ids]
+    stock_data = [fetch_stock_data(symbol) for symbol in stock_ids] # dumby utility function for now!
     
     return jsonify(stock_data), 200
 
@@ -66,7 +46,7 @@ def get_stocks_in_watchlist(watchlist_id):
 @login_required
 def add_stock_to_watchlists(symbol):
     data = request.json
-    watchlist_ids = data.get('watchlist_ids', []) # Save request body to failsafe array if empty
+    watchlist_ids = data.get('watchlist_ids', []) # Default to empty list if not provided
 
     # Ensure watchlist_ids is a list
     if not isinstance(watchlist_ids, list):
@@ -93,7 +73,7 @@ def add_stock_to_watchlists(symbol):
 @login_required
 def remove_stock_from_watchlists(symbol):
     data = request.json
-    watchlist_ids = data.get("watchlist_ids", []) # default empty ids to a fail-safe array
+    watchlist_ids = data.get("watchlist_ids", []) # Default to empty list of not provided
 
     # Ensure watchlist_ids is a list to prevent NoneType errors. Can't filter 'in' an object of NO type
     if not isinstance(watchlist_ids, list):
@@ -136,3 +116,22 @@ def get_watchlists_with_stock(symbol):
     return jsonify([watchlist.to_dict() for watchlist in target_watchlists]), 200
 
 
+# Fetch stock details by id utility function
+# def fetch_stock_data(symbol):
+#     url = f"https://yahoo-finance15.p.rapidapi.com/api/v1/markets/quote?ticker={symbol}&type=STOCKS"
+
+#     headers = {
+#         "x-rapidapi-host": "yahoo-finance15.p.rapidapi.com",
+#         "x-rapidapi-key": <get api key>
+#     }
+
+#     response = requests.get(url, headers=headers)
+
+#     if response.status_code == 200:
+#         stock_data = response.json()
+#         if stock_data and isinstance(stock_data, list):  # Ensure data is a list
+#             return stock_data[0]  # Return first stock object
+#         return None
+#     else:
+#         print(f"Error fetching stock data: {response.status_code}, {response.text}")
+#         return None
