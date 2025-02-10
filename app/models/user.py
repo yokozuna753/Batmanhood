@@ -24,6 +24,10 @@ class User(db.Model, UserMixin):
     watchlist = db.relationship(
         "Watchlist", back_populates="user", cascade="all, delete-orphan"
     )
+    
+    orders = db.relationship(
+        "Order", back_populates="owners", cascade="all, delete-orphan"
+    )
 
     @property
     def password(self):
