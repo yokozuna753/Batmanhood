@@ -30,8 +30,8 @@ app.cli.add_command(seed_commands)
 app.config.from_object(Config)
 app.register_blueprint(user_routes, url_prefix='/api/users')
 app.register_blueprint(auth_routes, url_prefix='/api/auth')
-app.register_blueprint(portfolio, url_prefix='/api/routes/portfolio')
-app.register_blueprint(watchlists, url_prefix='/api/routes/watchlists') #consider dropping routes from file path
+app.register_blueprint(watchlists, url_prefix='/api/watchlists')
+app.register_blueprint(portfolio, url_prefix='/api')
 db.init_app(app)
 Migrate(app, db)
 
