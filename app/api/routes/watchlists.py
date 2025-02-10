@@ -3,7 +3,7 @@ from flask_login import current_user, login_required
 from app.models import db, Watchlist, WatchlistStock
 
 # Fetch stock details by id utility function
-# def fetch_stock_data_from_api(symbol):
+# def fetch_stock_data(symbol):
 #     url = f"https://yahoo-finance15.p.rapidapi.com/api/v1/markets/quote?ticker={symbol}&type=STOCKS"
 
 #     headers = {
@@ -24,14 +24,14 @@ from app.models import db, Watchlist, WatchlistStock
 
 watchlists = Blueprint("watchlists", __name__)
 
-# GET all watchlists
+# GET all session user's watchlists
 @watchlists.route('/', methods=['GET'])
 @login_required
 def get_user_watchlists():
-    watchlists = Watchlist.query.filter(user_id = current_user.id).all()
+    watchlists = Watchlist.query.filter_by(user_id = current_user.id).all()
     return jsonify([watchlist.to_dict() for watchlist in watchlists])
 
-# DELETE a watchlist
+# DELETE a session user's watchlist
 @watchlists.route('/<int:id>', methods=['DELETE'])
 @login_required
 def delete_watchlist(id):
@@ -43,13 +43,13 @@ def delete_watchlist(id):
     db.session.commit()
     return jsonify({"message": "Watchlist dropped successfully"})
 
-# GET all stocks in a watchlist
+# GET all stocks in a session user's watchlist
 @watchlists.route('/<int:watchlist_id>/stocks', methods=['GET'])
 @login_required
 def get_stocks_in_watchlist(watchlist_id):
     watchlist_stocks = WatchlistStock.query.filter_by(watchlist_id=watchlist_id).all()
     stock_ids = [ws.stock_id for ws in watchlist_stocks]
 
-    stock_data = [fetch_stock_data_from_api(symbol) for symbol in stock_ids]
+    stock_data = [fetch_stock_data(symbol) for symbol in stock_ids]
     
     return jsonify(stock_data)
