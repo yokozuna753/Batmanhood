@@ -2,6 +2,26 @@ from flask import Blueprint, jsonify
 from flask_login import current_user, login_required
 from app.models import db, Watchlist, WatchlistStock
 
+# Fetch stock details by id utility function
+# def fetch_stock_data_from_api(symbol):
+#     url = f"https://yahoo-finance15.p.rapidapi.com/api/v1/markets/quote?ticker={symbol}&type=STOCKS"
+
+#     headers = {
+#         "x-rapidapi-host": "yahoo-finance15.p.rapidapi.com",
+#         "x-rapidapi-key": <get api key>
+#     }
+
+#     response = requests.get(url, headers=headers)
+
+#     if response.status_code == 200:
+#         stock_data = response.json()
+#         if stock_data and isinstance(stock_data, list):  # Ensure data is a list
+#             return stock_data[0]  # Return first stock object
+#         return None
+#     else:
+#         print(f"Error fetching stock data: {response.status_code}, {response.text}")
+#         return None
+
 watchlists = Blueprint("watchlists", __name__)
 
 # GET all watchlists
