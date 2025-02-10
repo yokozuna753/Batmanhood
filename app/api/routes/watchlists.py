@@ -88,7 +88,15 @@ def add_stock_to_watchlists(symbol):
 @login_required
 def remove_stock_from_watchlists(symbol):
     data = request.json
-    watchlist_ids = data.get("watchlist_ids", []) # default empty ids to an empty, fail-safe array
+    watchlist_ids = data.get("watchlist_ids", []) # default empty ids to a fail-safe array
+
+    # Ensure watchlist_ids is a list to prevent NoneType errors. Can't filter 'in' an object of NO type
+    if not isinstance(watchlist_ids, list):
+        return jsonify({"error": "Invalid watchlist_ids format"}), 400
+    
+    # Return early if not watchlist_ids selected for deletion
+    if not watchlist_ids: 
+        return jsonify({"message": "No watchlist IDs provided, nothing to remove"}), 200
 
     WatchlistStock.query.filter(
         WatchlistStock.watchlist_id.in_(watchlist_ids),
