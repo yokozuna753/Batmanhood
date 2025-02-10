@@ -31,7 +31,7 @@ watchlists = Blueprint("watchlists", __name__)
 @login_required
 def get_user_watchlists():
     watchlists = Watchlist.query.filter_by(user_id = current_user.id).all()
-    return jsonify([watchlist.to_dict() for watchlist in watchlists])
+    return jsonify([watchlist.to_dict() for watchlist in watchlists]), 200
 
 
 # DELETE a session user's watchlist
@@ -44,7 +44,7 @@ def delete_watchlist(id):
 
     db.session.delete(watchlist)
     db.session.commit()
-    return jsonify({"message": "Watchlist dropped successfully"})
+    return jsonify({"message": "Watchlist dropped successfully"}), 200
 
 
 # GET all stocks in a session user's watchlist
@@ -56,7 +56,7 @@ def get_stocks_in_watchlist(watchlist_id):
 
     stock_data = [fetch_stock_data(symbol) for symbol in stock_ids]
     
-    return jsonify(stock_data)
+    return jsonify(stock_data), 200
 
 
 # POST stock to a session user's watchlist(s)
@@ -75,15 +75,15 @@ def add_stock_to_watchlists(symbol):
     # Add stock to selected watchlist(s)
     for watchlist_id in watchlist_ids:
         existing_entry = WatchlistStock.query.filter_by(
-            watchlist_id=watchlist_id,
-            symbol=symbol
+            watchlist_id=watchlist_id, symbol=symbol
         ).first()
+
         if not existing_entry:
-            new_watchlist_stock = WatchlistStock(watchlist_id=watchlist_id, symbol=symbol)
-            db.session.add(new_watchlist_stock)
+            new_entry = WatchlistStock(watchlist_id=watchlist_id, symbol=symbol)
+            db.session.add(new_entry)
 
     db.session.commit()
-    return jsonify({"message": "Stock added to watchlists successfully"})
+    return jsonify({"message": "Stock added to watchlists successfully"}), 200
 
 
 # DELETE stock from a session user's watchlist(s)
@@ -113,7 +113,7 @@ def remove_stock_from_watchlists(symbol):
     # component rerenders due to a slice of state change
 
     db.session.commit()
-    return jsonify({"message": "Stock removed from watchlists successfully"})
+    return jsonify({"message": "Stock removed from watchlists successfully"}), 200
 
 
 # GET all session user watchlists that contain a specific stock symbol
@@ -133,6 +133,6 @@ def get_watchlists_with_stock(symbol):
         Watchlist.user_id == current_user.id
     ).all()
 
-    return jsonify([watchlist.to_dict() for watchlist in target_watchlists])
+    return jsonify([watchlist.to_dict() for watchlist in target_watchlists]), 200
 
 
