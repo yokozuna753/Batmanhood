@@ -9,7 +9,7 @@ class StocksOwned(db.Model):
     id = db.Column(db.Integer, primary_key=True)
     estimated_cost = db.Column(db.Float, nullable=False)
     owner_id = db.Column(db.Integer, db.ForeignKey("users.id"), nullable=False)
-    ticker = db.Column(db.Varchar(100), nullable=False)
+    ticker = db.Column(db.String(100), nullable=False)
     shares_owned = db.Column(db.Float, nullable=False)
 
     owners = db.relationship(
