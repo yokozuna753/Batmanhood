@@ -16,3 +16,6 @@ class Watchlist(db.Model):
     user = db.relationship(
         "User", back_populates="watchlist", cascade="all, delete-orphan"
     )
+
+    def to_dict(self):
+        return { "id": self.id, "user_id": self.user_id, "name": self.name }
