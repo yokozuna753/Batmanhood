@@ -1,12 +1,12 @@
-# Batmanhood - !!!!!CHANGE THE DB SCHEMA AND UPDATE README
+# Batmanhood 
 
-## Database Schema Design - ADD SHARES TO STOCKS OWNED TABLE
+## Database Schema Design
 
 FIGURE OUT THE GRAPH
 
 ![Batmanhood-api-schema]
 
-[Batmanhood-api-schema]: ./static/images/Screenshot%202025-02-07%20at%2012.01.24 PM.png
+[Batmanhood-api-schema]: ./static/images/Screenshot%202025-02-10%20at%2012.46.32 PM.png
 
 ## API Documentation
 

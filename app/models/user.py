@@ -24,6 +24,10 @@ class User(db.Model, UserMixin):
     watchlist = db.relationship(
         "Watchlist", back_populates="user", cascade="all, delete-orphan"
     )
+    
+    orders = db.relationship(
+        "Order", back_populates="owners", cascade="all, delete-orphan"
+    )
 
     @property
     def password(self):
@@ -37,4 +41,5 @@ class User(db.Model, UserMixin):
         return check_password_hash(self.password, password)
 
     def to_dict(self):
-        return {"id": self.id, "username": self.username, "email": self.email}
+        return {"id": self.id, "username": self.username, "email": self.email,
+                "stocks_owned": self.stocks_owned}

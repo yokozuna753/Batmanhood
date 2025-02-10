@@ -17,6 +17,12 @@ class StocksOwned(db.Model):
     owners = db.relationship(
         "User", back_populates="stocks_owned", cascade="save-update"
     )
-
+    
+    def to_dict(self):
+        return {"id": self.id, 
+                "estimated_cost": self.estimated_cost, 
+                "owner_id": self.owner_id,
+                "ticker": self.ticker,
+                "shares_owned": self.shares_owned}
     # def __repr__(self):
     #     return f"<Stock Owned Ticker {self.ticker}, Owner ID: {self.owner_id}>"
