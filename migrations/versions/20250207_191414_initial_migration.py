@@ -32,7 +32,7 @@ def upgrade():
     )
     op.create_table('stocks_owned',
     sa.Column('id', sa.Integer(), nullable=False),
-    sa.Column('estimated_cost', sa.Float(), nullable=False),
+    sa.Column('total_cost', sa.Float(), nullable=False),
     sa.Column('owner_id', sa.Integer(), nullable=False),
     sa.Column('ticker', sa.String(length=100), nullable=False),
     sa.Column('shares_owned', sa.Float(), nullable=False),
