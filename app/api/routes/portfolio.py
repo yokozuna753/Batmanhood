@@ -28,52 +28,62 @@ grab the shares_owned & price_purchased from the orders table - relationship wit
 '''
 
 @portfolio.route('/<int:userId>/stocks', methods=['GET','POST'])
-# @login_required
+@login_required
 def stocks_portfolio(userId):
 # get all the investments owned by the current logged in user
-        user = User.query.filter(User.id == 1).all()
+        user = User.query.filter(User.id == int(userId)).all() 
         user_stocks = user[0].to_dict()["stocks_owned"]
+
         stock_dict = {"portfolio_value": 0}
         conn = http.client.HTTPSConnection("yahoo-finance15.p.rapidapi.com")
         headers = {
         'x-rapidapi-key': "0c6bcbaa3cmsh50c5adea77dadf5p10a80bjsnac2bcd90f6c5",
         'x-rapidapi-host': "real-time-finance-data.p.rapidapi.com"
         }
-        # !! for loop to show each stock the user owns 
+
+# ** for loop to show each stock the user owns 
         for ticker in user_stocks:
-                # grab the symbol of the stock from ticker
+                #* grab the symbol of the stock from ticker
                 symbol = ticker.to_dict()["ticker"]
 
-                # request the stock info from API dynamically and convert to JSON
+                #* request the stock info from API dynamically and convert to JSON
                 conn.request("GET", f"/stock-quote?symbol={symbol}%3ANASDAQ&language=en", headers=headers)
                 res = conn.getresponse()
                 data = res.read()
                 data = data.decode("utf-8")
                 res = json.loads(data)
-
-                # set the stock dictionary keys to the symbols and values to the data returned
+                #* set the stock dictionary keys to the symbols and values to the data returned
                 stock_dict[symbol] = ticker.to_dict()
-                stock_dict["portfolio_value"] += int(ticker.to_dict()["total_cost"])
-                # i want the total portfolio value for all of the stocks
-                        # grab the shares - $200
-                stock_dict[symbol]["stock_info"] = res["data"]
-        
-        # grab the orders info from the user table
 
-        #! for loop to get the percent gain for each stock and add it to the stock_dict
-        for order in user[0].orders:
-                total_cost = 0
-                total_shares = 0
-                order = order.to_dict()
-                # add total shares up for each order
-                num_shares = float(order["shares_purchased"])
-                total_shares += num_shares
-                # add total cost for each order
-                price = float(order["price_purchased"])
-                total_cost += price * num_shares
-                print(total_cost)
-        
-        avg_price = total_cost / total_shares
-        print(avg_price)
+                #* set the portfolio value from the stocks_owned table
+                stock_dict["portfolio_value"] += int(ticker.to_dict()["total_cost"])
+
+                #* set the data for the stock (data, percent gain)
+                stock_dict[symbol]["stock_info"] = res["data"]
+
+                total_cost = stock_dict[symbol]['total_cost']
+                shares = stock_dict[symbol]['shares_owned']
+                avg_cost = total_cost / shares
+                percent_gain = ((stock_dict[symbol]['stock_info']['price'] - avg_cost) / avg_cost) * 100
+                stock_dict[symbol]['percent_gain/loss'] = round(percent_gain,2)
 
         return stock_dict
+
+
+@portfolio.route('/portfolio/stocks/news', methods=['GET'])
+@login_required
+def news_portfolio():
+        conn = http.client.HTTPSConnection("yahoo-finance15.p.rapidapi.com")
+
+        headers = {
+        'x-rapidapi-key': "0c6bcbaa3cmsh50c5adea77dadf5p10a80bjsnac2bcd90f6c5",
+        'x-rapidapi-host': "yahoo-finance15.p.rapidapi.com"
+        }
+
+        conn.request("GET", "/api/v1/markets/news", headers=headers)
+
+        res = conn.getresponse()
+        data = res.read()
+        data = json.loads(data.decode("utf-8"))
+        
+        return {i: data['body'][i] for i in range(25)}
