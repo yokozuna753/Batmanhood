@@ -26,7 +26,7 @@ from app.models import db, Watchlist, WatchlistStock
 watchlists = Blueprint("watchlists", __name__)
 
 
-# GET all session user's watchlists
+# GET all session user watchlists
 @watchlists.route('/', methods=['GET'])
 @login_required
 def get_user_watchlists():
@@ -59,7 +59,29 @@ def get_stocks_in_watchlist(watchlist_id):
     return jsonify(stock_data)
 
 
-# GET all session user's watchlists that contain a specific stock symbol
+# POST stock to a user's watchlist(s)
+## POST data-> { "watchlist_ids": [1, 3, 4] }
+## POST response-> {"message": "Stock added to watchlists successfully"}
+@watchlists.route('/stocks/<string:symbol>', methods=['POST'])
+@login_required
+def add_stock_to_watchlists(symbol):
+    data = request.json
+    watchlist_ids = data.get('watchlist_ids', [])
+
+    for watchlist_id in watchlist_ids:
+        existing_entry = WatchlistStock.query.filter_by(
+            watchlist_id=watchlist_id,
+            symbol=symbol
+        ).first()
+        if not existing_entry:
+            new_watchlist_stock = WatchlistStock(watchlist_id=watchlist_id, symbol=symbol)
+            db.session.add(new_watchlist_stock)
+
+    db.session.commit()
+    return jsonify({"message": "Stock added to watchlists successfully"})
+
+
+# GET all session user watchlists that contain a specific stock symbol
 # Returns a list of the session user's watchlist that contain the targeted symbol
 @watchlists.route('/stocks/<string:symbol>', methods=['GET'])
 @login_required
