@@ -22,7 +22,9 @@ from app.models import db, Watchlist, WatchlistStock
 #         print(f"Error fetching stock data: {response.status_code}, {response.text}")
 #         return None
 
+
 watchlists = Blueprint("watchlists", __name__)
+
 
 # GET all session user's watchlists
 @watchlists.route('/', methods=['GET'])
@@ -30,6 +32,7 @@ watchlists = Blueprint("watchlists", __name__)
 def get_user_watchlists():
     watchlists = Watchlist.query.filter_by(user_id = current_user.id).all()
     return jsonify([watchlist.to_dict() for watchlist in watchlists])
+
 
 # DELETE a session user's watchlist
 @watchlists.route('/<int:id>', methods=['DELETE'])
@@ -43,6 +46,7 @@ def delete_watchlist(id):
     db.session.commit()
     return jsonify({"message": "Watchlist dropped successfully"})
 
+
 # GET all stocks in a session user's watchlist
 @watchlists.route('/<int:watchlist_id>/stocks', methods=['GET'])
 @login_required
@@ -53,6 +57,7 @@ def get_stocks_in_watchlist(watchlist_id):
     stock_data = [fetch_stock_data(symbol) for symbol in stock_ids]
     
     return jsonify(stock_data)
+
 
 # GET all session user's watchlists that contain a specific stock symbol
 # Returns a list of the session user's watchlist that contain the targeted symbol
@@ -72,3 +77,5 @@ def get_watchlists_with_stock(symbol):
     ).all()
 
     return jsonify([watchlist.to_dict() for watchlist in target_watchlists])
+
+

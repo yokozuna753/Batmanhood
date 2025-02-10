@@ -9,7 +9,7 @@ class WatchlistStock(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     watchlist_id = db.Column(db.Integer, nullable=False)
-    ticker = db.Column(db.String(100), nullable=False)
+    symbol = db.Column(db.String(100), nullable=False)
 
     watchlist = db.relationship(
         "Watchlist", back_populates="watchlist_stocks", cascade="save-update"
