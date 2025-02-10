@@ -72,6 +72,7 @@ def add_stock_to_watchlists(symbol):
     if not isinstance(watchlist_ids, list):
         return jsonify({"error": "Invalid data format, expected a list"}), 400
 
+    # Add stock to selected watchlist(s)
     for watchlist_id in watchlist_ids:
         existing_entry = WatchlistStock.query.filter_by(
             watchlist_id=watchlist_id,
@@ -102,6 +103,7 @@ def remove_stock_from_watchlists(symbol):
     if not watchlist_ids: 
         return jsonify({"message": "No watchlist IDs provided, nothing to remove"}), 200
 
+    # Remove stock from (de)selected watchlist(s)
     WatchlistStock.query.filter(
         WatchlistStock.watchlist_id.in_(watchlist_ids),
         WatchlistStock.symbol == symbol
