@@ -8,3 +8,4 @@ watchlists = Blueprint("watchlists", __name__)
 def get_user_watchlists():
     watchlists = Watchlist.query.filter(user_id = current_user.id).all()
     return jsonify([watchlist.to_dict() for watchlist in watchlists])
+
