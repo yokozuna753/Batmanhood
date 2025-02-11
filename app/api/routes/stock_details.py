@@ -44,7 +44,7 @@ def auto_login():
 @login_required
 def get_stock_details(stockId):
     """
-    Get details of a stock by its ID with comprehensive error handling
+    Get details of a stock by its ID with error handling
     """
     logger.info(f"Attempting to fetch stock details for stockId: {stockId}")
     logger.info(f"Current User ID: {current_user.id}")
@@ -62,7 +62,7 @@ def get_stock_details(stockId):
         return jsonify({"message": "Unauthorized access to stock"}), 403
 
     try:
-        # Get real-time stock data using yfinance
+        # Get realtime stock data using yfinance
         ticker = yf.Ticker(stock.ticker)
 
         # Fetch market data
@@ -142,7 +142,7 @@ def trade_stock(stockId):
     stock = StocksOwned.query.get(stockId)
 
     try:
-        # Detailed market data retrieval with comprehensive error handling
+        # market data retrieval with error handling
         try:
             # Print stock information for debugging
             logger.info(f"Attempting to fetch market data for ticker: {stock.ticker}")

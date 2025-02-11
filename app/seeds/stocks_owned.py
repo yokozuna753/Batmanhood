@@ -5,11 +5,11 @@ from sqlalchemy.sql import text
 # Adds a demo user, you can add other users here if you want
 def seed_stocks_owned():
     apple = StocksOwned(
-        estimated_cost=22740,owner_id=1, ticker='AAPL',shares_owned=100)
+        total_cost=22740,owner_id=1, ticker='AAPL',shares_owned=100)
     netflix = StocksOwned(
-        estimated_cost=101491,owner_id=2, ticker='NFLX',shares_owned=100)
+        total_cost=101491,owner_id=2, ticker='NFLX',shares_owned=100)
     amazon = StocksOwned(
-        estimated_cost=22858,owner_id=3, ticker='AMZN',shares_owned=100)
+        total_cost=22858,owner_id=3, ticker='AMZN',shares_owned=100)
 
     db.session.add(apple)
     db.session.add(netflix)
