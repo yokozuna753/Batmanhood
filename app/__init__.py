@@ -8,6 +8,7 @@ from .models import db, User
 from .api.user_routes import user_routes
 from .api.auth_routes import auth_routes
 from .api.routes.portfolio import portfolio
+from .api.routes.search_bar import search_bar
 from .seeds import seed_commands
 from .config import Config
 
@@ -30,7 +31,7 @@ app.config.from_object(Config)
 app.register_blueprint(user_routes, url_prefix='/api/users')
 app.register_blueprint(auth_routes, url_prefix='/api/auth')
 app.register_blueprint(portfolio, url_prefix='/api')
-app.register_blueprint(searchbar, url_prefix='/api/search')
+app.register_blueprint(search_bar, url_prefix='/api')
 db.init_app(app)
 Migrate(app, db)
 
