@@ -12,7 +12,7 @@ function LoginFormPage() {
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
 
-  if (sessionUser) return <Navigate to="/" replace={true} />; // ! BROD - added /portfolio, was '/'
+  if (sessionUser) return <Navigate to="/portfolio" replace={true} />; // ! BROD - added /portfolio, was '/'
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -26,8 +26,9 @@ function LoginFormPage() {
 
     if (serverResponse) {
       setErrors(serverResponse);
+      console.log('SERVER RESPONSE ==>>   ', serverResponse);
     } else {
-      navigate("/"); // ! BROD - added /portfolio, was '/'
+      navigate("/portfolio"); // ! BROD - added /portfolio, was '/'
     }
   };
 
