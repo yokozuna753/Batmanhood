@@ -45,7 +45,8 @@ def stocks_portfolio(userId):
 # ** for loop to show each stock the user owns 
         for ticker in user_stocks:
                 #* grab the symbol of the stock from ticker
-                symbol = ticker.to_dict()["ticker"]
+                print('THIS IS TICKER ===>  ', ticker)
+                symbol = ticker["ticker"]
 
                 #* request the stock info from API dynamically and convert to JSON
                 conn.request("GET", f"/stock-quote?symbol={symbol}%3ANASDAQ&language=en", headers=headers)
@@ -56,10 +57,10 @@ def stocks_portfolio(userId):
 
                 print('THIS IS API RESPONSE ==>       ', res)
                 #* set the stock dictionary keys to the symbols and values to the data returned
-                stock_dict[symbol] = ticker.to_dict()
+                stock_dict[symbol] = ticker
 
                 #* set the portfolio value from the stocks_owned table
-                stock_dict["portfolio_value"] += int(ticker.to_dict()["total_cost"])
+                stock_dict["portfolio_value"] += int(ticker["total_cost"])
 
                 #* set the data for the stock (data, percent gain)
                 stock_dict[symbol]["stock_info"] = res["data"]

@@ -16,3 +16,10 @@ class Watchlist(db.Model):
     user = db.relationship(
         "User", back_populates="watchlist", cascade="save-update"
     )
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "name": self.name,
+            "watchlist_stocks": [stock.to_dict() for stock in self.watchlist_stocks]
+        }

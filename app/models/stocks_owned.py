@@ -21,6 +21,7 @@ class StocksOwned(db.Model):
                 "total_cost": self.total_cost, 
                 "owner_id": self.owner_id,
                 "ticker": self.ticker,
-                "shares_owned": self.shares_owned}
+                "shares_owned": self.shares_owned,
+                }
     def __repr__(self):
         return f"<StocksOwned(id={self.id}, ticker={self.ticker}, shares_owned={self.shares_owned})>"
