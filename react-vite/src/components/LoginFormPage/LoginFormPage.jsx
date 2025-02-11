@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { thunkLogin } from "../../redux/session";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate } from "react-router-dom";
@@ -7,16 +7,18 @@ import "./LoginForm.css";
 function LoginFormPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const sessionUser = useSelector((state) => state.session.user);
+  const sessionUser = useSelector((state) => state.session.user); // Getting the logged-in user from the Redux store
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
 
-  if (sessionUser) return <Navigate to="/portfolio" replace={true} />; // ! BROD - added /portfolio, was '/'
+  // If user is logged in, navigate to portfolio page
+  if (sessionUser) return <Navigate to="/portfolio" replace={true} />;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Dispatch login action to authenticate user
     const serverResponse = await dispatch(
       thunkLogin({
         email,
@@ -24,11 +26,12 @@ function LoginFormPage() {
       })
     );
 
+    // If there are errors, update the state and show them
     if (serverResponse) {
       setErrors(serverResponse);
-      console.log('SERVER RESPONSE ==>>   ', serverResponse);
     } else {
-      navigate("/portfolio"); // ! BROD - added /portfolio, was '/'
+      // If login is successful, redirect to portfolio page
+      navigate("/portfolio");
     }
   };
 

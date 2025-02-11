@@ -2,7 +2,8 @@
 import './Portfolio.css'
 
 
-
+// before i implement the line chart for the stocks, i want to show the stocks owned and the news
+  //  - query the backend through a thunk to populate the state with stocks_owned
 function Portfolio() {
     return (
         <>
