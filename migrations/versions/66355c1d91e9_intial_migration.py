@@ -1,8 +1,8 @@
-"""Initial migration
+"""Intial Migration
 
-Revision ID: dbaef0703201
+Revision ID: 66355c1d91e9
 Revises: 
-Create Date: 2025-02-07 19:14:14.433690
+Create Date: 2025-02-10 13:57:38.638550
 
 """
 from alembic import op
@@ -10,7 +10,7 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision = 'dbaef0703201'
+revision = '66355c1d91e9'
 down_revision = None
 branch_labels = None
 depends_on = None
@@ -29,6 +29,16 @@ def upgrade():
     sa.PrimaryKeyConstraint('id'),
     sa.UniqueConstraint('email'),
     sa.UniqueConstraint('username')
+    )
+    op.create_table('orders',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('price_purchased', sa.Float(), nullable=False),
+    sa.Column('shares_purchased', sa.Float(), nullable=False),
+    sa.Column('owner_id', sa.Integer(), nullable=False),
+    sa.Column('ticker', sa.String(length=100), nullable=False),
+    sa.Column('order_type', sa.String(length=100), nullable=False),
+    sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
     )
     op.create_table('stocks_owned',
     sa.Column('id', sa.Integer(), nullable=False),
@@ -61,5 +71,6 @@ def downgrade():
     op.drop_table('watchlist_stocks')
     op.drop_table('watchlists')
     op.drop_table('stocks_owned')
+    op.drop_table('orders')
     op.drop_table('users')
     # ### end Alembic commands ###

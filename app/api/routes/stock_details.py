@@ -3,6 +3,7 @@ from flask_login import login_required, current_user, login_user
 from app.models.stocks_owned import StocksOwned
 from app.models.user import User
 from app.models.db import db
+from app.models.orders import Order
 from app.forms.transaction_form import TransactionForm
 import yfinance as yf
 import logging
@@ -48,14 +49,6 @@ def get_stock_details(stockId):
     logger.info(f"Attempting to fetch stock details for stockId: {stockId}")
     logger.info(f"Current User ID: {current_user.id}")
 
-    # Debugging: List all stocks owned by current user
-    all_user_stocks = StocksOwned.query.filter_by(owner_id=current_user.id).all()
-    logger.info("All user stocks:")
-    for stock in all_user_stocks:
-        logger.info(
-            f"Stock ID: {stock.id}, Ticker: {stock.ticker}, Shares: {stock.shares_owned}"
-        )
-
     # Find the specific stock
     stock = StocksOwned.query.get(stockId)
 
@@ -72,7 +65,7 @@ def get_stock_details(stockId):
         # Get real-time stock data using yfinance
         ticker = yf.Ticker(stock.ticker)
 
-        # Enhanced error handling for market data
+        # Fetch market data
         try:
             market_data = ticker.info
             if not market_data:
@@ -87,17 +80,23 @@ def get_stock_details(stockId):
         # Fetch news
         news = ticker.news[:2]
 
-        # Get owner information
-        owner = None
-        if stock.owner_id == current_user.id:
-            owner_data = User.query.get(stock.owner_id)
-            owner = {
-                "id": owner_data.id,
-                "firstName": owner_data.first_name,
-                "lastName": owner_data.last_name,
-            }
+        # Fetch order history for this stock
+        order_history = Order.query.filter_by(
+            owner_id=current_user.id, ticker=stock.ticker
+        ).all()
 
-        # Construct response with comprehensive stock details
+        # Prepare order history for response
+        order_details = [
+            {
+                "id": order.id,
+                "shares": order.shares_purchased,
+                "price": order.price_purchased,
+                "order_type": order.order_type,
+            }
+            for order in order_history
+        ]
+
+        # Response with comprehensive stock details
         response = {
             "id": stock.id,
             "ownerId": stock.owner_id,
@@ -105,15 +104,6 @@ def get_stock_details(stockId):
             "shares_owned": stock.shares_owned,
             "estimated_cost": stock.estimated_cost,
             "regularMarketPrice": market_data.get("regularMarketPrice"),
-            "marketCap": market_data.get("marketCap"),
-            "regularMarketDayHigh": market_data.get("regularMarketDayHigh"),
-            "fiftyTwoWeekHigh": market_data.get("fiftyTwoWeekHigh"),
-            "regularMarketDayLow": market_data.get("regularMarketDayLow"),
-            "fiftyTwoWeekLow": market_data.get("fiftyTwoWeekLow"),
-            "regularMarketOpen": market_data.get("regularMarketOpen"),
-            "regularMarketVolume": market_data.get("regularMarketVolume"),
-            "averageDailyVolume10Day": market_data.get("averageDailyVolume10Day"),
-            "longBusinessSummary": market_data.get("longBusinessSummary"),
             "News": [
                 {
                     "id": idx + 1,
@@ -123,7 +113,7 @@ def get_stock_details(stockId):
                 }
                 for idx, item in enumerate(news)
             ],
-            "Owner": owner,
+            "OrderHistory": order_details,
         }
 
         logger.info(f"Successfully retrieved stock details for {stock.ticker}")
@@ -150,21 +140,53 @@ def trade_stock(stockId):
         return {"errors": validation_errors_to_error_messages(form.errors)}, 400
 
     stock = StocksOwned.query.get(stockId)
-    current_price = None
 
     try:
-        # Get current market price
-        ticker = yf.Ticker(stock.ticker)
-        current_price = ticker.info.get("regularMarketPrice")
+        # Detailed market data retrieval with comprehensive error handling
+        try:
+            # Print stock information for debugging
+            logger.info(f"Attempting to fetch market data for ticker: {stock.ticker}")
 
-        # Handle limit orders
-        if form.order_type.data == "Limit Order":
-            if form.limit_price.data > current_price:  # for sell orders
-                logger.warning("Market price is below limit price")
-                return jsonify({"message": "Market price is below limit price"}), 400
-            if form.limit_price.data < current_price:  # for buy orders
-                logger.warning("Market price is above limit price")
-                return jsonify({"message": "Market price is above limit price"}), 400
+            # Use multiple methods to fetch stock price
+            ticker = yf.Ticker(stock.ticker)
+
+            # Try different methods to get current price
+            current_price = None
+
+            # Method 1: Using .info
+            try:
+                market_data = ticker.info
+                current_price = market_data.get("regularMarketPrice")
+                logger.info(f"Price from .info: {current_price}")
+            except Exception as info_error:
+                logger.error(f"Error fetching info: {info_error}")
+
+            # Method 2: Using .history if .info fails
+            if not current_price:
+                try:
+                    history = ticker.history(period="1d")
+                    current_price = (
+                        history["Close"].iloc[-1] if not history.empty else None
+                    )
+                    logger.info(f"Price from history: {current_price}")
+                except Exception as history_error:
+                    logger.error(f"Error fetching history: {history_error}")
+
+            # Final check for current price
+            if not current_price:
+                logger.error(f"Unable to retrieve price for {stock.ticker}")
+                return jsonify(
+                    {
+                        "message": "Unable to fetch market price",
+                        "details": f"No price data available for {stock.ticker}",
+                    }
+                ), 500
+
+        except Exception as data_error:
+            logger.error(f"Comprehensive market data error: {data_error}")
+            return jsonify(
+                {"message": "Error fetching market data", "error": str(data_error)}
+            ), 500
 
         # Calculate shares based on dollars if needed
         shares_to_trade = form.shares.data
@@ -174,28 +196,22 @@ def trade_stock(stockId):
         # Calculate total transaction value
         transaction_value = shares_to_trade * current_price
 
-        # Check if selling
-        if stock and stock.owner_id == current_user.id:
-            # Selling logic
-            if shares_to_trade > stock.shares_owned:
-                logger.warning("Cannot sell more shares than owned")
-                return jsonify({"message": "Cannot sell more shares than owned"}), 400
+        # Determine order type
+        order_type = (
+            "Buy Order" if form.order_type.data == "Buy Order" else "Sell Order"
+        )
 
-            # Update user balance and stock position
-            current_user.account_balance += transaction_value
-            stock.shares_owned -= shares_to_trade
+        # Create a new order record
+        new_order = Order(
+            owner_id=current_user.id,
+            ticker=stock.ticker,
+            price_purchased=current_price,
+            shares_purchased=shares_to_trade,
+            order_type=order_type,
+        )
 
-            # If all shares sold, delete position
-            if stock.shares_owned <= 0:
-                db.session.delete(stock)
-            else:
-                # Update estimated cost proportionally
-                stock.estimated_cost *= stock.shares_owned / (
-                    stock.shares_owned + shares_to_trade
-                )
-
-        else:
-            # Buying logic
+        # Buying logic
+        if order_type == "Buy Order":
             if transaction_value > current_user.account_balance:
                 logger.warning("Insufficient funds for transaction")
                 return jsonify({"message": "Insufficient funds"}), 400
@@ -210,12 +226,39 @@ def trade_stock(stockId):
                 )
                 db.session.add(stock)
 
-            # Update user balance and stock position
-            current_user.account_balance -= transaction_value
-            stock.shares_owned += shares_to_trade
-            stock.estimated_cost += transaction_value
+            # Calculate new average cost
+            total_existing_cost = stock.estimated_cost * stock.shares_owned
+            total_new_cost = total_existing_cost + transaction_value
+            total_new_shares = stock.shares_owned + shares_to_trade
 
+            # Update stock details
+            stock.estimated_cost = total_new_cost / total_new_shares
+            stock.shares_owned += shares_to_trade
+            current_user.account_balance -= transaction_value
+
+        # Selling logic
+        else:
+            if shares_to_trade > stock.shares_owned:
+                logger.warning("Cannot sell more shares than owned")
+                return jsonify({"message": "Cannot sell more shares than owned"}), 400
+
+            # Update stock details
+            current_user.account_balance += transaction_value
+            stock.shares_owned -= shares_to_trade
+
+            # Recalculate average cost if shares remain
+            if stock.shares_owned > 0:
+                stock.estimated_cost *= stock.shares_owned / (
+                    stock.shares_owned + shares_to_trade
+                )
+            else:
+                stock.estimated_cost = 0
+                db.session.delete(stock)
+
+        # Add the new order to the session
+        db.session.add(new_order)
         db.session.commit()
+
         logger.info(f"Transaction successful: {shares_to_trade} shares traded")
         return jsonify(
             {
@@ -223,6 +266,7 @@ def trade_stock(stockId):
                 "shares_traded": shares_to_trade,
                 "price": current_price,
                 "total_value": transaction_value,
+                "new_average_cost": stock.estimated_cost,
             }
         )
 
@@ -253,8 +297,22 @@ def sell_all_shares(stockId):
         # Calculate sale proceeds
         sale_proceeds = stock.shares_owned * current_price
 
-        # Update user's balance and delete position
+        # Create a sell order record
+        sell_order = Order(
+            owner_id=current_user.id,
+            ticker=stock.ticker,
+            price_purchased=current_price,
+            shares_purchased=stock.shares_owned,
+            order_type="Sell Order",
+        )
+
+        # Update user balance and delete position
         current_user.account_balance += sale_proceeds
+
+        # Add sell order
+        db.session.add(sell_order)
+
+        # Delete the stock position
         db.session.delete(stock)
         db.session.commit()
 
