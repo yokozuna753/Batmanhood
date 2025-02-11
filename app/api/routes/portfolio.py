@@ -27,7 +27,7 @@ grab the shares_owned & price_purchased from the orders table - relationship wit
 '''
 
 @portfolio.route('/<int:userId>/stocks', methods=['GET','POST'])
-# @login_required
+@login_required
 def stocks_portfolio(userId):
 # get all the investments owned by the current logged in user
         user = User.query.filter(User.id == int(userId)).all() 
@@ -75,7 +75,7 @@ def stocks_portfolio(userId):
 
 
 @portfolio.route('/portfolio/stocks/news', methods=['GET'])
-# @login_required
+@login_required
 def news_portfolio():
         conn = http.client.HTTPSConnection("yahoo-finance15.p.rapidapi.com")
 
