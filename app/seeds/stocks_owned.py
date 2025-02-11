@@ -8,12 +8,15 @@ def seed_stocks_owned():
         total_cost=22740,owner_id=1, ticker='AAPL',shares_owned=100)
     netflix = StocksOwned(
         total_cost=101491,owner_id=2, ticker='NFLX',shares_owned=100)
+    ford = StocksOwned(
+        total_cost=923,owner_id=2, ticker='F',shares_owned=100)
     amazon = StocksOwned(
         total_cost=22858,owner_id=3, ticker='AMZN',shares_owned=100)
 
     db.session.add(apple)
     db.session.add(netflix)
     db.session.add(amazon)
+    db.session.add(ford)
     db.session.commit()
 
 

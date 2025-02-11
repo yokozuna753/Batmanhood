@@ -10,11 +10,10 @@ const getPortfolio = (data) => {
 export const loadPortfolio = (userId) => async (dispatch) => {
   const response = await fetch(`/api/${userId}/stocks`);
   const data = await response.json();
-  // if(response.ok){
-
-  // }
-  console.log("DATA ==>    ", data);
-//   dispatch(getPortfolio(data));
+  if (response.ok) {
+    await dispatch(getPortfolio(data));
+  }
+  return response;
 };
 
 let initialState = {};
@@ -27,4 +26,4 @@ export const portfolioReducer = (state = initialState, action) => {
       return state;
   }
 };
-export default portfolioReducer
+export default portfolioReducer;

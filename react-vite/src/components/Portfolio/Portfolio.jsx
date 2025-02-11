@@ -1,16 +1,38 @@
+import { loadPortfolio } from "../../redux/portfolio";
+import { Navigate } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
+import "./Portfolio.css";
+import { useEffect } from "react";
 
-import './Portfolio.css'
+//  grab the user id from redux store
+//
 
-
-// before i implement the line chart for the stocks, i want to show the stocks owned and the news
-  //  - query the backend through a thunk to populate the state with stocks_owned
 function Portfolio() {
-    return (
-        <>
-      <h1>THIS IS PORTFOLIO</h1>
-        </>
-    );
+  const sessionUser = useSelector((state) => state.session.user); // Access the user from Redux state
+  const portfolio = useSelector((state) => state.portfolio)
+  const dispatch = useDispatch();
+
+
+
+  useEffect(() => {
+    if (sessionUser) {
+      dispatch(loadPortfolio(sessionUser.id));
+    }
+  }, [sessionUser, dispatch ]);
+
+  // If the user is not logged in, redirect to the login page
+  if (!sessionUser) {
+    return <Navigate to="/login" replace={true} />;
   }
-  
-  export default Portfolio;
-  
+
+  console.log('              THIS IS PORTFOLIO ==>    ', Object.entries(portfolio));
+
+  return (
+    <div id="portfolio-base">
+      <h1>THIS IS PORTFOLIO</h1>
+      {/* Add the rest of your portfolio content here */}
+    </div>
+  );
+}
+
+export default Portfolio;
