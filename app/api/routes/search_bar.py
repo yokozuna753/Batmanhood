@@ -2,7 +2,7 @@ from flask import Blueprint, request, jsonify
 import yfinance as yf
 from yfinance import Search
 
-search_routes = Blueprint('search', __name__)
+search_bar = Blueprint('search_bar', __name__)
 
 # Search Query
 # 1. If no query, then the stocks object should have nothing in it since we're not fetching anything
@@ -10,7 +10,7 @@ search_routes = Blueprint('search', __name__)
 # Replace with your actual API key
 
 @search_bar.route('/search', methods=['GET'])
-def search_bar():
+def search():
     query = request.args.get('query')  # Get the search query from the request
     max_results = int(request.args.get('max_results', 5))  # Default to 5 results
 
