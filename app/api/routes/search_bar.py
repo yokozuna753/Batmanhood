@@ -1,6 +1,8 @@
 from flask import Blueprint, request, jsonify
+import yfinance as yf
+from yfinance import Search
 
-search_bar= Blueprint('search_bar', __name__)
+search_routes = Blueprint('search', __name__)
 
 # Search Query
 # 1. If no query, then the stocks object should have nothing in it since we're not fetching anything
@@ -8,35 +10,26 @@ search_bar= Blueprint('search_bar', __name__)
 # Replace with your actual API key
 
 @search_bar.route('/search', methods=['GET'])
-def search_stock():
-    query = request.args.get('symbol')
-    
+def search_bar():
+    query = request.args.get('query')  # Get the search query from the request
+    max_results = int(request.args.get('max_results', 5))  # Default to 5 results
+
     if not query:
-        return jsonify({'stocks': []}), 200  # No query, return empty results
-    
-    conn = http.client.HTTPSConnection(real-time-finance-data.p.rapidapi.com)
+        return jsonify({"error": "Query parameter is required"}), 400
 
-    headers = {
-        'x-rapidapi-key': "fa20148ac1mshb38fbb928ee92f9p175497jsna328531f092a",
-        'x-rapidapi-host': "real-time-finance-data.p.rapidapi.com"
-    }
-    conn.request("GET", f"/search?query={query}&language=en", headers=headers)
+    try:
+        # Searching yfinance
+        search_results = Search(query, max_results=max_results)
+        
+        # Grab the relevant data, and append this information into the results array
+        results = []
+        for quote in search_results.quotes:
+            results.append({
+                'symbol': quote['symbol'],
+                'name': quote['shortname']
+            })
 
-    res = conn.getresponse()
+        return jsonify(results)
 
-    data = res.read()
-    response_data = json.loads(data.decode("utf-8"))
-    
-    # Extract stock info (symbol and name) from the 'stock' field
-    stocks = response_data.get('data', {}).get('stock', [])
-    
-    # Sort alphabetically and limit to the first 5 results
-    stocks_sorted = sorted(stocks, key=lambda x: x['symbol'])[:5]
-    
-    # Return only the symbol and name
-    results = [{
-        'symbol': stock.get('symbol'),
-        'name': stock.get('name')
-    } for stock in stocks_sorted]
-    
-    return jsonify({'stocks': results}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
