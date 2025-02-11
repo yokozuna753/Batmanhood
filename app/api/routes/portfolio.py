@@ -1,5 +1,4 @@
-from flask import Blueprint
-from app.models.stocks_owned import StocksOwned
+from flask import Blueprint, jsonify
 from app.models.user import User
 from flask_login import login_required
 import json
@@ -28,11 +27,13 @@ grab the shares_owned & price_purchased from the orders table - relationship wit
 '''
 
 @portfolio.route('/<int:userId>/stocks', methods=['GET','POST'])
-@login_required
+# @login_required
 def stocks_portfolio(userId):
 # get all the investments owned by the current logged in user
         user = User.query.filter(User.id == int(userId)).all() 
         user_stocks = user[0].to_dict()["stocks_owned"]
+
+        # print('THIS IS USER STOCKS ==>        ', user_stocks)
 
         stock_dict = {"portfolio_value": 0}
         conn = http.client.HTTPSConnection("yahoo-finance15.p.rapidapi.com")
@@ -52,6 +53,8 @@ def stocks_portfolio(userId):
                 data = res.read()
                 data = data.decode("utf-8")
                 res = json.loads(data)
+
+                print('THIS IS API RESPONSE ==>       ', res)
                 #* set the stock dictionary keys to the symbols and values to the data returned
                 stock_dict[symbol] = ticker.to_dict()
 
@@ -67,11 +70,11 @@ def stocks_portfolio(userId):
                 percent_gain = ((stock_dict[symbol]['stock_info']['price'] - avg_cost) / avg_cost) * 100
                 stock_dict[symbol]['percent_gain/loss'] = round(percent_gain,2)
 
-        return stock_dict
+        return jsonify(stock_dict)
 
 
 @portfolio.route('/portfolio/stocks/news', methods=['GET'])
-@login_required
+# @login_required
 def news_portfolio():
         conn = http.client.HTTPSConnection("yahoo-finance15.p.rapidapi.com")
 
@@ -86,4 +89,4 @@ def news_portfolio():
         data = res.read()
         data = json.loads(data.decode("utf-8"))
         
-        return {i: data['body'][i] for i in range(25)}
+        return jsonify({i: data['body'][i] for i in range(10)})

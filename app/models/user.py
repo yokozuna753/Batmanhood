@@ -42,4 +42,4 @@ class User(db.Model, UserMixin):
 
     def to_dict(self):
         return {"id": self.id, "username": self.username, "email": self.email,
-                "stocks_owned": self.stocks_owned}
+                "stocks_owned": [stock.to_dict() for stock in self.stocks_owned]}
