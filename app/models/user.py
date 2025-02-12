@@ -28,6 +28,7 @@ class User(db.Model, UserMixin):
     orders = db.relationship(
         "Order", back_populates="owners", cascade="all, delete-orphan"
     )
+    
 
     @property
     def password(self):
