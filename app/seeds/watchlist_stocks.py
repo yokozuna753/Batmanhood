@@ -5,11 +5,11 @@ from sqlalchemy.sql import text
 # Adds a demo user, you can add other users here if you want
 def seed_watchlist_stocks():
     apple = WatchlistStock(
-        watchlist_id=1, ticker='AAPL')
+        watchlist_id=1, symbol='AAPL')
     netflix = WatchlistStock(
-        watchlist_id=2, ticker='NFLX')
+        watchlist_id=2, symbol='NFLX')
     amazon = WatchlistStock(
-        watchlist_id=3, ticker='AMZN')
+        watchlist_id=3, symbol='AMZN')
 
     db.session.add(apple)
     db.session.add(netflix)
