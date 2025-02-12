@@ -25,7 +25,7 @@ function Portfolio() {
     return <Navigate to="/login" replace={true} />;
   }
 
-  const portfolioValue = portfolio.portfolio_value //* use this to render on the line chart 
+  // const portfolioValue = portfolio.portfolio_value //* use this to render on the line chart 
   
   // now i want to render the stocks owned (IF ANY)
 
@@ -47,7 +47,7 @@ function Portfolio() {
       ?
          <ul>
     {portfolio.tickers.map((stock) => {
-      return <li>
+      return <li key={stock.id}>
         <p>{stock.ticker} </p>
         <p>{stock.shares_owned} shares </p>
         <h5>${Math.round(stock.stock_info.currentPrice * 100) / 100} </h5>
