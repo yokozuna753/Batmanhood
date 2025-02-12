@@ -49,7 +49,7 @@ def upgrade():
     op.create_table('watchlist_stocks',
     sa.Column('id', sa.Integer(), nullable=False),
     sa.Column('watchlist_id', sa.Integer(), nullable=False),
-    sa.Column('ticker', sa.String(length=100), nullable=False),
+    sa.Column('symbol', sa.String(length=100), nullable=False),
     sa.ForeignKeyConstraint(['watchlist_id'], ['watchlists.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
