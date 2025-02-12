@@ -1,6 +1,5 @@
 from flask import Blueprint, request, jsonify
 import yfinance as yf
-from yfinance import Search
 
 search_bar = Blueprint('search_bar', __name__)
 
@@ -19,7 +18,7 @@ def search():
 
     try:
         # Searching yfinance
-        search_results = Search(query, max_results=max_results)
+        search_results = yf.Search(query, max_results=max_results)
         
         # Grab the relevant data, and append this information into the results array
         results = []
