@@ -29,6 +29,11 @@ def login():
     if form.validate_on_submit():
         # Add the user to the session, we are logged in!
         user = User.query.filter(User.email == form.data['email']).first()
+
+        # Throw error if user the does not exist
+        if not user:
+            return {'errors': {'message': 'Invalid email or password'}}, 400
+
         login_user(user)
         return user.to_dict()
     return form.errors, 401
