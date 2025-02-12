@@ -25,12 +25,25 @@ function Portfolio() {
     return <Navigate to="/login" replace={true} />;
   }
 
-  console.log('              THIS IS PORTFOLIO ==>    ', Object.entries(portfolio));
+  const portfolioValue = portfolio.portfolio_value
+  
+
 
   return (
     <div id="portfolio-base">
       <h1>THIS IS PORTFOLIO</h1>
-      {/* Add the rest of your portfolio content here */}
+      {sessionUser ?
+    <div>
+      <h3 id="portfolio-buying-power">Buying power</h3>
+      <h3 id="portfolio-money">${sessionUser.account_balance.toString().includes('.') 
+        ?
+        sessionUser.account_balance :
+        sessionUser.account_balance.toString() + ".00"
+        }</h3>
+    </div>
+    :
+    console.log('hello')
+    }
     </div>
   );
 }
