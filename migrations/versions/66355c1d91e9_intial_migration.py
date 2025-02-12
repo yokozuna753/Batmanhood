@@ -63,6 +63,16 @@ def upgrade():
     sa.ForeignKeyConstraint(['watchlist_id'], ['watchlists.id'], ),
     sa.PrimaryKeyConstraint('id')
     )
+    op.create_table('orders',
+    sa.Column('id', sa.Integer(), nullable=False),
+    sa.Column('price_purchased', sa.Float(), nullable=False),
+    sa.Column('shares_purchased', sa.Float(), nullable=False),
+    sa.Column('owner_id', sa.Integer(), nullable=False),
+    sa.Column('ticker', sa.String(length=100), nullable=False),
+    sa.Column('order_type', sa.String(length=100), nullable=False),
+    sa.ForeignKeyConstraint(['owner_id'], ['users.id'], ),
+    sa.PrimaryKeyConstraint('id')
+    )
     # ### end Alembic commands ###
 
 
@@ -73,4 +83,5 @@ def downgrade():
     op.drop_table('stocks_owned')
     op.drop_table('orders')
     op.drop_table('users')
+    op.drop_table('orders')
     # ### end Alembic commands ###
