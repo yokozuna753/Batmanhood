@@ -1,17 +1,17 @@
 FULL CRUD FEATURES:
-1.  Portfolio
+1.  Portfolio - B-Rod
     - user can purchase a stock - C
     - user can view the stocks they own - R
     - user can add more buying power - U
     - user can remove buying power - D
 
-2. Watch list
+2. Watch list - Calid
    - user can create new watch list - C
    - user can view their watchlist - R
    - user can add more stocks to their watchlist - U
    - user can delete stocks from their list - D
 
-3. Stock details
+3. Stock details - Muhammad
 - user can purchase a stock - C
 - users can read info on a stock - R
 - user can update shares/dollars- U
@@ -23,7 +23,7 @@ FULL CRUD FEATURES:
 
 
 
-PARTIAL CRUD FEATURES:
+PARTIAL CRUD FEATURES: - B-Chan
 1. Search 
 - user can create a search (typing in the search bar)
 - user can read the stocks that come up
