@@ -1,31 +1,34 @@
 from flask import Blueprint, request, jsonify
-import requests
+import yfinance as yf
 
-search_bar= Blueprint('search_bar', __name__)
-
-# RapidAPI configuration
-RAPIDAPI_KEY = 'fa20148ac1mshb38fbb928ee92f9p175497jsna328531f092a'
-RAPIDAPI_HOST = 'yahoo-finance15.p.rapidapi.com'
-BASE_URL = 'https://yahoo-finance15.p.rapidapi.com/api/v1/markets/quote'
-
+search_bar = Blueprint('search_bar', __name__)
 
 # Search Query
 # 1. If no query, then the stocks object should have nothing in it since we're not fetching anything
 # 2. If there is a query, only then do a max of 5 tickers show in the results 
-@search_bar.route('/api/stocks', methods=['GET'])
-def get_stocks():
-    # Search query from req (convert to uppercase for consistency)
-    query = request.args.get('query', '').upper()
-    
-    if not query:
-        return jsonify({"Stocks": []})  # Return empty list if no query
+# Replace with your actual API key
 
-    headers = {
-        'x-rapidapi-key': RAPIDAPI_KEY,
-        'x-rapidapi-host': RAPIDAPI_HOST
-    }
-    
-    params = {
-        'ticker': query,  # Querying with ticker symbol
-        'type': 'STOCKS'   # Specifying the type of data we're requesting
-    }
+@search_bar.route('/search', methods=['GET'])
+def search():
+    query = request.args.get('query')  # Get the search query from the request
+    max_results = int(request.args.get('max_results', 5))  # Default to 5 results, but can be modified for more
+
+    if not query:
+        return jsonify({"error": "Query parameter is required"}), 400
+
+    try:
+        # Searching yfinance
+        search_results = yf.Search(query, max_results=max_results)
+        
+        # Grab the relevant data, and append this information into the results array
+        results = []
+        for quote in search_results.quotes:
+            results.append({
+                'symbol': quote['symbol'],
+                'name': quote['shortname']
+            })
+
+        return jsonify(results)
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

@@ -1,6 +1,9 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
 
 
+
+
+
 class Order(db.Model):
     __tablename__ = "orders"
     if environment == "production":
@@ -23,6 +26,8 @@ class Order(db.Model):
                 "shares_purchased": self.shares_purchased,
                 "owner_id": self.owner_id,
                 "ticker": self.ticker,
-                "order_type": self.order_type,}
+                "order_type": self.order_type,
+                # "owners": self.owners.to_dict() if self.owners else None 
+                }
     # def __repr__(self):
     #     return f"<Stock Owned Ticker {self.ticker}, Owner ID: {self.owner_id}>"

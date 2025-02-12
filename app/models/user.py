@@ -28,6 +28,7 @@ class User(db.Model, UserMixin):
     orders = db.relationship(
         "Order", back_populates="owners", cascade="all, delete-orphan"
     )
+    
 
     @property
     def password(self):
@@ -42,4 +43,8 @@ class User(db.Model, UserMixin):
 
     def to_dict(self):
         return {"id": self.id, "username": self.username, "email": self.email,
-                "stocks_owned": self.stocks_owned}
+                "stocks_owned": [stock.to_dict() for stock in self.stocks_owned],
+                "watchlist": [item.to_dict() for item in self.watchlist],
+                "orders": [order.to_dict() for order in self.orders],
+                "account_balance": self.account_balance
+                }

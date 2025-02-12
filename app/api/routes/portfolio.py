@@ -1,9 +1,8 @@
-from flask import Blueprint
-from app.models.stocks_owned import StocksOwned
+from flask import Blueprint, jsonify
 from app.models.user import User
 from flask_login import login_required
-import json
-import http.client
+import yfinance as yf
+
 
 
 portfolio = Blueprint("portfolio", __name__)
@@ -30,60 +29,61 @@ grab the shares_owned & price_purchased from the orders table - relationship wit
 @portfolio.route('/<int:userId>/stocks', methods=['GET','POST'])
 @login_required
 def stocks_portfolio(userId):
-# get all the investments owned by the current logged in user
+# get all the investments owned by the current logged in user => news = [{},{}]
+        final_news = []
         user = User.query.filter(User.id == int(userId)).all() 
         user_stocks = user[0].to_dict()["stocks_owned"]
 
-        stock_dict = {"portfolio_value": 0}
-        conn = http.client.HTTPSConnection("yahoo-finance15.p.rapidapi.com")
-        headers = {
-        'x-rapidapi-key': "0c6bcbaa3cmsh50c5adea77dadf5p10a80bjsnac2bcd90f6c5",
-        'x-rapidapi-host': "real-time-finance-data.p.rapidapi.com"
-        }
-
+        stock_dict = {'tickers': [], "portfolio_value": 0}
 # ** for loop to show each stock the user owns 
         for ticker in user_stocks:
                 #* grab the symbol of the stock from ticker
-                symbol = ticker.to_dict()["ticker"]
+                symbol = ticker["ticker"] #* ==> 'AAPL'
 
-                #* request the stock info from API dynamically and convert to JSON
-                conn.request("GET", f"/stock-quote?symbol={symbol}%3ANASDAQ&language=en", headers=headers)
-                res = conn.getresponse()
-                data = res.read()
-                data = data.decode("utf-8")
-                res = json.loads(data)
-                #* set the stock dictionary keys to the symbols and values to the data returned
-                stock_dict[symbol] = ticker.to_dict()
 
-                #* set the portfolio value from the stocks_owned table
-                stock_dict["portfolio_value"] += int(ticker.to_dict()["total_cost"])
+                # #* set the stock dictionary values to the data returned
+                # ! stock_dict['tickers'][symbol] = ticker
 
-                #* set the data for the stock (data, percent gain)
-                stock_dict[symbol]["stock_info"] = res["data"]
+                # #* set the portfolio value from the stocks_owned table
+                stock_dict["portfolio_value"] += int(ticker["total_cost"])
 
-                total_cost = stock_dict[symbol]['total_cost']
-                shares = stock_dict[symbol]['shares_owned']
+                # #* set the data for the stock (data, percent gain)
+                dat = yf.Ticker(f'{symbol}')
+                dat = dat.info
+                del dat['companyOfficers']
+                # del dat['']
+
+                ticker["stock_info"] = dat
+
+                total_cost = ticker['total_cost']
+                shares = ticker['shares_owned']
                 avg_cost = total_cost / shares
-                percent_gain = ((stock_dict[symbol]['stock_info']['price'] - avg_cost) / avg_cost) * 100
-                stock_dict[symbol]['percent_gain/loss'] = round(percent_gain,2)
+                percent_gain = ((ticker['stock_info']['currentPrice'] - avg_cost) / avg_cost) * 100
+                ticker['percent_gain/loss'] = round(percent_gain,2)
 
-        return stock_dict
+                news = yf.Search(f'{symbol}', news_count=3).news
+                final_news.append(news) 
+
+                # i need to append the ticker object to the stock_dict at the end 
+                stock_dict['tickers'].append(ticker)
+        # flatten out the news matrix as one array of objects
+        final_news = [x for subarr in final_news for x in subarr]
+        stock_dict["news"] = final_news
+
+        return jsonify(stock_dict)
 
 
-@portfolio.route('/portfolio/stocks/news', methods=['GET'])
-@login_required
-def news_portfolio():
-        conn = http.client.HTTPSConnection("yahoo-finance15.p.rapidapi.com")
+# @portfolio.route('/<int:userId>/stocks/news', methods=['GET'])
+# @login_required
+# def news_portfolio(userId):
+#         user = User.query.filter(User.id == int(2)).all() 
+#         user_stocks = user[0].to_dict()["stocks_owned"]
+#         print('                USER STOCKS !!!! ==>    ',       user_stocks)
+#         final_news = {}
 
-        headers = {
-        'x-rapidapi-key': "0c6bcbaa3cmsh50c5adea77dadf5p10a80bjsnac2bcd90f6c5",
-        'x-rapidapi-host': "yahoo-finance15.p.rapidapi.com"
-        }
-
-        conn.request("GET", "/api/v1/markets/news", headers=headers)
-
-        res = conn.getresponse()
-        data = res.read()
-        data = json.loads(data.decode("utf-8"))
+#         for stock in user_stocks:
+#                 ticker = stock["ticker"]
+#                 print('TICKER ====>>>', ticker)
+                
         
-        return {i: data['body'][i] for i in range(25)}
+#         return final_news

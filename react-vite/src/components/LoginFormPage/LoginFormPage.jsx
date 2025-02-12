@@ -7,16 +7,18 @@ import "./LoginForm.css";
 function LoginFormPage() {
   const navigate = useNavigate();
   const dispatch = useDispatch();
-  const sessionUser = useSelector((state) => state.session.user);
+  const sessionUser = useSelector((state) => state.session.user); // Getting the logged-in user from the Redux store
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [errors, setErrors] = useState({});
 
-  if (sessionUser) return <Navigate to="/" replace={true} />;
+  // If user is logged in, navigate to portfolio page
+  if (sessionUser) return <Navigate to="/portfolio" replace={true} />;
 
   const handleSubmit = async (e) => {
     e.preventDefault();
 
+    // Dispatch login action to authenticate user
     const serverResponse = await dispatch(
       thunkLogin({
         email,
@@ -24,10 +26,12 @@ function LoginFormPage() {
       })
     );
 
+    // If there are errors, update the state and show them
     if (serverResponse) {
       setErrors(serverResponse);
     } else {
-      navigate("/");
+      // If login is successful, redirect to portfolio page
+      navigate("/portfolio");
     }
   };
 
