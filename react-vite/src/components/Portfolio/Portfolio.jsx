@@ -25,25 +25,45 @@ function Portfolio() {
     return <Navigate to="/login" replace={true} />;
   }
 
-  const portfolioValue = portfolio.portfolio_value
+  const portfolioValue = portfolio.portfolio_value //* use this to render on the line chart 
   
-
+  // now i want to render the stocks owned (IF ANY)
 
   return (
     <div id="portfolio-base">
       <h1>THIS IS PORTFOLIO</h1>
       {sessionUser ?
+      <>
     <div>
       <h3 id="portfolio-buying-power">Buying power</h3>
       <h3 id="portfolio-money">${sessionUser.account_balance.toString().includes('.') 
         ?
         sessionUser.account_balance :
         sessionUser.account_balance.toString() + ".00"
-        }</h3>
+      }</h3>
     </div>
+    <div>
+      {portfolio.tickers 
+      ?
+         <ul>
+    {portfolio.tickers.map((stock) => {
+      return <li>
+        <p>{stock.ticker} </p>
+        <p>{stock.shares_owned} shares </p>
+        <h5>${Math.round(stock.stock_info.currentPrice * 100) / 100} </h5>
+        
+      </li>
+    })}
+    </ul>
     :
     console.log('hello')
     }
+    </div>
+    </>
+    :
+    console.log('hello')
+    }
+
     </div>
   );
 }
