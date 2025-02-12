@@ -2,6 +2,8 @@ from app.models import db, environment, SCHEMA
 from app.models.orders import Order
 from sqlalchemy.sql import text
 
+print('               THIS IS SCHEMA ==>    ', SCHEMA)
+
 
 # Adds a demo user, you can add other users here if you want
 def seed_orders():

@@ -1,6 +1,9 @@
 from .db import db, environment, SCHEMA, add_prefix_for_prod
 
 
+
+
+
 class Order(db.Model):
     __tablename__ = "orders"
     if environment == "production":
