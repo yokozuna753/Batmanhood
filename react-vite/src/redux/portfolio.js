@@ -20,7 +20,7 @@ let initialState = {};
 
 export const portfolioReducer = (state = initialState, action) => {
   switch (action.type) {
-    case GET_PORTFOLIO:
+    case GET_PORTFOLIO: 
       return { ...state, ...action.payload };
     default:
       return state;

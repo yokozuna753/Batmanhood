@@ -29,20 +29,20 @@ grab the shares_owned & price_purchased from the orders table - relationship wit
 @portfolio.route('/<int:userId>/stocks', methods=['GET','POST'])
 @login_required
 def stocks_portfolio(userId):
-# get all the investments owned by the current logged in user
-        
+# get all the investments owned by the current logged in user => news = [{},{}]
+        final_news = []
         user = User.query.filter(User.id == int(userId)).all() 
         user_stocks = user[0].to_dict()["stocks_owned"]
 
-        stock_dict = {"portfolio_value": 0}
+        stock_dict = {'tickers': [], "portfolio_value": 0}
 # ** for loop to show each stock the user owns 
         for ticker in user_stocks:
                 #* grab the symbol of the stock from ticker
-                symbol = ticker["ticker"]
+                symbol = ticker["ticker"] #* ==> 'AAPL'
 
 
-                # #* set the stock dictionary keys to the symbols and values to the data returned
-                stock_dict[symbol] = ticker
+                # #* set the stock dictionary values to the data returned
+                # ! stock_dict['tickers'][symbol] = ticker
 
                 # #* set the portfolio value from the stocks_owned table
                 stock_dict["portfolio_value"] += int(ticker["total_cost"])
@@ -51,34 +51,39 @@ def stocks_portfolio(userId):
                 dat = yf.Ticker(f'{symbol}')
                 dat = dat.info
                 del dat['companyOfficers']
-                print('             DATA HERE         ==>', dat)
-
                 # del dat['']
 
-                stock_dict[symbol]["stock_info"] = dat
+                ticker["stock_info"] = dat
 
-                total_cost = stock_dict[symbol]['total_cost']
-                shares = stock_dict[symbol]['shares_owned']
+                total_cost = ticker['total_cost']
+                shares = ticker['shares_owned']
                 avg_cost = total_cost / shares
-                percent_gain = ((stock_dict[symbol]['stock_info']['currentPrice'] - avg_cost) / avg_cost) * 100
-                stock_dict[symbol]['percent_gain/loss'] = round(percent_gain,2)
-                # print(stock_dict)
+                percent_gain = ((ticker['stock_info']['currentPrice'] - avg_cost) / avg_cost) * 100
+                ticker['percent_gain/loss'] = round(percent_gain,2)
+
+                news = yf.Search(f'{symbol}', news_count=3).news
+                final_news.append(news) 
+
+                # i need to append the ticker object to the stock_dict at the end 
+                stock_dict['tickers'].append(ticker)
+        # flatten out the news matrix as one array of objects
+        final_news = [x for subarr in final_news for x in subarr]
+        stock_dict["news"] = final_news
 
         return jsonify(stock_dict)
 
 
-@portfolio.route('/<int:userId>/stocks/news', methods=['GET'])
-@login_required
-def news_portfolio(userId):
-        user = User.query.filter(User.id == int(2)).all() 
-        user_stocks = user[0].to_dict()["stocks_owned"]
-        print('                USER STOCKS !!!! ==>    ',       user_stocks)
-        final_news = {}
+# @portfolio.route('/<int:userId>/stocks/news', methods=['GET'])
+# @login_required
+# def news_portfolio(userId):
+#         user = User.query.filter(User.id == int(2)).all() 
+#         user_stocks = user[0].to_dict()["stocks_owned"]
+#         print('                USER STOCKS !!!! ==>    ',       user_stocks)
+#         final_news = {}
 
-        for stock in user_stocks:
-                ticker = stock["ticker"]
-                print('TICKER ====>>>', ticker)
-                news = yf.Search(f'{ticker}', news_count=3).news
-                final_news[ticker] = news
+#         for stock in user_stocks:
+#                 ticker = stock["ticker"]
+#                 print('TICKER ====>>>', ticker)
+                
         
-        return final_news
+#         return final_news

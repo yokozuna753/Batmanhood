@@ -44,5 +44,6 @@ class User(db.Model, UserMixin):
         return {"id": self.id, "username": self.username, "email": self.email,
                 "stocks_owned": [stock.to_dict() for stock in self.stocks_owned],
                 "watchlist": [item.to_dict() for item in self.watchlist],
-                "orders": [order.to_dict() for order in self.orders]
+                "orders": [order.to_dict() for order in self.orders],
+                "account_balance": self.account_balance
                 }
