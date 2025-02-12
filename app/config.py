@@ -10,5 +10,8 @@ class Config:
     # url in the hidden config vars to start with postgres.
     # so the connection uri must be updated here (for production)
     SQLALCHEMY_DATABASE_URI = os.environ.get(
-        'DATABASE_URL').replace('postgres://', 'postgresql://')
+        'DATABASE_URL').replace('postgres://', 'postgresql://') + "?schema=bat_schema"
     SQLALCHEMY_ECHO = True
+
+
+# SQLALCHEMY_DATABASE_URI = os.environ.get('DATABASE_URL').replace('postgres://', 'postgresql://') + "?schema=your_schema_name"
