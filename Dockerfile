@@ -36,6 +36,8 @@ FROM python:3.9.18-alpine3.18
 
 # Install required build dependencies
 # RUN apk add --no-cache build-base postgresql-dev gcc python3-dev musl-dev
+RUN apk add --no-cache build-base postgresql-dev gcc python3-dev musl-dev postgresql-client
+
 
 # Set up environment variables
 ARG FLASK_APP
