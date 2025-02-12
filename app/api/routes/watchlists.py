@@ -28,15 +28,15 @@ def delete_watchlist(id):
 
 
 # GET all stocks in a session user's watchlist
-@watchlists.route('/<int:watchlist_id>/stocks', methods=['GET'])
-@login_required
-def get_stocks_in_watchlist(watchlist_id):
-    watchlist_stocks = WatchlistStock.query.filter_by(watchlist_id=watchlist_id).all()
-    stock_ids = [ws.stock_id for ws in watchlist_stocks]
+# @watchlists.route('/<int:watchlist_id>/stocks', methods=['GET'])
+# @login_required
+# def get_stocks_in_watchlist(watchlist_id):
+#     watchlist_stocks = WatchlistStock.query.filter_by(watchlist_id=watchlist_id).all()
+#     stock_ids = [ws.stock_id for ws in watchlist_stocks]
 
-    stock_data = [fetch_stock_data(symbol) for symbol in stock_ids] # dumby utility function for now!
+#     stock_data = [fetch_stock_data(symbol) for symbol in stock_ids] # dumby utility function for now!
     
-    return jsonify(stock_data), 200
+#     return jsonify(stock_data), 200
 
 
 # POST stock to a session user's watchlist(s)
