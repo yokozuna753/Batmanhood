@@ -22,14 +22,22 @@ def login():
     """
     Logs a user in
     """
+    print("***** INSIDE LOGIN ROUTE! *****")
+   
     form = LoginForm()
-    # Get the csrf_token from the request cookie and put it into the
-    # form manually to validate_on_submit can be used
-    form['csrf_token'].data = request.cookies['csrf_token']
+
+    # Extract the CSRF token from the request cookie
+    csrf_token = request.cookies.get('csrf_token')
+    print(f"CSRF Token from request.cookies: {csrf_token}")
+
+    # Set CSRF token on form for validate_on_submit to use
+    form['csrf_token'].data = csrf_token
+    print(f"Form Data: {form.data}")
+
     if form.validate_on_submit():
         # Add the user to the session, we are logged in!
         user = User.query.filter(User.email == form.data['email']).first()
-
+        print(user)
         # Throw error if user the does not exist
         if not user:
             return {'errors': {'message': 'Invalid email or password'}}, 400
