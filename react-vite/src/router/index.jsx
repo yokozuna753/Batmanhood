@@ -24,6 +24,10 @@ export const router = createBrowserRouter([
       {
         path: 'portfolio',
         element: <Portfolio />
+      },
+      {
+        path: 'watchlists/:watchlist_id',
+        element: <WatchlistPage />
       }
     ],
   },
