@@ -2,18 +2,62 @@ from app.models import db, WatchlistStock, environment, SCHEMA
 from sqlalchemy.sql import text
 
 
-# Adds a demo user, you can add other users here if you want
 def seed_watchlist_stocks():
-    apple = WatchlistStock(
+
+    # Watchlist 1 owned by user 1
+    apple00 = WatchlistStock(
         watchlist_id=1, symbol='AAPL')
+    
+    # Watchlist 2 owned by user 2
     netflix = WatchlistStock(
         watchlist_id=2, symbol='NFLX')
-    amazon = WatchlistStock(
-        watchlist_id=3, symbol='AMZN')
+    zillow = WatchlistStock(
+        watchlist_id=2, symbol='Z')
+    sofi = WatchlistStock(
+        watchlist_id=2, symbol='SOFI')
+    apple02 = WatchlistStock(
+        watchlist_id=2, symbol='AAPL')
+    nvidia00 = WatchlistStock(
+        watchlist_id=2, symbol='NVDA'
+    )
 
-    db.session.add(apple)
+    # Watchlist 3 owned by user 3
+    duolingo = WatchlistStock(
+        watchlist_id=3, symbol='DUOL'
+    ) 
+
+    # Watchlist 4 owned by user 2
+    wix = WatchlistStock(
+        watchlist_id=4, symbol='WIX'
+    )
+
+    # Watchlist 5 owned by user 2
+    nvidia01 = WatchlistStock(
+        watchlist_id=5, symbol='NVDA')
+
+    # Watchlist 6 owned by user 2
+    nvidia02  = WatchlistStock(
+        watchlist_id=6, symbol='NVDA')
+    apple03 = WatchlistStock(
+        watchlist_id=6, symbol='AAPL')
+    draftkings = WatchlistStock(
+        watchlist_id=6, symbol='DKNG')
+    expedia = WatchlistStock(
+        watchlist_id=6, symbol='EXPE')
+
+    db.session.add(apple00)
     db.session.add(netflix)
-    db.session.add(amazon)
+    db.session.add(zillow)
+    db.session.add(sofi)
+    db.session.add(apple02)
+    db.session.add(nvidia00)
+    db.session.add(duolingo)
+    db.session.add(wix)
+    db.session.add(nvidia01)
+    db.session.add(nvidia02)
+    db.session.add(apple03)
+    db.session.add(draftkings)
+    db.session.add(expedia)
     db.session.commit()
 
 

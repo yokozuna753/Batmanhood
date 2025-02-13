@@ -1,5 +1,9 @@
 # Browser console fetch commands to test watchlist routes
 
+## Testing rules
+
+### Watchlist 4 (belonging to user 2) should remain empty for testing
+
 """
 #1 - Test GET session user's watchlists
 fetch('/api/watchlists/', {
