@@ -8,12 +8,22 @@ def seed_watchlist():
         user_id=1,name='Trending')
     popular = Watchlist(
         user_id=2,name='Popular')
+    retirement = Watchlist(
+        user_id=2,name='Retirement')
+    rocket = Watchlist(
+        user_id=2,name='Rocket')
+    innovative = Watchlist(
+        user_id=2,name='Innovative')
     long_term = Watchlist(
-        user_id=3,name='Long Term')
+        user_id=3,name='Long Term'
+    )
 
     db.session.add(trending)
     db.session.add(popular)
     db.session.add(long_term)
+    db.session.add(retirement)
+    db.session.add(rocket)
+    db.session.add(innovative)
     db.session.commit()
 
 
