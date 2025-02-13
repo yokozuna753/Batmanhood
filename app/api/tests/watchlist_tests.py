@@ -71,3 +71,22 @@ fetch('/api/watchlists/stocks/NVDA', {
 .then(data => console.log('Success:', data))
 .catch(error => console.error('Error:', error));
 """
+
+"""
+#6 - Fetch-> GET list of session user watchlists that contain a specific stock
+function getCsrfToken() {
+    return document.cookie.split('; ').find(row => row.startsWith('csrf_token='))?.split('=')[1];
+}
+
+fetch('/api/watchlists/stocks/AAPL', {
+    method: 'GET',
+    headers: {
+        'Content-Type': 'application/json',
+        'X-CSRFToken': getCsrfToken()
+    },
+    credentials: 'include'
+})
+.then(response => response.json())
+.then(data => console.log('Success:', data))
+.catch(error => console.error('Error:', error));
+"""
