@@ -11,7 +11,7 @@ class Watchlist(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('users.id')), nullable=False)
     name = db.Column(db.String(100), nullable=False)
 
-    watchlist_stocks = db.relationship("WatchlistStock", back_populates="watchlist")
+    watchlist_stocks = db.relationship("WatchlistStock", back_populates="watchlist", cascade="all, delete-orphan")
 
     user = db.relationship(
         "User", back_populates="watchlist", cascade="save-update"
