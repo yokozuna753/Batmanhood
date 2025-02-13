@@ -2,7 +2,7 @@
 
 ## Testing rules
 
-### Watchlist 4 (belonging to user 2) should remain empty for testing
+### Watchlist 4 (belonging to user 2) should remain empty for testing null
 
 """
 #1 - Fetch-> GET session user's watchlists test
