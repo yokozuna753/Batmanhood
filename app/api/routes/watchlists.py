@@ -6,7 +6,7 @@ from app.models import db, Watchlist, WatchlistStock
 watchlists = Blueprint("watchlists", __name__)
 
 
-# GET all session user watchlists
+#1 GET all session user watchlists
 @watchlists.route('/', methods=['GET'])
 @login_required
 def get_user_watchlists():
@@ -14,7 +14,7 @@ def get_user_watchlists():
     return jsonify([watchlist.to_dict() for watchlist in watchlists]), 200
 
 
-# DELETE a session user's watchlist
+#2 DELETE a session user's watchlist
 @watchlists.route('/<int:id>', methods=['DELETE'])
 @login_required
 def delete_watchlist(id):
@@ -29,7 +29,7 @@ def delete_watchlist(id):
     return jsonify({"message": "Watchlist dropped successfully"}), 200
 
 
-# GET all stocks in a session user's watchlist
+#3 GET all stocks in a session user's watchlist
 # @watchlists.route('/<int:watchlist_id>/stocks', methods=['GET'])
 # @login_required
 # def get_stocks_in_watchlist(watchlist_id):
@@ -41,7 +41,7 @@ def delete_watchlist(id):
 #     return jsonify(stock_data), 200
 
 
-# POST stock to a session user's watchlist(s)
+#4 POST stock to a session user's watchlist(s)
 ## request data-> { "watchlist_ids": [1, 3, 4] }
 ## response data-> {"message": "Stock added to watchlists successfully"}
 @watchlists.route('/stocks/<string:symbol>', methods=['POST'])
@@ -68,7 +68,7 @@ def add_stock_to_watchlists(symbol):
     return jsonify({"message": "Stock added to watchlists successfully"}), 200
 
 
-# DELETE stock from a session user's watchlist(s)
+#5 DELETE stock from a session user's watchlist(s)
 ## request data-> { "watchlist_ids": [1, 3, 4] }
 ## response data-> {"message": "Stock added to watchlists successfully"}
 @watchlists.route("/stocks/<string:symbol>", methods=["DELETE"])
