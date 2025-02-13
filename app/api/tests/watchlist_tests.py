@@ -14,3 +14,15 @@ fetch('/api/watchlists/', {
 .catch(error => console.error('Error:', error));
 """
 
+"""
+fetch('/api/watchlists/2', {
+  method: 'DELETE',
+  headers: {
+    'Content-Type': 'application/json'
+  },
+  credentials: 'include'
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+"""

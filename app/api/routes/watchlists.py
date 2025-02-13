@@ -18,7 +18,9 @@ def get_user_watchlists():
 @watchlists.route('/<int:id>', methods=['DELETE'])
 @login_required
 def delete_watchlist(id):
+    print(f"*****INSIDE DELETE WATCHLIST ROUTE!*****")
     watchlist = Watchlist.query.filter_by(id=id, user_id=current_user.id).first()
+    print(f"Pending watchlist for deletion: {watchlist}")
     if not watchlist:
         return jsonify({"error": "Watchlist not found"}), 404
 
