@@ -3,6 +3,7 @@ import LoginFormPage from "../components/LoginFormPage";
 import SignupFormPage from "../components/SignupFormPage";
 import Layout from "./Layout";
 import Portfolio from "../components/Portfolio/Portfolio";
+import WatchlistPage from "../components/WatchlistPage/WatchlistPage";
 
 
 export const router = createBrowserRouter([
