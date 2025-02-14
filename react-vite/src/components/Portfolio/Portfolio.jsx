@@ -17,6 +17,14 @@ function Portfolio() {
   // Use a ref array to store references to the individual stock charts
   const stockChartRefs = useRef([]);
 
+  // Portfolio chart - track performance of portfolio (everything combined)
+  //! use a setInterval every 10 seconds to track the live value of each stock
+    // first try loading the portfolio with a set interval every 10 seconds
+  // this in turn will 
+  //* 1. add each stock value the user owns together
+    // create a sum variable
+    // Redux store => portfolio => tickers(Array) - iterate through the tickers => total_cost 
+
   useEffect(() => {
     if (sessionUser) {
       dispatch(loadPortfolio(sessionUser.id));
