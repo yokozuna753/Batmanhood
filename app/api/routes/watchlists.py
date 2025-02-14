@@ -18,9 +18,9 @@ def fetch_stock_data(symbols):
         if stock:
             stock_data.append({
                 "symbol": symbol,
-                "marketPrice": stock.info.get("regularMarketPrice"),
-                "changePercent": stock.info.get("regularMarketChangePercent"),
-                "marketCap": stock.info.get("marketCap")
+                "marketPrice": stock.info.get("regularMarketPrice", 0.0),
+                "changePercent": stock.info.get("regularMarketChangePercent", 0.0),
+                "marketCap": stock.info.get("marketCap", 0.0)
             })
 
     return stock_data
