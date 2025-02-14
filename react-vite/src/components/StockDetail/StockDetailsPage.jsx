@@ -73,18 +73,6 @@ const StockDetailsPage = ({ stockId }) => {
     setTradeError(null);
     setTradeSuccess(null);
 
-    // Mock successful trade for preview
-    if (!stockId) {
-      setTradeSuccess('Trade executed successfully! (Preview Mode)');
-      setStockDetails(prev => ({
-        ...prev,
-        shares_owned: tradeForm.orderType === 'Buy Order' 
-          ? prev.shares_owned + (Number(tradeForm.shares) || 0)
-          : prev.shares_owned - (Number(tradeForm.shares) || 0)
-      }));
-      return;
-    }
-
     try {
       const response = await fetch(`/api/stocks/${stockId}/trade`, {
         method: 'POST',
