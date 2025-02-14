@@ -5,6 +5,7 @@ import yfinance as yf
 
 
 
+
 portfolio = Blueprint("portfolio", __name__)
 # from app.models import User
 
@@ -49,6 +50,12 @@ def stocks_portfolio(userId):
 
                 # #* set the data for the stock (data, percent gain)
                 dat = yf.Ticker(f'{symbol}')
+                history = (dat.history(period='1mo'))
+                ticker['historical_data'] = [row[0] for index, row in history.iterrows()]
+
+                        
+
+                        
                 dat = dat.info
                 del dat['companyOfficers']
                 # del dat['']

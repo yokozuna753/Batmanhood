@@ -1,69 +1,250 @@
+import { useEffect, useRef } from "react";
+import Chart from "chart.js/auto";
 import { loadPortfolio } from "../../redux/portfolio";
-import { Navigate } from "react-router-dom";
+import { Navigate, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import "./Portfolio.css";
-import { useEffect } from "react";
-
-//  grab the user id from redux store
-//
 
 function Portfolio() {
   const sessionUser = useSelector((state) => state.session.user); // Access the user from Redux state
-  const portfolio = useSelector((state) => state.portfolio)
+  const portfolio = useSelector((state) => state.portfolio);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
+  // Use a ref to store the main chart instance
+  const chartRef = useRef(null);
 
+  // Use a ref array to store references to the individual stock charts
+  const stockChartRefs = useRef([]);
 
   useEffect(() => {
     if (sessionUser) {
       dispatch(loadPortfolio(sessionUser.id));
     }
-  }, [sessionUser, dispatch ]);
+
+    // Sample data, update this to use user's portfolio performance
+    const data = [
+      { year: 2010, count: 10 },
+      { year: 2011, count: 20 },
+      { year: 2012, count: 15 },
+      { year: 2013, count: 25 },
+      { year: 2014, count: 22 },
+      { year: 2015, count: 30 },
+      { year: 2016, count: 28 },
+    ];
+
+    // Destroy the main chart if it already exists
+    if (chartRef.current) {
+      chartRef.current.destroy();
+    }
+
+    // Create a new main chart
+    chartRef.current = new Chart(document.getElementById("acquisitions"), {
+      type: "line",
+      data: {
+        labels: data.map((row) => row.year),
+        datasets: [
+          {
+            label: "Portfolio Performance",
+            data: [65, 59, 80, 81, 56, 55, 40],
+          },
+        ],
+      },
+      options: {
+        plugins: {
+          legend: {
+            display: false
+          }
+        },
+        responsive: true,
+        maintainAspectRatio: false, // Disable aspect ratio to allow for resizing
+        scales: {
+          x: {
+            ticks: {
+              font: {
+                size: 10, // Smaller font size for x-axis
+              },
+            },
+          },
+          y: {
+            display: false, // Hide y-axis for the main chart
+          },
+        },
+      },
+    });
+
+    // Clean up the chart when the component is unmounted
+    return () => {
+      if (chartRef.current) {
+        chartRef.current.destroy();
+      }
+    };
+  }, [sessionUser, dispatch]);
+
+  useEffect(() => {
+    if (portfolio.tickers) {
+      portfolio.tickers.forEach((stock, index) => {
+        // Prepare data for individual stock charts
+        const history = stock.historical_data || [];
+        const chartData = {
+          labels: history.map((_, i) => `Day ${i + 1}`), // Placeholder for labels like "Day 1", "Day 2", etc.
+          datasets: [
+            {
+              label: `${stock.ticker} Performance`,
+              data: history, // Stock prices (assuming they are closing prices)
+              borderColor: "rgb(22, 228, 60)",
+              backgroundColor: "rgb(39, 235, 13)",
+              fill: false, // Fill the area under the curve
+              pointRadius: 0
+            },
+          ],
+        };
+
+        // Retrieve the canvas element for this stock chart
+        const canvas = stockChartRefs.current[index];
+
+        // If a chart exists, destroy it before creating a new one
+        if (canvas && canvas.chartInstance) {
+          canvas.chartInstance.destroy();
+        }
+
+        // Create a new chart for this stock, reusing the same canvas
+        if (canvas) {
+          canvas.chartInstance = new Chart(canvas, {
+            type: "line",
+            data: chartData,
+            options: {
+              plugins: {
+                legend: {
+                  display: false
+                }
+              },
+              responsive: true,
+              maintainAspectRatio: false, // Allow chart to resize freely within its container
+              scales: {
+                x: {
+                  type: "category", // X-axis as categorical (e.g., "Day 1", "Day 2", etc.)
+                  ticks: {
+                    font: {
+                      size: 3, // Smaller font size for x-axis labels
+                    },
+                  },
+                },
+                y: {
+                  display: false, // Hide the y-axis
+                },
+              },
+              layout: {
+                padding: {
+                  top: 0,
+                  right: 0,
+                  bottom: 0,
+                  left: 0,
+                },
+              },
+            },
+          });
+        }
+      });
+    }
+  }, [portfolio.tickers]); // Re-run whenever portfolio.tickers changes
 
   // If the user is not logged in, redirect to the login page
   if (!sessionUser) {
     return <Navigate to="/login" replace={true} />;
   }
 
-  // const portfolioValue = portfolio.portfolio_value //* use this to render on the line chart 
-  
-  // now i want to render the stocks owned (IF ANY)
-
   return (
     <div id="portfolio-base">
       <h1>THIS IS PORTFOLIO</h1>
-      {sessionUser ?
-      <>
-    <div>
-      <h3 id="portfolio-buying-power">Buying power</h3>
-      <h3 id="portfolio-money">${sessionUser.account_balance.toString().includes('.') 
-        ?
-        sessionUser.account_balance :
-        sessionUser.account_balance.toString() + ".00"
-      }</h3>
-    </div>
-    <div>
-      {portfolio.tickers 
-      ?
-         <ul>
-    {portfolio.tickers.map((stock) => {
-      return <li key={stock.id}>
-        <p>{stock.ticker} </p>
-        <p>{stock.shares_owned} shares </p>
-        <h5>${Math.round(stock.stock_info.currentPrice * 100) / 100} </h5>
-        
-      </li>
-    })}
-    </ul>
-    :
-    console.log('hello')
-    }
-    </div>
-    </>
-    :
-    console.log('hello')
-    }
 
+      {sessionUser ? (
+        <>
+          <div id="canvas-div">
+            <canvas id="acquisitions" width="400" height="250"></canvas>{" "}
+            {/* Smaller main chart */}
+          </div>
+          <div id="bp-div">
+            <h3 id="portfolio-buying-power">Buying power</h3>
+            <h3 id="portfolio-money">
+              $
+              {sessionUser.account_balance.toString().includes(".")
+                ? sessionUser.account_balance
+                : sessionUser.account_balance.toString() + ".00"}
+            </h3>
+          </div>
+          <div>
+            <h3>Holdings</h3>
+            {portfolio.tickers ? (
+              <ul>
+                {portfolio.tickers.map((stock, index) => {
+                  return (
+                    <li key={stock.id}>
+                      <p>{stock.ticker} </p>
+                      <p>{stock.shares_owned} shares </p>
+                      <h5>
+                        ${Math.round(stock.stock_info.currentPrice * 100) / 100}{" "}
+                      </h5>
+
+                      {/* Render the individual stock chart (smaller version) */}
+                      <div>
+                        <canvas
+                          ref={(el) => (stockChartRefs.current[index] = el)} // Set ref to each canvas element
+                          width="200" // Set a reasonable width for the smaller chart
+                          height="100" // Set a fixed height for the smaller chart
+                          style={{
+                            display: "block",
+                            maxWidth: "180px",
+                            maxHeight: "100px",
+                          }} // CSS to ensure size restrictions
+                        ></canvas>
+                      </div>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <h1> Loading... </h1>
+            )}
+          </div>
+          <div>
+            <h3>News</h3>
+            {portfolio.news ? (
+              <ul>
+                {portfolio.news.map((ele) => {
+                  return (
+                    <li key={ele.providerPublishTime}>
+                      <button
+                        onClick={() => {
+                          let link = ele.link;
+                          console.log("Original link:", link); // Debugging log
+
+                          if (link.startsWith("/portfolio/")) {
+                            link = link.replace("/portfolio/", "");
+                          }
+
+                          if (link.startsWith("http")) {
+                            window.open(link, "_blank");
+                          } else {
+                            navigate(link);
+                          }
+                        }}
+                      >
+                        <h5>{ele.title} </h5>
+                        <p>{ele.relatedTickers && ele.relatedTickers[0]} </p>
+                      </button>
+                    </li>
+                  );
+                })}
+              </ul>
+            ) : (
+              <h1> Loading... </h1>
+            )}
+          </div>
+        </>
+      ) : (
+        <h1>Please Sign In...</h1>
+      )}
     </div>
   );
 }
