@@ -1,14 +1,239 @@
 import { useState, useEffect } from 'react';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
-import { Label } from '@/components/ui/label';
-import { Alert, AlertDescription } from '@/components/ui/alert';
+import { useDispatch, useSelector } from 'react-redux';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { ArrowUp, ArrowDown, DollarSign } from 'lucide-react';
+import { getStockDetails, executeTrade } from "../../redux/stocks";
+import "./StockDetails.css";
 
-// Sample data for preview
+const StockDetailsPage = ({ stockId }) => {
+  const dispatch = useDispatch();
+  
+  // Replace useState with useSelector for Redux state
+  const stockDetails = useSelector(state => state.stocks.currentStock) || SAMPLE_DATA;
+  const loading = useSelector(state => state.stocks.loading);
+  const error = useSelector(state => state.stocks.error);
+  const tradeSuccess = useSelector(state => state.stocks.tradeSuccess);
+  const tradeError = useSelector(state => state.stocks.tradeError);
+
+  // Keep tradeForm as local state since it's form data
+  const [tradeForm, setTradeForm] = useState({
+    orderType: 'Buy Order',
+    buyIn: 'Dollars',
+    shares: '',
+    amount: '',
+  });
+
+  // Use Redux thunk action 
+  useEffect(() => {
+    if (stockId) {
+      dispatch(getStockDetails(stockId));
+    }
+  }, [dispatch, stockId]);
+
+  if (loading) return <div className="loading">Loading...</div>;
+  if (error) return <div className="error-message">{error}</div>;
+  if (!stockDetails) return null;
+
+  const priceChange = stockDetails.regularMarketPrice - stockDetails.previousClose;
+  const priceChangePercent = (priceChange / stockDetails.previousClose) * 100;
+  const isPositive = priceChange >= 0;
+
+  // Use Redux thunk action for trade submission
+  const handleTradeSubmit = async (e) => {
+    e.preventDefault();
+
+    const tradeData = {
+      order_type: tradeForm.orderType,
+      buy_in: tradeForm.buyIn,
+      shares: tradeForm.buyIn === 'Shares' ? Number(tradeForm.shares) : null,
+      amount: tradeForm.buyIn === 'Dollars' ? Number(tradeForm.amount) : null,
+    };
+
+    await dispatch(executeTrade(stockId, tradeData));
+
+    // Only reset form if there's no trade error
+    if (!tradeError) {
+      setTradeForm(prev => ({
+        ...prev,
+        shares: '',
+        amount: ''
+      }));
+    }
+  };
+
+  return (
+    <div className="stock-details">
+      {/* Stock Header */}
+      <div className="stock-header">
+        <h1>{stockDetails.ticker}</h1>
+        <div className="current-price">
+          ${stockDetails.regularMarketPrice.toFixed(2)}
+        </div>
+        <div className={`price-change ${isPositive ? 'positive' : 'negative'}`}>
+          <i className={`fas fa-${isPositive ? 'arrow-up' : 'arrow-down'}`}></i>
+          <span>
+            ${Math.abs(priceChange).toFixed(2)} ({Math.abs(priceChangePercent).toFixed(2)}%)
+          </span>
+        </div>
+      </div>
+
+      {/* Chart and Trading Section */}
+      <div className="main-content">
+        <div className="chart-container">
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={stockDetails.priceHistory}>
+              <Line 
+                type="monotone" 
+                dataKey="price" 
+                stroke={isPositive ? '#00C805' : '#FF5000'}
+                strokeWidth={2} 
+                dot={false}
+              />
+              <XAxis dataKey="time" />
+              <YAxis 
+                domain={['auto', 'auto']}
+                tickFormatter={(value) => `$${value.toFixed(2)}`}
+              />
+              <Tooltip 
+                formatter={(value) => [`$${value.toFixed(2)}`, 'Price']}
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </div>
+
+        <div className="trade-form">
+          <div className="trade-type-buttons">
+            <button 
+              className={`trade-button ${tradeForm.orderType === 'Buy Order' ? 'active' : ''}`}
+              onClick={() => setTradeForm(prev => ({...prev, orderType: 'Buy Order'}))}
+            >
+              Buy
+            </button>
+            <button 
+              className={`trade-button ${tradeForm.orderType === 'Sell Order' ? 'active' : ''}`}
+              onClick={() => setTradeForm(prev => ({...prev, orderType: 'Sell Order'}))}
+            >
+              Sell
+            </button>
+          </div>
+
+          <form onSubmit={handleTradeSubmit}>
+            <div className="radio-group">
+              <label>
+                <input 
+                  type="radio"
+                  name="buyIn"
+                  value="Dollars"
+                  checked={tradeForm.buyIn === 'Dollars'}
+                  onChange={(e) => setTradeForm(prev => ({...prev, buyIn: e.target.value}))}
+                />
+                <span>Dollars</span>
+              </label>
+              <label>
+                <input 
+                  type="radio"
+                  name="buyIn"
+                  value="Shares"
+                  checked={tradeForm.buyIn === 'Shares'}
+                  onChange={(e) => setTradeForm(prev => ({...prev, buyIn: e.target.value}))}
+                />
+                <span>Shares</span>
+              </label>
+            </div>
+
+            {tradeForm.buyIn === 'Dollars' ? (
+              <div className="input-group">
+                <label>Amount</label>
+                <div className="dollar-input">
+                  <span className="dollar-sign">$</span>
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={tradeForm.amount}
+                    onChange={(e) => setTradeForm(prev => ({...prev, amount: e.target.value}))}
+                    placeholder="0.00"
+                  />
+                </div>
+              </div>
+            ) : (
+              <div className="input-group">
+                <label>Shares</label>
+                <input
+                  type="number"
+                  min="0"
+                  step="1"
+                  value={tradeForm.shares}
+                  onChange={(e) => setTradeForm(prev => ({...prev, shares: e.target.value}))}
+                  placeholder="0"
+                />
+              </div>
+            )}
+
+            {tradeError && <div className="error-message">{tradeError}</div>}
+            {tradeSuccess && <div className="success-message">{tradeSuccess}</div>}
+
+            <button type="submit" className="submit-button">
+              Review {tradeForm.orderType}
+            </button>
+          </form>
+        </div>
+      </div>
+
+      {/* Position and History */}
+      <div className="bottom-section">
+        <div className="position-card">
+          <h2>Your Position</h2>
+          <div className="position-grid">
+            <div>
+              <p className="label">Shares Owned</p>
+              <p className="value">{stockDetails.shares_owned}</p>
+            </div>
+            <div>
+              <p className="label">Average Cost</p>
+              <p className="value">${stockDetails.estimated_cost.toFixed(2)}</p>
+            </div>
+            <div>
+              <p className="label">Market Value</p>
+              <p className="value">
+                ${(stockDetails.shares_owned * stockDetails.regularMarketPrice).toFixed(2)}
+              </p>
+            </div>
+            <div>
+              <p className="label">Total Return</p>
+              <p className={`value ${
+                stockDetails.shares_owned * (stockDetails.regularMarketPrice - stockDetails.estimated_cost) >= 0 
+                  ? 'positive' 
+                  : 'negative'
+              }`}>
+                ${(stockDetails.shares_owned * (stockDetails.regularMarketPrice - stockDetails.estimated_cost)).toFixed(2)}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="history-card">
+          <h2>Order History</h2>
+          <div className="order-list">
+            {stockDetails.OrderHistory.map((order) => (
+              <div key={order.id} className="order-item">
+                <div>
+                  <p className="order-type">{order.order_type}</p>
+                  <p className="order-date">{new Date(order.date).toLocaleDateString()}</p>
+                </div>
+                <div className="order-details">
+                  <p>{order.shares} shares</p>
+                  <p className="price">${order.price}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+// Keep SAMPLE_DATA for initial/fallback state
 const SAMPLE_DATA = {
   id: 1,
   ticker: 'AAPL',
@@ -24,237 +249,6 @@ const SAMPLE_DATA = {
     time: `${i}:00`,
     price: 170 + Math.sin(i / 3) * 10
   }))
-};
-
-const StockDetailsPage = ({ stockId }) => {
-  const [stockDetails, setStockDetails] = useState(SAMPLE_DATA);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(null);
-  const [tradeForm, setTradeForm] = useState({
-    orderType: 'Buy Order',
-    buyIn: 'Dollars',
-    shares: '',
-    amount: '',
-  });
-  const [tradeError, setTradeError] = useState(null);
-  const [tradeSuccess, setTradeSuccess] = useState(null);
-
-  // Fetch real data when stockId is provided
-  useEffect(() => {
-    const fetchStockDetails = async () => {
-      if (!stockId) return; // Don't fetch if no stockId
-
-      setLoading(true);
-      try {
-        const response = await fetch(`/api/stocks/${stockId}`);
-        if (!response.ok) throw new Error('Failed to fetch stock details');
-        const data = await response.json();
-        setStockDetails(data);
-      } catch (err) {
-        setError(err.message);
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchStockDetails();
-  }, [stockId]);
-
-  if (loading) return <div className="flex justify-center p-8">Loading...</div>;
-  if (error) return <Alert variant="destructive"><AlertDescription>{error}</AlertDescription></Alert>;
-  if (!stockDetails) return null;
-
-  const priceChange = stockDetails.regularMarketPrice - stockDetails.previousClose;
-  const priceChangePercent = (priceChange / stockDetails.previousClose) * 100;
-  const isPositive = priceChange >= 0;
-
-  const handleTradeSubmit = async (e) => {
-    e.preventDefault();
-    setTradeError(null);
-    setTradeSuccess(null);
-
-    try {
-      const response = await fetch(`/api/stocks/${stockId}/trade`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'CSRF-Token': document.cookie.match(/csrf_token=([\w-]+)/)?.[1],
-        },
-        body: JSON.stringify({
-          order_type: tradeForm.orderType,
-          buy_in: tradeForm.buyIn,
-          shares: tradeForm.buyIn === 'Shares' ? Number(tradeForm.shares) : null,
-          amount: tradeForm.buyIn === 'Dollars' ? Number(tradeForm.amount) : null,
-        }),
-      });
-
-      const data = await response.json();
-      
-      if (!response.ok) throw new Error(data.message || 'Trade failed');
-      
-      setTradeSuccess('Trade executed successfully!');
-      // Refresh stock details after successful trade
-      const updatedDetails = await fetch(`/api/stocks/${stockId}`).then(res => res.json());
-      setStockDetails(updatedDetails);
-    } catch (err) {
-      setTradeError(err.message);
-    }
-  };
-
-  return (
-    <div className="max-w-4xl mx-auto p-4">
-      {/* Stock Header */}
-      <Card className="p-6 mb-4">
-        <h1 className="text-2xl font-medium mb-2">{stockDetails.ticker}</h1>
-        <div className="text-4xl font-light mb-2">
-          ${stockDetails.regularMarketPrice.toFixed(2)}
-        </div>
-        <div className={`flex items-center text-lg ${isPositive ? 'text-green-500' : 'text-red-500'}`}>
-          {isPositive ? <ArrowUp className="w-5 h-5" /> : <ArrowDown className="w-5 h-5" />}
-          <span className="ml-1">
-            ${Math.abs(priceChange).toFixed(2)} ({Math.abs(priceChangePercent).toFixed(2)}%)
-          </span>
-        </div>
-      </Card>
-
-      {/* Chart and Trading Section */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-4">
-        {/* Chart */}
-        <Card className="p-4 lg:col-span-2">
-          <div className="h-64">
-            <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={stockDetails.priceHistory}>
-                <Line 
-                  type="monotone" 
-                  dataKey="price" 
-                  stroke={isPositive ? '#00C805' : '#FF5000'}
-                  strokeWidth={2} 
-                  dot={false}
-                />
-                <XAxis dataKey="time" />
-                <YAxis domain={['auto', 'auto']} />
-                <Tooltip />
-              </LineChart>
-            </ResponsiveContainer>
-          </div>
-        </Card>
-
-        {/* Trading Form */}
-        <Card className="p-4">
-          <div className="flex space-x-2 mb-4">
-            <Button 
-              variant={tradeForm.orderType === 'Buy Order' ? 'default' : 'outline'}
-              className="flex-1"
-              onClick={() => setTradeForm(prev => ({...prev, orderType: 'Buy Order'}))}
-            >
-              Buy
-            </Button>
-            <Button 
-              variant={tradeForm.orderType === 'Sell Order' ? 'default' : 'outline'}
-              className="flex-1"
-              onClick={() => setTradeForm(prev => ({...prev, orderType: 'Sell Order'}))}
-            >
-              Sell
-            </Button>
-          </div>
-
-          <form onSubmit={handleTradeSubmit} className="space-y-4">
-            <RadioGroup
-              value={tradeForm.buyIn}
-              onValueChange={(value) => setTradeForm(prev => ({...prev, buyIn: value}))}
-              className="flex space-x-4 mb-4"
-            >
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Dollars" id="dollars" />
-                <Label htmlFor="dollars">Dollars</Label>
-              </div>
-              <div className="flex items-center space-x-2">
-                <RadioGroupItem value="Shares" id="shares" />
-                <Label htmlFor="shares">Shares</Label>
-              </div>
-            </RadioGroup>
-
-            {tradeForm.buyIn === 'Dollars' ? (
-              <div>
-                <Label>Amount</Label>
-                <div className="relative">
-                  <DollarSign className="absolute left-3 top-3 h-4 w-4 text-gray-500" />
-                  <Input
-                    type="number"
-                    className="pl-8"
-                    value={tradeForm.amount}
-                    onChange={(e) => setTradeForm(prev => ({...prev, amount: e.target.value}))}
-                    placeholder="0.00"
-                  />
-                </div>
-              </div>
-            ) : (
-              <div>
-                <Label>Shares</Label>
-                <Input
-                  type="number"
-                  value={tradeForm.shares}
-                  onChange={(e) => setTradeForm(prev => ({...prev, shares: e.target.value}))}
-                  placeholder="0"
-                />
-              </div>
-            )}
-
-            {tradeError && (
-              <Alert variant="destructive">
-                <AlertDescription>{tradeError}</AlertDescription>
-              </Alert>
-            )}
-            
-            {tradeSuccess && (
-              <Alert className="bg-green-50 border-green-500">
-                <AlertDescription>{tradeSuccess}</AlertDescription>
-              </Alert>
-            )}
-
-            <Button type="submit" className="w-full">
-              Review {tradeForm.orderType}
-            </Button>
-          </form>
-        </Card>
-      </div>
-
-      {/* Position and History */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-        <Card className="p-4">
-          <h2 className="text-lg font-medium mb-4">Your Position</h2>
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-gray-500">Shares Owned</p>
-              <p className="text-lg">{stockDetails.shares_owned}</p>
-            </div>
-            <div>
-              <p className="text-sm text-gray-500">Average Cost</p>
-              <p className="text-lg">${stockDetails.estimated_cost.toFixed(2)}</p>
-            </div>
-          </div>
-        </Card>
-
-        <Card className="p-4">
-          <h2 className="text-lg font-medium mb-4">Order History</h2>
-          <div className="space-y-4">
-            {stockDetails.OrderHistory.map((order) => (
-              <div key={order.id} className="flex justify-between items-center py-2 border-b">
-                <div>
-                  <p className="font-medium">{order.order_type}</p>
-                  <p className="text-sm text-gray-500">{new Date(order.date).toLocaleDateString()}</p>
-                </div>
-                <div className="text-right">
-                  <p>{order.shares} shares</p>
-                  <p className="text-sm text-gray-500">${order.price}</p>
-                </div>
-              </div>
-            ))}
-          </div>
-        </Card>
-      </div>
-    </div>
-  );
 };
 
 export default StockDetailsPage;
