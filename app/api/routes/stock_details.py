@@ -7,12 +7,50 @@ from app.models.orders import Order
 from app.forms.transaction_form import TransactionForm
 import yfinance as yf
 import logging
+from datetime import datetime, timedelta
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 stock_details_routes = Blueprint("stock_details", __name__)
+
+# Cache setup
+market_data_cache = {}
+CACHE_DURATION = timedelta(minutes=5)
+
+
+def get_cached_market_data(ticker_symbol):
+    """
+    Get market data with caching to prevent rate limiting
+    """
+    now = datetime.now()
+    if ticker_symbol in market_data_cache:
+        timestamp, data = market_data_cache[ticker_symbol]
+        if now - timestamp < CACHE_DURATION:
+            return data
+
+    ticker = yf.Ticker(ticker_symbol)
+    ticker.session.headers.update(
+        {
+            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+            "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+            "Accept-Language": "en-US,en;q=0.5",
+        }
+    )
+
+    try:
+        data = ticker.info
+    except Exception:
+        # Fallback to history
+        history = ticker.history(period="1d")
+        if not history.empty:
+            data = {"regularMarketPrice": history["Close"].iloc[-1]}
+        else:
+            raise Exception("Unable to fetch market data")
+
+    market_data_cache[ticker_symbol] = (now, data)
+    return data
 
 
 def validation_errors_to_error_messages(validation_errors):
@@ -49,43 +87,47 @@ def get_stock_details(stockId):
     logger.info(f"Attempting to fetch stock details for stockId: {stockId}")
     logger.info(f"Current User ID: {current_user.id}")
 
-    # Find the specific stock
     stock = StocksOwned.query.get(stockId)
-
     if not stock:
         logger.warning(f"No stock found with ID: {stockId}")
         return jsonify({"message": "Stock couldn't be found"}), 404
 
-    # Verify stock ownership
     if stock.owner_id != current_user.id:
         logger.warning(f"Stock {stockId} does not belong to current user")
         return jsonify({"message": "Unauthorized access to stock"}), 403
 
     try:
-        # Get realtime stock data using yfinance
-        ticker = yf.Ticker(stock.ticker)
-
-        # Fetch market data
+        # Get market data with caching and fallback
         try:
-            market_data = ticker.info
-            if not market_data:
-                logger.error(f"No market data found for ticker: {stock.ticker}")
-                return jsonify({"message": "Unable to fetch market data"}), 500
+            market_data = get_cached_market_data(stock.ticker)
         except Exception as data_error:
             logger.error(f"Error fetching market data: {data_error}")
             return jsonify(
                 {"message": "Error fetching market data", "error": str(data_error)}
             ), 500
 
-        # Fetch news
-        news = ticker.news[:2]
+        # Create ticker for news
+        ticker = yf.Ticker(stock.ticker)
+        ticker.session.headers.update(
+            {
+                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
+                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+                "Accept-Language": "en-US,en;q=0.5",
+            }
+        )
 
-        # Fetch order history for this stock
+        # Fetch news with error handling
+        news = []
+        try:
+            news = ticker.news[:2]
+        except Exception as news_error:
+            logger.warning(f"Error fetching news: {news_error}")
+
+        # Fetch order history
         order_history = Order.query.filter_by(
             owner_id=current_user.id, ticker=stock.ticker
         ).all()
 
-        # Prepare order history for response
         order_details = [
             {
                 "id": order.id,
@@ -96,7 +138,6 @@ def get_stock_details(stockId):
             for order in order_history
         ]
 
-        # Response with comprehensive stock details
         response = {
             "id": stock.id,
             "ownerId": stock.owner_id,
@@ -142,37 +183,11 @@ def trade_stock(stockId):
     stock = StocksOwned.query.get(stockId)
 
     try:
-        # market data retrieval with error handling
+        # Get market data with caching
         try:
-            # Print stock information for debugging
-            logger.info(f"Attempting to fetch market data for ticker: {stock.ticker}")
+            market_data = get_cached_market_data(stock.ticker)
+            current_price = market_data.get("regularMarketPrice")
 
-            # Use multiple methods to fetch stock price
-            ticker = yf.Ticker(stock.ticker)
-
-            # Try different methods to get current price
-            current_price = None
-
-            # Method 1: Using .info
-            try:
-                market_data = ticker.info
-                current_price = market_data.get("regularMarketPrice")
-                logger.info(f"Price from .info: {current_price}")
-            except Exception as info_error:
-                logger.error(f"Error fetching info: {info_error}")
-
-            # Method 2: Using .history if .info fails
-            if not current_price:
-                try:
-                    history = ticker.history(period="1d")
-                    current_price = (
-                        history["Close"].iloc[-1] if not history.empty else None
-                    )
-                    logger.info(f"Price from history: {current_price}")
-                except Exception as history_error:
-                    logger.error(f"Error fetching history: {history_error}")
-
-            # Final check for current price
             if not current_price:
                 logger.error(f"Unable to retrieve price for {stock.ticker}")
                 return jsonify(
@@ -183,7 +198,7 @@ def trade_stock(stockId):
                 ), 500
 
         except Exception as data_error:
-            logger.error(f"Comprehensive market data error: {data_error}")
+            logger.error(f"Error fetching market data: {data_error}")
             return jsonify(
                 {"message": "Error fetching market data", "error": str(data_error)}
             ), 500
@@ -220,7 +235,7 @@ def trade_stock(stockId):
             if not stock:
                 stock = StocksOwned(
                     owner_id=current_user.id,
-                    ticker=ticker.ticker,
+                    ticker=stock.ticker,
                     shares_owned=0,
                     estimated_cost=0,
                 )
@@ -290,9 +305,15 @@ def sell_all_shares(stockId):
         return jsonify({"message": "Stock couldn't be found"}), 404
 
     try:
-        # Get current market price
-        ticker = yf.Ticker(stock.ticker)
-        current_price = ticker.info.get("regularMarketPrice")
+        # Get market data with caching
+        try:
+            market_data = get_cached_market_data(stock.ticker)
+            current_price = market_data.get("regularMarketPrice")
+        except Exception as data_error:
+            logger.error(f"Error fetching market data: {data_error}")
+            return jsonify(
+                {"message": "Error fetching market data", "error": str(data_error)}
+            ), 500
 
         # Calculate sale proceeds
         sale_proceeds = stock.shares_owned * current_price
@@ -309,10 +330,8 @@ def sell_all_shares(stockId):
         # Update user balance and delete position
         current_user.account_balance += sale_proceeds
 
-        # Add sell order
+        # Add sell order and delete stock position
         db.session.add(sell_order)
-
-        # Delete the stock position
         db.session.delete(stock)
         db.session.commit()
 
