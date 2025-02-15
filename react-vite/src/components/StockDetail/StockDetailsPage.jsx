@@ -1,20 +1,22 @@
 import { useState, useEffect } from 'react';
 import { useDispatch, useSelector } from 'react-redux';
+import { useParams } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
+import { faArrowUp, faArrowDown, faDollarSign, faSpinner } from '@fortawesome/free-solid-svg-icons';
 import { getStockDetails, executeTrade } from "../../redux/stocks";
 import "./StockDetails.css";
 
-const StockDetailsPage = ({ stockId }) => {
+const StockDetailsPage = () => {
+  const { stockId } = useParams(); // Get stockId from URL
   const dispatch = useDispatch();
   
-  // Replace useState with useSelector for Redux state
   const stockDetails = useSelector(state => state.stocks.currentStock) || SAMPLE_DATA;
   const loading = useSelector(state => state.stocks.loading);
   const error = useSelector(state => state.stocks.error);
   const tradeSuccess = useSelector(state => state.stocks.tradeSuccess);
   const tradeError = useSelector(state => state.stocks.tradeError);
 
-  // Keep tradeForm as local state since it's form data
   const [tradeForm, setTradeForm] = useState({
     orderType: 'Buy Order',
     buyIn: 'Dollars',
@@ -22,24 +24,36 @@ const StockDetailsPage = ({ stockId }) => {
     amount: '',
   });
 
-  // Use Redux thunk action 
   useEffect(() => {
     if (stockId) {
       dispatch(getStockDetails(stockId));
     }
   }, [dispatch, stockId]);
 
-  if (loading) return <div className="loading">Loading...</div>;
+  if (loading) return (
+    <div className="loading">
+      <FontAwesomeIcon icon={faSpinner} spin />
+      <span>Loading stock details...</span>
+    </div>
+  );
   if (error) return <div className="error-message">{error}</div>;
   if (!stockDetails) return null;
 
-  const priceChange = stockDetails.regularMarketPrice - stockDetails.previousClose;
-  const priceChangePercent = (priceChange / stockDetails.previousClose) * 100;
+  const regularMarketPrice = stockDetails.regularMarketPrice || 0;
+  const previousClose = stockDetails.previousClose || regularMarketPrice;
+  const priceChange = regularMarketPrice - previousClose;
+  const priceChangePercent = previousClose ? (priceChange / previousClose) * 100 : 0;
   const isPositive = priceChange >= 0;
 
-  // Use Redux thunk action for trade submission
   const handleTradeSubmit = async (e) => {
     e.preventDefault();
+
+    if (tradeForm.buyIn === 'Dollars' && (!tradeForm.amount || tradeForm.amount <= 0)) {
+      return;
+    }
+    if (tradeForm.buyIn === 'Shares' && (!tradeForm.shares || tradeForm.shares <= 0)) {
+      return;
+    }
 
     const tradeData = {
       order_type: tradeForm.orderType,
@@ -50,7 +64,6 @@ const StockDetailsPage = ({ stockId }) => {
 
     await dispatch(executeTrade(stockId, tradeData));
 
-    // Only reset form if there's no trade error
     if (!tradeError) {
       setTradeForm(prev => ({
         ...prev,
@@ -60,27 +73,30 @@ const StockDetailsPage = ({ stockId }) => {
     }
   };
 
+  const sharesOwned = stockDetails.shares_owned || 0;
+  const estimatedCost = stockDetails.estimated_cost || 0;
+  const marketValue = sharesOwned * regularMarketPrice;
+  const totalReturn = sharesOwned * (regularMarketPrice - estimatedCost);
+
   return (
     <div className="stock-details">
-      {/* Stock Header */}
       <div className="stock-header">
         <h1>{stockDetails.ticker}</h1>
         <div className="current-price">
-          ${stockDetails.regularMarketPrice.toFixed(2)}
+          ${regularMarketPrice.toFixed(2)}
         </div>
         <div className={`price-change ${isPositive ? 'positive' : 'negative'}`}>
-          <i className={`fas fa-${isPositive ? 'arrow-up' : 'arrow-down'}`}></i>
+          <FontAwesomeIcon icon={isPositive ? faArrowUp : faArrowDown} />
           <span>
             ${Math.abs(priceChange).toFixed(2)} ({Math.abs(priceChangePercent).toFixed(2)}%)
           </span>
         </div>
       </div>
 
-      {/* Chart and Trading Section */}
       <div className="main-content">
         <div className="chart-container">
           <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={stockDetails.priceHistory}>
+            <LineChart data={stockDetails.priceHistory || []}>
               <Line 
                 type="monotone" 
                 dataKey="price" 
@@ -103,12 +119,14 @@ const StockDetailsPage = ({ stockId }) => {
         <div className="trade-form">
           <div className="trade-type-buttons">
             <button 
+              type="button"
               className={`trade-button ${tradeForm.orderType === 'Buy Order' ? 'active' : ''}`}
               onClick={() => setTradeForm(prev => ({...prev, orderType: 'Buy Order'}))}
             >
               Buy
             </button>
             <button 
+              type="button"
               className={`trade-button ${tradeForm.orderType === 'Sell Order' ? 'active' : ''}`}
               onClick={() => setTradeForm(prev => ({...prev, orderType: 'Sell Order'}))}
             >
@@ -144,7 +162,7 @@ const StockDetailsPage = ({ stockId }) => {
               <div className="input-group">
                 <label>Amount</label>
                 <div className="dollar-input">
-                  <span className="dollar-sign">$</span>
+                  <FontAwesomeIcon icon={faDollarSign} className="dollar-sign" />
                   <input
                     type="number"
                     min="0"
@@ -169,43 +187,46 @@ const StockDetailsPage = ({ stockId }) => {
               </div>
             )}
 
-            {tradeError && <div className="error-message">{tradeError}</div>}
-            {tradeSuccess && <div className="success-message">{tradeSuccess}</div>}
+            {(tradeError || tradeSuccess) && (
+              <div className={`message ${tradeError ? 'error-message' : 'success-message'}`}>
+                {tradeError || tradeSuccess}
+              </div>
+            )}
 
-            <button type="submit" className="submit-button">
+            <button 
+              type="submit" 
+              className="submit-button"
+              disabled={
+                (tradeForm.buyIn === 'Dollars' && (!tradeForm.amount || tradeForm.amount <= 0)) ||
+                (tradeForm.buyIn === 'Shares' && (!tradeForm.shares || tradeForm.shares <= 0))
+              }
+            >
               Review {tradeForm.orderType}
             </button>
           </form>
         </div>
       </div>
 
-      {/* Position and History */}
       <div className="bottom-section">
         <div className="position-card">
           <h2>Your Position</h2>
           <div className="position-grid">
             <div>
               <p className="label">Shares Owned</p>
-              <p className="value">{stockDetails.shares_owned}</p>
+              <p className="value">{sharesOwned}</p>
             </div>
             <div>
               <p className="label">Average Cost</p>
-              <p className="value">${stockDetails.estimated_cost.toFixed(2)}</p>
+              <p className="value">${estimatedCost.toFixed(2)}</p>
             </div>
             <div>
               <p className="label">Market Value</p>
-              <p className="value">
-                ${(stockDetails.shares_owned * stockDetails.regularMarketPrice).toFixed(2)}
-              </p>
+              <p className="value">${marketValue.toFixed(2)}</p>
             </div>
             <div>
               <p className="label">Total Return</p>
-              <p className={`value ${
-                stockDetails.shares_owned * (stockDetails.regularMarketPrice - stockDetails.estimated_cost) >= 0 
-                  ? 'positive' 
-                  : 'negative'
-              }`}>
-                ${(stockDetails.shares_owned * (stockDetails.regularMarketPrice - stockDetails.estimated_cost)).toFixed(2)}
+              <p className={`value ${totalReturn >= 0 ? 'positive' : 'negative'}`}>
+                ${totalReturn.toFixed(2)}
               </p>
             </div>
           </div>
@@ -214,7 +235,7 @@ const StockDetailsPage = ({ stockId }) => {
         <div className="history-card">
           <h2>Order History</h2>
           <div className="order-list">
-            {stockDetails.OrderHistory.map((order) => (
+            {(stockDetails.OrderHistory || []).map((order) => (
               <div key={order.id} className="order-item">
                 <div>
                   <p className="order-type">{order.order_type}</p>
@@ -233,7 +254,6 @@ const StockDetailsPage = ({ stockId }) => {
   );
 };
 
-// Keep SAMPLE_DATA for initial/fallback state
 const SAMPLE_DATA = {
   id: 1,
   ticker: 'AAPL',

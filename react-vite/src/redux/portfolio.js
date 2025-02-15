@@ -8,12 +8,18 @@ const getPortfolio = (data) => {
 };
 
 export const loadPortfolio = (userId) => async (dispatch) => {
-  const response = await fetch(`/api/${userId}/stocks`);
-  const data = await response.json();
-  if (response.ok) {
-    await dispatch(getPortfolio(data));
+  try {
+    const response = await fetch(`/api/${userId}/stocks`);
+    if (!response.ok) {
+      throw new Error('Failed to load portfolio');
+    }
+    const data = await response.json();
+    dispatch(getPortfolio(data));
+    return data;
+  } catch (error) {
+    console.error('Portfolio load error:', error);
+    return null;
   }
-  return response;
 };
 
 let initialState = {};
