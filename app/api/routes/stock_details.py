@@ -101,6 +101,7 @@ def get_stock_details(stockId):
         if not stock or stock.owner_id != current_user.id:
             return jsonify({"message": "Stock not found"}), 404
 
+        # Get market data with caching
         try:
             ticker = yf.Ticker(stock.ticker)
 
@@ -129,32 +130,12 @@ def get_stock_details(stockId):
                 "regularMarketPreviousClose", current_price
             )
 
-            # Format news data
-            news_data = ticker.news
-            formatted_news = []
-
-            if news_data and len(news_data) > 0:
-                for idx, item in enumerate(news_data[:5]):
-                    title = item.get("title")
-                    link = item.get("link")
-                    if (
-                        title and link
-                    ):  # Only include news items with both title and link
-                        formatted_news.append(
-                            {
-                                "id": idx + 1,
-                                "link": link,
-                                "source": item.get("publisher", "Yahoo Finance"),
-                                "title": title,
-                            }
-                        )
-
             response = {
                 "id": stock.id,
                 "ownerId": stock.owner_id,
                 "ticker": stock.ticker,
                 "shares_owned": stock.shares_owned,
-                "total_cost": stock.total_cost,
+                "estimated_cost": stock.total_cost,
                 "regularMarketPrice": current_price,
                 "previousClose": previous_close,
                 "dayHigh": market_data.get("dayHigh", 0),
@@ -166,7 +147,15 @@ def get_stock_details(stockId):
                     "1M": format_historical_data(hist_1m),
                     "1Y": format_historical_data(hist_1y),
                 },
-                "News": formatted_news,
+                "News": [
+                    {
+                        "id": idx + 1,
+                        "link": item.get("link"),
+                        "source": "Yahoo Finance",
+                        "title": item.get("title"),
+                    }
+                    for idx, item in enumerate(ticker.news[:5])  # Get more news items
+                ],
                 "OrderHistory": [
                     {
                         "id": order.id,
@@ -203,9 +192,6 @@ def trade_stock(stockId):
     Handle both buying and selling stock with market and limit orders
     """
     try:
-        # Log incoming request payload
-        print("🚀 Incoming Trade Request:", request.json)
-
         # Try multiple ways to get CSRF token
         csrf_token = (
             request.headers.get("X-CSRF-Token")
@@ -228,14 +214,8 @@ def trade_stock(stockId):
         form = TransactionForm()
         form.csrf_token.data = csrf_token
 
-        # Log form data before validation
-        print(
-            f"➡️ Form Data Received - Shares: {form.shares.data}, Amount: {form.amount.data}, Order Type: {form.order_type.data}"
-        )
-
-        # Check for validation errors
         if not form.validate_on_submit():
-            print("❌ Validation Errors:", form.errors)
+            logger.warning(f"Validation errors in trade_stock: {form.errors}")
             return {"errors": validation_errors_to_error_messages(form.errors)}, 400
 
         stock = StocksOwned.query.get(stockId)
@@ -244,27 +224,14 @@ def trade_stock(stockId):
             # Get market data with caching
             try:
                 market_data = get_cached_market_data(stock.ticker)
-                print(
-                    f"🔍 Market Data for {stock.ticker}: {market_data}"
-                )  # Debugging log
+                current_price = market_data.get("regularMarketPrice")
 
-                # Try multiple price fields to ensure we get a valid price
-                current_price = (
-                    market_data.get("regularMarketPrice")
-                    or market_data.get("currentPrice")
-                    or market_data.get("ask")
-                    or market_data.get("bid")
-                    or market_data.get("previousClose")  # Last fallback option
-                )
-
-                if not current_price or current_price <= 0:
-                    logger.error(
-                        f"❌ Unable to retrieve valid price for {stock.ticker}"
-                    )
+                if not current_price:
+                    logger.error(f"Unable to retrieve price for {stock.ticker}")
                     return jsonify(
                         {
                             "message": "Unable to fetch market price",
-                            "details": f"No price data available for {stock.ticker}. Market data: {market_data}",
+                            "details": f"No price data available for {stock.ticker}",
                         }
                     ), 500
 
@@ -274,50 +241,18 @@ def trade_stock(stockId):
                     {"message": "Error fetching market data", "error": str(data_error)}
                 ), 500
 
-            # Validate shares and amount based on buy_in type
-            if form.buy_in.data == "Shares":
-                if form.shares.data is None or form.shares.data < 1:
-                    return jsonify(
-                        {"errors": ["Shares must be atleast 1 if buying in Shares."]}
-                    ), 400
-                shares_to_trade = int(form.shares.data)
-            else:  # If buying in dollars, calculate shars dynamically
-                amount_to_use = form.amount.data if form.amount.data is not None else 0
-                shares_to_trade = (
-                    amount_to_use / current_price if current_price > 0 else 0
-                )
-
-            # Convert `shares_to_trade` and `amount_to_use` to valid numbers
-            try:
-                shares_to_trade = int(shares_to_trade)
-                amount_to_use = float(amount_to_use)
-            except ValueError:
-                return jsonify(
-                    {"message": "Invalid numeric values for shares or amount"}
-                ), 400
-
-            # Calculate shares if buying in dollars
+            # Calculate shares based on dollars if needed
+            shares_to_trade = form.shares.data
             if form.buy_in.data == "Dollars":
-                shares_to_trade = (
-                    amount_to_use / current_price if current_price > 0 else 0
-                )
-
-            # Ensure shares to trade is a valid number
-            if shares_to_trade <= 0:
-                return jsonify({"message": "Invalid trade amount"}), 400
+                shares_to_trade = form.amount.data / current_price
 
             # Calculate total transaction value
             transaction_value = shares_to_trade * current_price
 
             # Determine order type
-            valid_order_types = ["Market Order", "Limit Order"]
-            if form.order_type.data not in valid_order_types:
-                return jsonify({"message": "Invalid order type"}), 400
-
-            order_type = form.order_type.data  # Assign order type correctly
-
-            # Debug log
-            print(f"✅ Detected Order Type: {order_type}")  # 🚀 Debugging
+            order_type = (
+                "Buy Order" if form.order_type.data == "Buy Order" else "Sell Order"
+            )
 
             # Create a new order record
             new_order = Order(
@@ -329,7 +264,7 @@ def trade_stock(stockId):
             )
 
             # Buying logic
-            if order_type == "Market Order":
+            if order_type == "Buy Order":
                 if transaction_value > current_user.account_balance:
                     logger.warning("Insufficient funds for transaction")
                     return jsonify({"message": "Insufficient funds"}), 400
@@ -340,22 +275,22 @@ def trade_stock(stockId):
                         owner_id=current_user.id,
                         ticker=stock.ticker,
                         shares_owned=0,
-                        total_cost=0,
+                        estimated_cost=0,
                     )
                     db.session.add(stock)
 
                 # Calculate new average cost
-                total_existing_cost = stock.total_cost
+                total_existing_cost = stock.estimated_cost * stock.shares_owned
                 total_new_cost = total_existing_cost + transaction_value
                 total_new_shares = stock.shares_owned + shares_to_trade
 
                 # Update stock details
-                stock.total_cost = total_new_cost
+                stock.estimated_cost = total_new_cost / total_new_shares
                 stock.shares_owned += shares_to_trade
                 current_user.account_balance -= transaction_value
 
             # Selling logic
-            elif order_type == "Limit Order":
+            else:
                 if shares_to_trade > stock.shares_owned:
                     logger.warning("Cannot sell more shares than owned")
                     return jsonify(
@@ -368,11 +303,11 @@ def trade_stock(stockId):
 
                 # Recalculate average cost if shares remain
                 if stock.shares_owned > 0:
-                    stock.total_cost *= stock.shares_owned / (
+                    stock.estimated_cost *= stock.shares_owned / (
                         stock.shares_owned + shares_to_trade
                     )
                 else:
-                    stock.total_cost = 0
+                    stock.estimated_cost = 0
                     db.session.delete(stock)
 
             # Add the new order to the session
@@ -386,7 +321,7 @@ def trade_stock(stockId):
                     "shares_traded": shares_to_trade,
                     "price": current_price,
                     "total_value": transaction_value,
-                    "new_average_cost": stock.total_cost,
+                    "new_average_cost": stock.estimated_cost,
                 }
             )
 

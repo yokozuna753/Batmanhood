@@ -102,14 +102,6 @@ const StockChart = ({ stockDetails, timeRange, onTimeRangeChange }) => {
   );
 };
 
-function getCookie(name) {
-  const value = `; ${document.cookie}`;
-  const parts = value.split(`; ${name}=`);
-  if (parts.length === 2) return parts.pop().split(";").shift();
-  return null;
-}
-
-
 const StockDetailsPage = () => {
   const { stockId } = useParams();
   const dispatch = useDispatch();
@@ -176,39 +168,26 @@ const StockDetailsPage = () => {
       return;
     }
 
-    // ✅ Retrieve CSRF token from cookies
-    const csrfToken = getCookie("csrf_token");
-
-    if (!csrfToken) {
-        console.error("CSRF token is missing!");
-        return;
-    }
-
     const tradeData = {
       order_type: tradeForm.orderType,
       buy_in: tradeForm.buyIn,
-      shares: tradeForm.buyIn === 'Shares' ? Number(tradeForm.shares) || 0 : 0, // ✅ Ensures shares is never missing
-      amount: tradeForm.buyIn === 'Dollars' ? Number(tradeForm.amount) || 0 : 0,
-      limit_price: tradeForm.limitPrice !== undefined ? Number(tradeForm.limitPrice) || 0 : 0 // ✅ Ensures limit_price is included
+      shares: tradeForm.buyIn === 'Shares' ? Number(tradeForm.shares) : null,
+      amount: tradeForm.buyIn === 'Dollars' ? Number(tradeForm.amount) : null,
+      limit_price: tradeForm.limitPrice || 0
     };
-    
-    
 
-    // ✅ Use Redux action instead of fetch request
-    dispatch(executeTrade(stockId, tradeData, csrfToken));
+    await dispatch(executeTrade(stockId, tradeData));
 
     if (!tradeError) {
-        setTradeForm(prev => ({
-            ...prev,
-            shares: '',
-            amount: '',
-            limitPrice: 0
-        }));
-        dispatch(getStockDetails(stockId));
+      setTradeForm(prev => ({
+        ...prev,
+        shares: '',
+        amount: '',
+        limitPrice: 0
+      }));
+      dispatch(getStockDetails(stockId));
     }
-};
-
-
+  };
 
   return (
     <div className="stock-details">
@@ -266,7 +245,16 @@ const StockDetailsPage = () => {
                 />
                 <span>Dollars</span>
               </label>
-              
+              <label>
+                <input 
+                  type="radio"
+                  name="buyIn"
+                  value="Shares"
+                  checked={tradeForm.buyIn === 'Shares'}
+                  onChange={(e) => setTradeForm(prev => ({...prev, buyIn: e.target.value}))}
+                />
+                <span>Shares</span>
+              </label>
             </div>
 
             {tradeForm.buyIn === 'Dollars' ? (

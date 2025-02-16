@@ -108,7 +108,7 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
       throw new Error(errorData.message || 'Trade failed');
     }
 
-    const responseData = await response.json();
+    // const responseData = await response.json();
     
     dispatch(setTradeSuccess(
       `${tradeData.order_type} executed successfully! ${
