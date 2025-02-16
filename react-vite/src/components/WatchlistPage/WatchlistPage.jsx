@@ -1,20 +1,24 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
-
+import StockWatchlistTable from '../StockWatchlistTable';
 
 const WatchlistPage = () => {
 
-    console.log("*****HIT WATCHLIST PAGE!*****")
+  console.log("*****HIT WATCHLIST PAGE!*****")
 
-    const {watchlist_id} = useParams()
-    const [watchlist, setWatchlist] = useState(null);
-    const [stocks, setStocks] = useState([]);
-    const [loading, setLoading] = useState(true);
+  const { watchlist_id } = useParams()
+  console.log("Value of watchlist id: ", watchlist_id);
+  const [watchlist, setWatchlist] = useState(null);
+  const [stocks, setStocks] = useState([]);
+  const [loading, setLoading] = useState(true);
 
+
+  useEffect(() => {
     const fetchWatchlistData = async () => {
       try {
         // Get target Watchlist
         const watchlistRes = await fetch(`/api/watchlists/${watchlist_id}`);
+        console.log("Value of watchlist response: ", watchlistRes)
         if (!watchlistRes.ok) throw new Error("Failed to fetch watchlist");
         const watchlistData = await watchlistRes.json();
         setWatchlist(watchlistData);
@@ -31,13 +35,11 @@ const WatchlistPage = () => {
         setLoading(false);
       }
     };
+    fetchWatchlistData();
+  }, [watchlist_id]);
 
-    useEffect(() => {
-        fetchWatchlistData();
-    }, [watchlist_id]);
-
-    if (loading) return <p>Loading watchlist...</p>;
-    if (!watchlist) return <p>Watchlist not found.</p>;
+  if (loading) return <p>Loading watchlist...</p>;
+  if (!watchlist) return <p>Watchlist not found.</p>;
 
   return (
     <div>
@@ -45,7 +47,7 @@ const WatchlistPage = () => {
       <StockWatchlistTable stocks={stocks} />
     </div>
   );
-  
+
 }
 
 export default WatchlistPage;

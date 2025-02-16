@@ -7,6 +7,7 @@ function Navigation() {
     <ul>
       <li>
         <NavLink to="/">Home</NavLink>
+        <NavLink to="/watchlists/2">Watchlist 2 Page</NavLink>
       </li>
 
       <li>

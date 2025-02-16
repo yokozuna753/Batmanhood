@@ -28,3 +28,4 @@ const WatchlistStockTable = ({ stockData }) => {
 };
 
 export default WatchlistStockTable;
+
