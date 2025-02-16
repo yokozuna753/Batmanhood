@@ -11,37 +11,37 @@ logger = logging.getLogger(__name__)
 watchlists = Blueprint("watchlists", __name__)
 
 # Utility function to fetch watchlisted stock data
-def fetch_stock_data(symbols):
+# def fetch_stock_data(symbols):
 
-    logger.info("*****INSIDE FETCH_STOCK_DATA FUNCTION!*****")
+#     logger.info("*****INSIDE FETCH_STOCK_DATA FUNCTION!*****")
 
-    if not symbols:
-        logger.info("No symbols provided, returning empty stock data.")
-        return []
+#     if not symbols:
+#         logger.info("No symbols provided, returning empty stock data.")
+#         return []
 
-    stocks = yf.Tickers(" ".join(symbols))
-    logger.info("current batch of stocks to fetch data for: %s", stocks)
+#     stocks = yf.Tickers(" ".join(symbols))
+#     logger.info("current batch of stocks to fetch data for: %s", stocks)
      
-    stock_data = []
-    logger.info("current stock_data: %s", stock_data)
+#     stock_data = []
+#     logger.info("current stock_data: %s", stock_data)
 
-    for symbol in symbols:
-        stock = stocks.tickers.get(symbol)
-        logger.info("Targeting data for %s", stock)
+#     for symbol in symbols:
+#         stock = stocks.tickers.get(symbol)
+#         logger.info("Targeting data for %s", stock)
 
-        if stock:
-            logger.info("Getting data for %s", stock)
-            stock_data.append({
-                "symbol": symbol,
-                "marketPrice": stock.info.get("regularMarketPrice", 0.0),
-                "changePercent": stock.info.get("regularMarketChangePercent", 0.0),
-                "marketCap": stock.info.get("marketCap", 0.0)
-            })
-            logger.info("Retrieved stock data: %s", stock_data)
-        else:
-            logger.warning("Stock data not found for symbol: %s", symbol)
+#         if stock:
+#             logger.info("Getting data for %s", stock)
+#             stock_data.append({
+#                 "symbol": symbol,
+#                 "marketPrice": stock.info.get("regularMarketPrice", 0.0),
+#                 "changePercent": stock.info.get("regularMarketChangePercent", 0.0),
+#                 "marketCap": stock.info.get("marketCap", 0.0)
+#             })
+#             logger.info("Retrieved stock data: %s", stock_data)
+#         else:
+#             logger.warning("Stock data not found for symbol: %s", symbol)
 
-    return stock_data
+#     return stock_data
 
 # 1. GET all session user watchlists
 @watchlists.route('/', methods=['GET'])
@@ -63,7 +63,7 @@ def get_user_watchlists():
         logger.info("stock symbols associated with watchlist %d: %s", watchlist.id, stock_symbols)
 
         # Pass each batch of stocks to a data fetching utility function
-        stock_data = fetch_stock_data(stock_symbols) if stock_symbols else []
+        # stock_data = fetch_stock_data(stock_symbols) if stock_symbols else []
 
         watchlist_data.append({
             "id": watchlist.id,
