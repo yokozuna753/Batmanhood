@@ -38,13 +38,8 @@ export default function Layout() {
   return (
     <>
       <ModalProvider>
-<<<<<<< HEAD
         <Navigation />
         <Outlet />
-=======
-        {/* <Navigation /> */}
-        {isLoaded && <Outlet />}
->>>>>>> searchbar
         <Modal />
       </ModalProvider>
     </>
