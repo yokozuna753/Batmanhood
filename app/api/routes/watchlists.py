@@ -68,7 +68,7 @@ def get_user_watchlists():
         watchlist_data.append({
             "id": watchlist.id,
             "name": watchlist.name,
-            "stocks": stock_data
+            "stocks": stock_symbols
         })
 
     logger.info("Running watchlist data: %s", watchlist_data)
