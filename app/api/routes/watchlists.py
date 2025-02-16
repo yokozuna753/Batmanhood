@@ -43,37 +43,59 @@ watchlists = Blueprint("watchlists", __name__)
 
 #     return stock_data
 
-# 1. GET all session user watchlists
+
 @watchlists.route('/', methods=['GET'])
 @login_required
 def get_user_watchlists():  
     logger.info("Fetching watchlists for user with ID: %d", current_user.id)
 
-    # Get current session user's watchlists
     watchlists = Watchlist.query.filter_by(user_id=current_user.id).all()
-    logger.info("Collected Watchlists for user %d: %s", current_user.id, watchlists)
 
-    # Process stocks of each watchlist, one at a time
     watchlist_data = []
     for watchlist in watchlists:
         watchlist_stocks = WatchlistStock.query.filter_by(watchlist_id=watchlist.id).all()
-        logger.info("stocks associated with watchlist %d", watchlist.id)
-
         stock_symbols = [ws.symbol for ws in watchlist_stocks]
-        logger.info("stock symbols associated with watchlist %d: %s", watchlist.id, stock_symbols)
-
-        # Pass each batch of stocks to a data fetching utility function
-        # stock_data = fetch_stock_data(stock_symbols) if stock_symbols else []
 
         watchlist_data.append({
             "id": watchlist.id,
             "name": watchlist.name,
-            "stocks": stock_symbols
+            "stocks": [{"symbol": symbol} for symbol in stock_symbols]
         })
 
-    logger.info("Running watchlist data: %s", watchlist_data)
-    logger.info("Retrieved %d watchlists", len(watchlists))
     return jsonify(watchlist_data), 200
+
+
+# 1. GET all session user watchlists
+# @watchlists.route('/', methods=['GET'])
+# @login_required
+# def get_user_watchlists():  
+#     logger.info("Fetching watchlists for user with ID: %d", current_user.id)
+
+#     # Get current session user's watchlists
+#     watchlists = Watchlist.query.filter_by(user_id=current_user.id).all()
+#     logger.info("Collected Watchlists for user %d: %s", current_user.id, watchlists)
+
+#     # Process stocks of each watchlist, one at a time
+#     watchlist_data = []
+#     for watchlist in watchlists:
+#         watchlist_stocks = WatchlistStock.query.filter_by(watchlist_id=watchlist.id).all()
+#         logger.info("stocks associated with watchlist %d", watchlist.id)
+
+#         stock_symbols = [ws.symbol for ws in watchlist_stocks]
+#         logger.info("stock symbols associated with watchlist %d: %s", watchlist.id, stock_symbols)
+
+#         # Pass each batch of stocks to a data fetching utility function
+#         # stock_data = fetch_stock_data(stock_symbols) if stock_symbols else []
+
+#         watchlist_data.append({
+#             "id": watchlist.id,
+#             "name": watchlist.name,
+#             "stocks": stock_symbols
+#         })
+
+#     logger.info("Running watchlist data: %s", watchlist_data)
+#     logger.info("Retrieved %d watchlists", len(watchlists))
+#     return jsonify(watchlist_data), 200
 
 # 2. DELETE a session user's watchlist
 @watchlists.route('/<int:id>', methods=['DELETE'])
