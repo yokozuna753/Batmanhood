@@ -8,6 +8,7 @@ function Navigation() {
       <li>
         <NavLink to="/">Home</NavLink>
         <NavLink to="/watchlists/2">Watchlist 2 Page</NavLink>
+        <NavLink to="/Watchlists/2/component"> Test Watchlist Component </NavLink>
       </li>
 
       <li>
