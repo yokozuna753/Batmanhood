@@ -47,7 +47,7 @@ export const portfolioReducer = (state = initialState, action) => {
       let portfolioSum = 0;
 
       tickersArray.forEach(ticker => {
-        console.log('this is ticker ====>', );
+        console.log('this is ticker ====>', ticker);
       });
 
       console.log('DATA FROM REDUCER ==>', tickersArray);
