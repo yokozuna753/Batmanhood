@@ -40,7 +40,7 @@ const setTradeLoading = (isLoading) => ({
 });
 
 const getCsrfToken = () => {
-  return document.cookie.match(/csrf_token=([\w-]+)/)?.[1];
+  return document.cookie.split('; ').find(row => row.startsWith('csrf_token='))?.split('=')[1];
 };
 
 // Thunk Actions
@@ -49,7 +49,10 @@ export const getStockDetails = (stockId) => async (dispatch) => {
   dispatch(setError(null));
   
   try {
-    const response = await fetch(`/api/stocks/${stockId}`);
+    const response = await fetch(`http://localhost:8000/api/stock_details/${stockId}`, {
+      credentials: 'include'
+    });
+    
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Failed to fetch stock details');
@@ -57,7 +60,6 @@ export const getStockDetails = (stockId) => async (dispatch) => {
     
     const stockData = await response.json();
     
-    // Validate required data
     if (!stockData.ticker || typeof stockData.regularMarketPrice === 'undefined') {
       throw new Error('Invalid stock data received');
     }
@@ -79,7 +81,6 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
   dispatch(setTradeSuccess(null));
 
   try {
-    // Validate trade data
     if (!tradeData.order_type || 
         (tradeData.buy_in !== 'Dollars' && tradeData.buy_in !== 'Shares') ||
         (tradeData.buy_in === 'Dollars' && !tradeData.amount) ||
@@ -89,14 +90,15 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
 
     const csrf_token = getCsrfToken();
     if (!csrf_token) {
-      throw new Error('CSRF token not found');
+      throw new Error('CSRF token not found in cookies');
     }
 
-    const response = await fetch(`/api/stocks/${stockId}/trade`, {
+    const response = await fetch(`http://localhost:8000/api/stock_details/${stockId}/trade`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        'CSRF-Token': csrf_token,
+        'XSRF-TOKEN': csrf_token,
       },
       body: JSON.stringify(tradeData),
     });
@@ -106,7 +108,7 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
       throw new Error(errorData.message || 'Trade failed');
     }
 
-    await response.json(); // Consume the response
+    // const responseData = await response.json();
     
     dispatch(setTradeSuccess(
       `${tradeData.order_type} executed successfully! ${
@@ -116,7 +118,6 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
       }`
     ));
 
-    // Refresh stock details after successful trade
     await dispatch(getStockDetails(stockId));
     return true;
   } catch (err) {

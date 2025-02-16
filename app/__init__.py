@@ -12,12 +12,18 @@ from .api.routes.search_bar import search_bar
 from .seeds import seed_commands
 from .config import Config
 from .api.routes.stock_details import stock_details_routes
-
+from flask_wtf.csrf import CSRFProtect, generate_csrf, ValidationError
 
 app = Flask(__name__, static_folder="../react-vite/dist", static_url_path="/")
 
+csrf = CSRFProtect(app)
 
-app.register_blueprint(stock_details_routes, url_prefix="/api/stocks")
+# Register blueprints
+app.register_blueprint(user_routes, url_prefix="/api/users")
+app.register_blueprint(auth_routes, url_prefix="/api/auth")
+app.register_blueprint(portfolio, url_prefix="/api")
+app.register_blueprint(search_bar, url_prefix="/api")
+app.register_blueprint(stock_details_routes, url_prefix="/api/stock_details")
 
 # Setup login manager
 login = LoginManager(app)
@@ -33,10 +39,6 @@ def load_user(id):
 app.cli.add_command(seed_commands)
 
 app.config.from_object(Config)
-app.register_blueprint(user_routes, url_prefix="/api/users")
-app.register_blueprint(auth_routes, url_prefix="/api/auth")
-app.register_blueprint(portfolio, url_prefix="/api")
-app.register_blueprint(search_bar, url_prefix="/api")
 db.init_app(app)
 Migrate(app, db)
 
@@ -60,12 +62,13 @@ def https_redirect():
 
 @app.after_request
 def inject_csrf_token(response):
+    csrf_token = generate_csrf()
     response.set_cookie(
         "csrf_token",
-        generate_csrf(),
+        csrf_token,
         secure=True if os.environ.get("FLASK_ENV") == "production" else False,
-        samesite="Strict" if os.environ.get("FLASK_ENV") == "production" else None,
-        httponly=True,
+        samesite="Lax",  # Use "Lax" instead of "Strict" for better cross-site requests
+        httponly=False,  # Change to False so the frontend can access it
     )
     return response
 
