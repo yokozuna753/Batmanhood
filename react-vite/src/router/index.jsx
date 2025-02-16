@@ -5,6 +5,7 @@ import Layout from "./Layout";
 import Portfolio from "../components/Portfolio/Portfolio";
 import StockDetailsPage from "../components/StockDetail/StockDetailsPage";
 import WatchlistPage from "../components/WatchlistPage/WatchlistPage";
+import WatchlistComponent from "../components/WatchlistComponent";
 
 
 export const router = createBrowserRouter([
