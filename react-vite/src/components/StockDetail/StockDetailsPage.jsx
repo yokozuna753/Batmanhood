@@ -3,25 +3,130 @@ import { useDispatch, useSelector } from 'react-redux';
 import { useParams } from 'react-router-dom';
 import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faArrowUp, faArrowDown, faDollarSign, faSpinner } from '@fortawesome/free-solid-svg-icons';
+import { faDollarSign, faSpinner, faArrowUp, faArrowDown } from '@fortawesome/free-solid-svg-icons';
 import { getStockDetails, executeTrade } from "../../redux/stocks";
 import "./StockDetails.css";
 
+const StockChart = ({ stockDetails, timeRange, onTimeRangeChange }) => {
+  const timeRanges = [
+    { label: '1D', value: '1D' },
+    { label: '1W', value: '1W' },
+    { label: '1M', value: '1M' },
+    { label: '1Y', value: '1Y' }
+  ];
+
+  const chartData = stockDetails?.priceHistory?.[timeRange] || [];
+  const latestPrice = chartData[chartData.length - 1]?.price || 0;
+  const startPrice = chartData[0]?.price || latestPrice;
+  const isPositive = latestPrice >= startPrice;
+
+  return (
+    <div className="chart-section">
+      <div className="time-range-selector">
+        {timeRanges.map(range => (
+          <button
+            key={range.value}
+            className={`time-range-button ${timeRange === range.value ? 'active' : ''}`}
+            onClick={() => onTimeRangeChange(range.value)}
+          >
+            {range.label}
+          </button>
+        ))}
+      </div>
+      <div className="chart-container">
+        <ResponsiveContainer width="100%" height="100%">
+          <LineChart 
+            data={chartData}
+            margin={{ top: 10, right: 30, left: 10, bottom: 30 }}
+          >
+            <Line 
+              type="monotone" 
+              dataKey="price" 
+              stroke={isPositive ? "rgb(0, 200, 5)" : "rgb(255, 80, 0)"} 
+              strokeWidth={2} 
+              dot={false}
+              isAnimationActive={false}
+            />
+            <XAxis 
+              dataKey="time" 
+              tickFormatter={(time) => {
+                const date = new Date(time);
+                return timeRange === '1D' 
+                  ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                  : date.toLocaleDateString([], { month: 'numeric', day: 'numeric' });
+              }}
+              tick={{ fontSize: 12, fill: '#666' }}
+              tickLine={false}
+              axisLine={false}
+              dy={10}
+            />
+            <YAxis 
+              domain={['auto', 'auto']}
+              tickFormatter={(value) => `$${value.toFixed(2)}`}
+              orientation="right"
+              tick={{ fontSize: 12, fill: '#666' }}
+              tickLine={false}
+              axisLine={false}
+              dx={10}
+            />
+            <Tooltip 
+              contentStyle={{
+                backgroundColor: 'white',
+                border: 'none',
+                borderRadius: '4px',
+                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                padding: '8px 12px',
+                fontSize: '14px'
+              }}
+              formatter={(value) => [`$${value.toFixed(2)}`, '']}
+              labelFormatter={(label) => {
+                const date = new Date(label);
+                return timeRange === '1D' 
+                  ? date.toLocaleTimeString([], { 
+                      hour: '2-digit', 
+                      minute: '2-digit',
+                      hour12: true 
+                    })
+                  : date.toLocaleDateString([], { 
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    });
+              }}
+              cursor={{ stroke: '#ccc', strokeWidth: 1, strokeDasharray: '5 5' }}
+            />
+          </LineChart>
+        </ResponsiveContainer>
+      </div>
+    </div>
+  );
+};
+
+function getCookie(name) {
+  const value = `; ${document.cookie}`;
+  const parts = value.split(`; ${name}=`);
+  if (parts.length === 2) return parts.pop().split(";").shift();
+  return null;
+}
+
+
 const StockDetailsPage = () => {
-  const { stockId } = useParams(); // Get stockId from URL
+  const { stockId } = useParams();
   const dispatch = useDispatch();
   
-  const stockDetails = useSelector(state => state.stocks.currentStock) || SAMPLE_DATA;
+  const stockDetails = useSelector(state => state.stocks.currentStock);
   const loading = useSelector(state => state.stocks.loading);
   const error = useSelector(state => state.stocks.error);
   const tradeSuccess = useSelector(state => state.stocks.tradeSuccess);
   const tradeError = useSelector(state => state.stocks.tradeError);
 
+  const [timeRange, setTimeRange] = useState('1D');
   const [tradeForm, setTradeForm] = useState({
-    orderType: 'Buy Order',
+    orderType: 'Market Order',
     buyIn: 'Dollars',
     shares: '',
     amount: '',
+    limitPrice: 0
   });
 
   useEffect(() => {
@@ -36,13 +141,29 @@ const StockDetailsPage = () => {
       <span>Loading stock details...</span>
     </div>
   );
-  if (error) return <div className="error-message">{error}</div>;
+  
+  if (error) return (
+    <div className="error-message">
+      <h2>Error Loading Stock Details</h2>
+      <p>{error}</p>
+    </div>
+  );
+  
   if (!stockDetails) return null;
 
-  const regularMarketPrice = stockDetails.regularMarketPrice || 0;
-  const previousClose = stockDetails.previousClose || regularMarketPrice;
+  // Get latest price from 1D data
+  const currentPriceData = stockDetails.priceHistory?.["1D"]?.slice(-1)[0] || {};
+  const regularMarketPrice = currentPriceData.price || 0;
+  const sharesOwned = stockDetails.shares_owned || 0;
+  const estimatedCost = stockDetails.estimated_cost || 0;
+  const marketValue = sharesOwned * regularMarketPrice;
+  const averageCost = sharesOwned > 0 ? estimatedCost / sharesOwned : 0;
+  const totalReturn = marketValue - estimatedCost;
+
+  // Calculate price change
+  const previousClose = stockDetails.previousClose || 0;
   const priceChange = regularMarketPrice - previousClose;
-  const priceChangePercent = previousClose ? (priceChange / previousClose) * 100 : 0;
+  const priceChangePercent = ((priceChange / previousClose) * 100);
   const isPositive = priceChange >= 0;
 
   const handleTradeSubmit = async (e) => {
@@ -55,28 +176,39 @@ const StockDetailsPage = () => {
       return;
     }
 
+    // ✅ Retrieve CSRF token from cookies
+    const csrfToken = getCookie("csrf_token");
+
+    if (!csrfToken) {
+        console.error("CSRF token is missing!");
+        return;
+    }
+
     const tradeData = {
       order_type: tradeForm.orderType,
       buy_in: tradeForm.buyIn,
-      shares: tradeForm.buyIn === 'Shares' ? Number(tradeForm.shares) : null,
-      amount: tradeForm.buyIn === 'Dollars' ? Number(tradeForm.amount) : null,
+      shares: tradeForm.buyIn === 'Shares' ? Number(tradeForm.shares) || 0 : 0, // ✅ Ensures shares is never missing
+      amount: tradeForm.buyIn === 'Dollars' ? Number(tradeForm.amount) || 0 : 0,
+      limit_price: tradeForm.limitPrice !== undefined ? Number(tradeForm.limitPrice) || 0 : 0 // ✅ Ensures limit_price is included
     };
+    
+    
 
-    await dispatch(executeTrade(stockId, tradeData));
+    // ✅ Use Redux action instead of fetch request
+    dispatch(executeTrade(stockId, tradeData, csrfToken));
 
     if (!tradeError) {
-      setTradeForm(prev => ({
-        ...prev,
-        shares: '',
-        amount: ''
-      }));
+        setTradeForm(prev => ({
+            ...prev,
+            shares: '',
+            amount: '',
+            limitPrice: 0
+        }));
+        dispatch(getStockDetails(stockId));
     }
-  };
+};
 
-  const sharesOwned = stockDetails.shares_owned || 0;
-  const estimatedCost = stockDetails.estimated_cost || 0;
-  const marketValue = sharesOwned * regularMarketPrice;
-  const totalReturn = sharesOwned * (regularMarketPrice - estimatedCost);
+
 
   return (
     <div className="stock-details">
@@ -94,43 +226,31 @@ const StockDetailsPage = () => {
       </div>
 
       <div className="main-content">
-        <div className="chart-container">
-          <ResponsiveContainer width="100%" height="100%">
-            <LineChart data={stockDetails.priceHistory || []}>
-              <Line 
-                type="monotone" 
-                dataKey="price" 
-                stroke={isPositive ? '#00C805' : '#FF5000'}
-                strokeWidth={2} 
-                dot={false}
-              />
-              <XAxis dataKey="time" />
-              <YAxis 
-                domain={['auto', 'auto']}
-                tickFormatter={(value) => `$${value.toFixed(2)}`}
-              />
-              <Tooltip 
-                formatter={(value) => [`$${value.toFixed(2)}`, 'Price']}
-              />
-            </LineChart>
-          </ResponsiveContainer>
+        <div className="chart-section-wrapper">
+          {stockDetails && (
+            <StockChart 
+              stockDetails={stockDetails}
+              timeRange={timeRange}
+              onTimeRangeChange={setTimeRange}
+            />
+          )}
         </div>
-
+        
         <div className="trade-form">
           <div className="trade-type-buttons">
             <button 
               type="button"
-              className={`trade-button ${tradeForm.orderType === 'Buy Order' ? 'active' : ''}`}
-              onClick={() => setTradeForm(prev => ({...prev, orderType: 'Buy Order'}))}
+              className={`trade-button ${tradeForm.orderType === 'Market Order' ? 'active' : ''}`}
+              onClick={() => setTradeForm(prev => ({...prev, orderType: 'Market Order'}))}
             >
-              Buy
+              Buy {stockDetails.ticker}
             </button>
             <button 
               type="button"
-              className={`trade-button ${tradeForm.orderType === 'Sell Order' ? 'active' : ''}`}
-              onClick={() => setTradeForm(prev => ({...prev, orderType: 'Sell Order'}))}
+              className={`trade-button ${tradeForm.orderType === 'Limit Order' ? 'active' : ''}`}
+              onClick={() => setTradeForm(prev => ({...prev, orderType: 'Limit Order'}))}
             >
-              Sell
+              Sell {stockDetails.ticker}
             </button>
           </div>
 
@@ -146,16 +266,7 @@ const StockDetailsPage = () => {
                 />
                 <span>Dollars</span>
               </label>
-              <label>
-                <input 
-                  type="radio"
-                  name="buyIn"
-                  value="Shares"
-                  checked={tradeForm.buyIn === 'Shares'}
-                  onChange={(e) => setTradeForm(prev => ({...prev, buyIn: e.target.value}))}
-                />
-                <span>Shares</span>
-              </label>
+              
             </div>
 
             {tradeForm.buyIn === 'Dollars' ? (
@@ -184,6 +295,23 @@ const StockDetailsPage = () => {
                   onChange={(e) => setTradeForm(prev => ({...prev, shares: e.target.value}))}
                   placeholder="0"
                 />
+              </div>
+            )}
+
+            {tradeForm.orderType === 'Limit Order' && (
+              <div className="input-group">
+                <label>Limit Price</label>
+                <div className="dollar-input">
+                  <FontAwesomeIcon icon={faDollarSign} className="dollar-sign" />
+                  <input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={tradeForm.limitPrice}
+                    onChange={(e) => setTradeForm(prev => ({...prev, limitPrice: e.target.value}))}
+                    placeholder="0.00"
+                  />
+                </div>
               </div>
             )}
 
@@ -217,7 +345,7 @@ const StockDetailsPage = () => {
             </div>
             <div>
               <p className="label">Average Cost</p>
-              <p className="value">${estimatedCost.toFixed(2)}</p>
+              <p className="value">${averageCost.toFixed(2)}</p>
             </div>
             <div>
               <p className="label">Market Value</p>
@@ -239,7 +367,7 @@ const StockDetailsPage = () => {
               <div key={order.id} className="order-item">
                 <div>
                   <p className="order-type">{order.order_type}</p>
-                  <p className="order-date">{new Date(order.date).toLocaleDateString()}</p>
+                  <p className="order-date">{order.date ? new Date(order.date).toLocaleDateString() : 'N/A'}</p>
                 </div>
                 <div className="order-details">
                   <p>{order.shares} shares</p>
@@ -249,26 +377,27 @@ const StockDetailsPage = () => {
             ))}
           </div>
         </div>
+
+        {stockDetails.News && stockDetails.News.length > 0 && (
+          <div className="news-card">
+            <h2>Latest News</h2>
+            <div className="news-list">
+              {stockDetails.News.map((newsItem) => (
+                <div key={newsItem.id} className="news-item">
+                  {newsItem.link && (
+                    <a href={newsItem.link} target="_blank" rel="noopener noreferrer">
+                      <h3>{newsItem.title || 'No Title Available'}</h3>
+                      <p className="news-source">{newsItem.source}</p>
+                    </a>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
-};
-
-const SAMPLE_DATA = {
-  id: 1,
-  ticker: 'AAPL',
-  shares_owned: 10,
-  estimated_cost: 150.25,
-  regularMarketPrice: 178.50,
-  previousClose: 176.50,
-  OrderHistory: [
-    { id: 1, order_type: 'Buy Order', shares: 5, price: 148.50, date: '2024-02-13' },
-    { id: 2, order_type: 'Buy Order', shares: 5, price: 152.00, date: '2024-02-12' },
-  ],
-  priceHistory: Array.from({ length: 24 }, (_, i) => ({
-    time: `${i}:00`,
-    price: 170 + Math.sin(i / 3) * 10
-  }))
 };
 
 export default StockDetailsPage;
