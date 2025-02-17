@@ -34,10 +34,13 @@ const WatchlistComponent = () => {
     const deleteStock = async (watchlistId, symbol) => {
         try {
             const csrf_token = getCsrfToken();
-
+            console.log(watchlistId, symbol);
+            
             const response = await fetch(`/api/watchlists/${watchlistId}/stocks/${symbol}`, {
                 method: "DELETE",
-                'X-CSRF-Token': csrf_token || '',
+
+                headers: {'X-CSRF-Token': csrf_token || '',
+                'Content-Type': 'application/json',}
             });
 
             if (!response.ok) {
@@ -48,7 +51,7 @@ const WatchlistComponent = () => {
             setWatchlists((prevWatchlists) =>
                 prevWatchlists.map((watchlist) =>
                     watchlist.id === watchlistId
-                        ? { ...watchlist, stocks: watchlist.stocks.filter((stock) => stock.symbol !== stockSymbol) }
+                        ? { ...watchlist, stocks: watchlist.stocks.filter((stock) => stock.symbol !== symbol) }
                         : watchlist
                 )
             );
