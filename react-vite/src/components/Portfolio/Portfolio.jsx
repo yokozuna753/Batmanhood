@@ -42,9 +42,6 @@ function Portfolio() {
     // the first data point should be $0 - account initiation
     // every data point is based on the performance of the portfolio
     // ! NOT based on account balance
-    // 0 => 900 - next data point (stock purchase) => 
-    // every data point is based on the performance of the portfolio
-    // ! NOT based on account balance
     // 0 => 900 - next data point (stock purchase) =>
 
     // Sample data, update this to use user's portfolio performance

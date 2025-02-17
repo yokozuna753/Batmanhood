@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import "./WatchlistComponent.css";
+import "./TestWatchlistComponent.css";
 
-const WatchlistComponent = () => {
+const TestWatchlistComponent = () => {
     const [watchlists, setWatchlists] = useState([]);
     const [expandedWatchlist, setExpandedWatchlist] = useState(null);
 
@@ -90,4 +90,4 @@ const WatchlistComponent = () => {
     );
 }
 
-export default WatchlistComponent;
+export default TestWatchlistComponent;

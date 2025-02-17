@@ -1,3 +1,3 @@
-import WatchlistPage from './WatchlistPage';
+// import WatchlistPage from './WatchlistPage';
 
-export default WatchlistPage;
+// export default WatchlistPage;
