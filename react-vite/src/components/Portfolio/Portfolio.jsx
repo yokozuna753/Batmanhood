@@ -4,6 +4,7 @@ import { loadPortfolio } from "../../redux/portfolio";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPortfolioPrices } from "../../redux/portfolio";
+import WatchlistComponent from "../../components/WatchlistComponent";
 import "./Portfolio.css";
 
 function Portfolio() {
@@ -65,7 +66,7 @@ function Portfolio() {
     chartRef.current = new Chart(document.getElementById("acquisitions"), {
       type: "line",
       data: {
-        labels: data.map((row) => ""),
+        labels: data.map(() => ""),
         datasets: [
           {
             label: "Portfolio Performance",
@@ -204,6 +205,9 @@ function Portfolio() {
                 ? sessionUser.account_balance
                 : sessionUser.account_balance.toString() + ".00"}
             </h3>
+          </div>
+          <div>
+            <WatchlistComponent/>
           </div>
           <div>
             <h3>Holdings</h3>

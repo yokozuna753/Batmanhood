@@ -48,12 +48,10 @@ def stocks_portfolio(userId):
 
         # #* set the data for the stock (data, percent gain)
         dat = yf.Ticker(f"{symbol}")
-        print("This is the data:", dat)
         history = dat.history(period="1mo")
         ticker["historical_data"] = [row[0] for index, row in history.iterrows()]
 
         dat = dat.info
-        print("This is the data:", dat)
         del dat["companyOfficers"]
         # del dat['']
 

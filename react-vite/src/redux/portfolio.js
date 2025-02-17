@@ -35,7 +35,6 @@ export const fetchPortfolioPrices = (userId) => async (dispatch) => {
   // const data = await response;
   if (response.ok) {
     const data = await response.json(); // Convert response to JSON
-    console.log('DATA FROM API:', data); // Log the data here
     dispatch(loadPortfolioPrices(data)); // Dispatch the action with the fetched data
   } else {
     console.error('Failed to fetch portfolio prices:', response.statusText);
@@ -54,11 +53,9 @@ export const portfolioReducer = (state = initialState, action) => {
       let portfolioSum = 0;
 
       tickersArray.forEach(ticker => {
-        console.log('this is ticker ====>', ticker);
         portfolioSum += ticker.shares_owned * ticker.stock_info.currentPrice
 
       });
-      console.log('DATA FROM REDUCER ==>', tickersArray);
 
       return {
         ...state,
