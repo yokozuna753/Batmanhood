@@ -5,6 +5,10 @@ const WatchlistComponent = () => {
     const [watchlists, setWatchlists] = useState([]);
     const [expandedWatchlist, setExpandedWatchlist] = useState(null);
 
+    const getCsrfToken = () => {
+        return document.cookie.split('; ').find(row => row.startsWith('csrf_token='))?.split('=')[1];
+      };
+
     useEffect(() => {
         const fetchWatchlists = async () => {
             try {
@@ -27,10 +31,13 @@ const WatchlistComponent = () => {
         setExpandedWatchlist(expandedWatchlist === id ? null : id);
     };
 
-    const deleteStock = async (watchlistId, stockSymbol) => {
+    const deleteStock = async (watchlistId, symbol) => {
         try {
-            const response = await fetch(`/api/watchlists/${watchlistId}/stocks/${stockSymbol}`, {
+            const csrf_token = getCsrfToken();
+
+            const response = await fetch(`/api/watchlists/${watchlistId}/stocks/${symbol}`, {
                 method: "DELETE",
+                'X-CSRF-Token': csrf_token || '',
             });
 
             if (!response.ok) {

@@ -196,10 +196,11 @@ def get_watchlists_with_stock(symbol):
     return jsonify([watchlist.to_dict() for watchlist in target_watchlists]), 200
 
 
-@watchlists.route('/<int:watchlist_id>/stocks/<string:symbol>', methods=['DELETE'])
+@watchlists.route('/<int:watchlistId>/stocks/<string:symbol>', methods=['DELETE'])
 @login_required
-def delete_stock_from_watchlist(watchlist_id, symbol):
-    watchlist_stock = WatchlistStock.query.filter_by(watchlist_id=watchlist_id, symbol=symbol).first()
+def delete_stock_from_watchlist(watchlistId, symbol):
+    print(' WATCHLIST HERE        ==>>>>>>', watchlistId, symbol)
+    watchlist_stock = WatchlistStock.query.filter_by(watchlistId=watchlistId, symbol=symbol).first()
     
     if not watchlist_stock:
         return jsonify({"error": "Stock not found in watchlist"}), 404
