@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { Outlet, useNavigate } from "react-router-dom";
-import { useDispatch } from "react-redux";
+import { Outlet, useNavigate, useLocation } from "react-router-dom";
+import { useDispatch, useSelector } from "react-redux";
 import { ModalProvider, Modal } from "../context/Modal";
 import { thunkAuthenticate } from "../redux/session";
 import Navigation from "../components/Navigation/Navigation";
@@ -8,27 +8,38 @@ import Navigation from "../components/Navigation/Navigation";
 export default function Layout() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const location = useLocation();
   const [isLoaded, setIsLoaded] = useState(false);
   
+  
+  const user = useSelector(state => state.session.user);
+
   useEffect(() => {
-    // Dispatch the action to check if the user is authenticated
-    dispatch(thunkAuthenticate()).then((user) => {
-      setIsLoaded(true);
-      if (user) {
-        // Redirect to the portfolio page if the user is logged in
-        navigate("/portfolio");
-      } else {
-        // Otherwise, stay on the login page or display modal for login
-        navigate("/login");
+    const initializeAuth = async () => {
+      if (!isLoaded) {
+        await dispatch(thunkAuthenticate());
+        setIsLoaded(true);
       }
-    });
-  }, [dispatch, navigate]);
+    };
+
+    initializeAuth();
+  }, [dispatch, isLoaded]);
+
+  useEffect(() => {
+    if (isLoaded && !user) {
+      navigate('/login');
+    } else if (isLoaded && user && location.pathname === '/') {
+      navigate('/portfolio');
+    }
+  }, [isLoaded, user, location.pathname, navigate]);
+
+  if (!isLoaded) return null;
 
   return (
     <>
       <ModalProvider>
         <Navigation />
-        {isLoaded && <Outlet />}
+        <Outlet />
         <Modal />
       </ModalProvider>
     </>

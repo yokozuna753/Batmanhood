@@ -11,15 +11,15 @@ class Watchlist(db.Model):
     user_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('users.id')), nullable=False)
     name = db.Column(db.String(100), nullable=False)
 
-    watchlist_stocks = db.relationship("WatchlistStock", back_populates="watchlist")
+    watchlist_stocks = db.relationship("WatchlistStock", back_populates="watchlist", cascade="all, delete-orphan")
 
     user = db.relationship(
         "User", back_populates="watchlist", cascade="save-update"
     )
-
     def to_dict(self):
         return {
             "id": self.id,
             "name": self.name,
+            "user_id": self.user_id,
             "watchlist_stocks": [stock.to_dict() for stock in self.watchlist_stocks]
         }

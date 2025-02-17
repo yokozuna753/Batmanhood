@@ -1,0 +1,351 @@
+/* StockDetails.css */
+.stock-details {
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 20px;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+}
+
+.stock-header {
+  background: white;
+  border: 1px solid rgb(229, 231, 235);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.stock-header h1 {
+  font-size: 24px;
+  font-weight: 500;
+  margin-bottom: 12px;
+  color: rgb(17, 24, 39);
+}
+
+.current-price {
+  font-size: 36px;
+  font-weight: 300;
+  margin-bottom: 8px;
+  color: rgb(17, 24, 39);
+}
+
+.price-change {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.price-change.positive {
+  color: rgb(0, 200, 5);
+}
+
+.price-change.negative {
+  color: rgb(255, 80, 0);
+}
+
+.main-content {
+  display: grid;
+  grid-template-columns: 2fr 1fr;
+  gap: 24px;
+  margin-bottom: 24px;
+}
+
+.chart-section-wrapper {
+  background: white;
+  border: 1px solid rgb(229, 231, 235);
+  border-radius: 8px;
+  padding: 24px;
+  margin-bottom: 24px;
+}
+
+.chart-section {
+  width: 100%;
+  padding: 20px 0;
+}
+
+.time-range-selector {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgb(229, 231, 235);
+}
+
+.time-range-button {
+  padding: 8px 16px;
+  border: none;
+  background: none;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgb(107, 114, 128);
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.time-range-button:hover {
+  background-color: rgb(243, 244, 246);
+}
+
+.time-range-button.active {
+  color: rgb(0, 200, 5);
+  background-color: rgb(243, 244, 246);
+}
+
+.chart-container {
+  height: 300px;
+  width: 100%;
+  position: relative;
+}
+
+.recharts-default-tooltip {
+  background-color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.recharts-tooltip-label {
+  color: rgb(107, 114, 128);
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.recharts-tooltip-item {
+  color: rgb(17, 24, 39);
+  font-size: 16px;
+  font-weight: 500;
+  padding: 0;
+}
+
+.recharts-cartesian-axis-tick-value {
+  font-size: 12px;
+  fill: rgb(107, 114, 128);
+}
+
+.recharts-cartesian-grid-horizontal line,
+.recharts-cartesian-grid-vertical line {
+  display: none;
+}
+
+.trade-form {
+  background: white;
+  border: 1px solid rgb(229, 231, 235);
+  border-radius: 8px;
+  padding: 24px;
+}
+
+.trade-type-buttons {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.trade-button {
+  flex: 1;
+  padding: 12px;
+  border: 1px solid rgb(229, 231, 235);
+  border-radius: 6px;
+  background: white;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.trade-button:hover {
+  background: rgb(243, 244, 246);
+}
+
+.trade-button.active {
+  background: rgb(0, 200, 5);
+  color: white;
+  border-color: rgb(0, 200, 5);
+}
+
+.radio-group {
+  display: flex;
+  gap: 24px;
+  margin-bottom: 24px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgb(229, 231, 235);
+}
+
+.radio-group label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  font-size: 14px;
+}
+
+.input-group {
+  margin-bottom: 24px;
+}
+
+.input-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: rgb(107, 114, 128);
+}
+
+.dollar-input {
+  position: relative;
+}
+
+.dollar-sign {
+  position: absolute;
+  left: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: rgb(107, 114, 128);
+}
+
+input[type="number"] {
+  width: 100%;
+  padding: 12px;
+  padding-left: 28px;
+  border: 1px solid rgb(229, 231, 235);
+  border-radius: 6px;
+  font-size: 14px;
+  box-sizing: border-box;
+}
+
+input[type="number"]:focus {
+  outline: none;
+  border-color: rgb(0, 200, 5);
+}
+
+.submit-button {
+  width: 100%;
+  padding: 14px;
+  background: rgb(0, 200, 5);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.submit-button:hover {
+  background: rgb(0, 180, 5);
+}
+
+.submit-button:disabled {
+  background: rgb(229, 231, 235);
+  cursor: not-allowed;
+}
+
+.bottom-section {
+  display: grid;
+  grid-template-columns: 1fr 1fr; 
+  gap: 20px;
+  padding: 20px 0;
+}
+
+.position-card,
+.history-card,
+.news-card {
+  background: white;
+  border: 1px solid rgb(229, 231, 235);
+  border-radius: 8px;
+  padding: 20px;
+  height: 300px; 
+  overflow-y: auto; 
+}
+
+.position-card h2,
+.history-card h2,
+.news-card h2 {
+  font-size: 18px;
+  font-weight: 500;
+  margin-bottom: 24px;
+  color: rgb(17, 24, 39);
+}
+
+.position-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 24px;
+}
+
+.label {
+  font-size: 14px;
+  color: rgb(107, 114, 128);
+  margin-bottom: 4px;
+}
+
+.value {
+  font-size: 18px;
+  font-weight: 500;
+  color: rgb(17, 24, 39);
+}
+
+.value.positive {
+  color: rgb(0, 200, 5);
+}
+
+.value.negative {
+  color: rgb(255, 80, 0);
+}
+
+.news-card {
+  grid-column: 1 / -1;
+}
+
+.news-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.news-item {
+  padding-bottom: 16px;
+  border-bottom: 1px solid rgb(229, 231, 235);
+}
+
+.news-item:last-child {
+  border-bottom: none;
+  padding-bottom: 0;
+}
+
+.news-item a {
+  text-decoration: none;
+  color: inherit;
+}
+
+.news-item h3 {
+  font-size: 16px;
+  font-weight: 500;
+  margin-bottom: 4px;
+  color: rgb(17, 24, 39);
+}
+
+.news-source {
+  font-size: 14px;
+  color: rgb(107, 114, 128);
+}
+
+@media (max-width: 768px) {
+  .main-content,
+  .bottom-section {
+    grid-template-columns: 1fr;
+  }
+  
+  .chart-container {
+    height: 400px;
+    width: 100%;
+    padding: 20px 0;
+  }
+  
+  .time-range-selector {
+    gap: 16px;
+  }
+  
+  .time-range-button {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+}

@@ -9,7 +9,7 @@ class WatchlistStock(db.Model):
 
     id = db.Column(db.Integer, primary_key=True)
     watchlist_id = db.Column(db.Integer, db.ForeignKey(add_prefix_for_prod('watchlists.id')), nullable=False)
-    ticker = db.Column(db.String(100), nullable=False)
+    symbol = db.Column(db.String(100), nullable=False)
 
     watchlist = db.relationship(
         "Watchlist", back_populates="watchlist_stocks", cascade="save-update"
@@ -18,6 +18,6 @@ class WatchlistStock(db.Model):
     def to_dict(self):
         return {
             "id": self.id,
-            "name": self.ticker,
+            "name": self.symbol,
         }
 
