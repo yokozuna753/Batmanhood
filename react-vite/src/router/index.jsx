@@ -26,7 +26,7 @@ export const router = createBrowserRouter([
         element: <Portfolio />
       },
       {
-        path: 'stocks/:stockId',
+        path: 'stocks/:ticker',
         element: <StockDetailsPage />
       }
     ],

@@ -31,7 +31,7 @@ function Portfolio() {
       // Start the interval for fetching portfolio prices
       const intervalId = setInterval(() => {
         dispatch(fetchPortfolioPrices(sessionUser.id));
-      }, 1000); // 5000 ms = 5 seconds
+      }, 10000); // 5000 ms = 5 seconds
 
       // Cleanup the interval on component unmount or sessionUser change
       return () => clearInterval(intervalId);
