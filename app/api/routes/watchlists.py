@@ -66,36 +66,36 @@ def get_user_watchlists():
 
 
 # 1. GET all session user watchlists
-@watchlists.route('/', methods=['GET'])
-@login_required
-def get_user_watchlists():  
-    logger.info("Fetching watchlists for user with ID: %d", current_user.id)
+# @watchlists.route('/', methods=['GET'])
+# @login_required
+# def get_user_watchlists():  
+#     logger.info("Fetching watchlists for user with ID: %d", current_user.id)
 
-    # Get current session user's watchlists
-    watchlists = Watchlist.query.filter_by(user_id=current_user.id).all()
-    logger.info("Collected Watchlists for user %d: %s", current_user.id, watchlists)
+#     # Get current session user's watchlists
+#     watchlists = Watchlist.query.filter_by(user_id=current_user.id).all()
+#     logger.info("Collected Watchlists for user %d: %s", current_user.id, watchlists)
 
-    # Process stocks of each watchlist, one at a time
-    watchlist_data = []
-    for watchlist in watchlists:
-        watchlist_stocks = WatchlistStock.query.filter_by(watchlist_id=watchlist.id).all()
-        logger.info("stocks associated with watchlist %d", watchlist.id)
+#     # Process stocks of each watchlist, one at a time
+#     watchlist_data = []
+#     for watchlist in watchlists:
+#         watchlist_stocks = WatchlistStock.query.filter_by(watchlist_id=watchlist.id).all()
+#         logger.info("stocks associated with watchlist %d", watchlist.id)
 
-        stock_symbols = [ws.symbol for ws in watchlist_stocks]
-        logger.info("stock symbols associated with watchlist %d: %s", watchlist.id, stock_symbols)
+#         stock_symbols = [ws.symbol for ws in watchlist_stocks]
+#         logger.info("stock symbols associated with watchlist %d: %s", watchlist.id, stock_symbols)
 
-        # Pass each batch of stocks to a data fetching utility function
-        # stock_data = fetch_stock_data(stock_symbols) if stock_symbols else []
+#         # Pass each batch of stocks to a data fetching utility function
+#         # stock_data = fetch_stock_data(stock_symbols) if stock_symbols else []
 
-        watchlist_data.append({
-            "id": watchlist.id,
-            "name": watchlist.name,
-            "stocks": stock_symbols
-        })
+#         watchlist_data.append({
+#             "id": watchlist.id,
+#             "name": watchlist.name,
+#             "stocks": stock_symbols
+#         })
 
-    logger.info("Running watchlist data: %s", watchlist_data)
-    logger.info("Retrieved %d watchlists", len(watchlists))
-    return jsonify(watchlist_data), 200
+#     logger.info("Running watchlist data: %s", watchlist_data)
+#     logger.info("Retrieved %d watchlists", len(watchlists))
+#     return jsonify(watchlist_data), 200
 
 # 2. DELETE a session user's watchlist
 @watchlists.route('/<int:id>', methods=['DELETE'])
@@ -194,6 +194,47 @@ def get_watchlists_with_stock(symbol):
 
     logger.info("Found %d watchlists containing stock %s", len(target_watchlists), symbol)
     return jsonify([watchlist.to_dict() for watchlist in target_watchlists]), 200
+
+
+@watchlists.route('/<int:watchlist_id>/stocks/<string:stock_symbol>', methods=['DELETE'])
+def delete_stock_from_watchlist(watchlist_id, stock_symbol):
+    watchlist_stock = WatchlistStock.query.filter_by(watchlist_id=watchlist_id, stock_symbol=stock_symbol).first()
+    
+    if not watchlist_stock:
+        return jsonify({"error": "Stock not found in watchlist"}), 404
+    
+    db.session.delete(watchlist_stock)
+    db.session.commit()
+    
+    return jsonify({"message": "Stock removed from watchlist successfully"}), 200
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 

@@ -69,6 +69,7 @@ const WatchlistComponent = () => {
                                     watchlist.stocks.map((stock) => (
                                         <li key={stock.symbol}>
                                             {stock.symbol}
+                                            {/* Delete stock from a watchlist */}
                                             <button
                                                 onClick={() => deleteStock(watchlist.id, stock.symbol)}
                                                 style={{ marginLeft: "10px", cursor: "pointer", color: "red" }}
