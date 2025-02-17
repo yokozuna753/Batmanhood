@@ -45,7 +45,7 @@ watchlists = Blueprint("watchlists", __name__)
 
 
 @watchlists.route('/', methods=['GET'])
-#@login_required
+@login_required
 def get_user_watchlists():  
     logger.info("Fetching watchlists for user with ID: %d", current_user.id)
 
@@ -197,7 +197,7 @@ def get_watchlists_with_stock(symbol):
 
 
 @watchlists.route('/<int:watchlist_id>/stocks/<string:stock_symbol>', methods=['DELETE'])
-#@login_required
+@login_required
 def delete_stock_from_watchlist(watchlist_id, stock_symbol):
     watchlist_stock = WatchlistStock.query.filter_by(watchlist_id=watchlist_id, stock_symbol=stock_symbol).first()
     
