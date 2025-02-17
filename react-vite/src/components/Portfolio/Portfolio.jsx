@@ -66,7 +66,7 @@ function Portfolio() {
     chartRef.current = new Chart(document.getElementById("acquisitions"), {
       type: "line",
       data: {
-        labels: data.map((row) => ""),
+        labels: data.map(() => ""),
         datasets: [
           {
             label: "Portfolio Performance",
