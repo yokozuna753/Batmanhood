@@ -63,12 +63,14 @@ CORS(
                 "Content-Type",
                 "X-CSRF-Token",
                 "XSRF-TOKEN",
-            ],  # Added XSRF-TOKEN
+                "X-Request-ID",
+            ],
             "expose_headers": [
                 "Content-Type",
                 "X-CSRF-Token",
                 "XSRF-TOKEN",
-            ],  # Added XSRF-TOKEN
+                "X-Request-ID",
+            ],
         }
     },
 )
