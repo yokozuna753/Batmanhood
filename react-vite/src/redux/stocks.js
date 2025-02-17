@@ -1,5 +1,3 @@
-// src/redux/stocks.js
-
 // Action Types
 const SET_STOCK_DETAILS = 'stocks/SET_STOCK_DETAILS';
 const SET_LOADING = 'stocks/SET_LOADING';
@@ -49,8 +47,13 @@ export const getStockDetails = (stockId) => async (dispatch) => {
   dispatch(setError(null));
   
   try {
+    const csrf_token = getCsrfToken();
     const response = await fetch(`http://localhost:8000/api/stock_details/${stockId}`, {
-      credentials: 'include'
+      credentials: 'include',
+      headers: {
+        'Content-Type': 'application/json',
+        'X-CSRF-Token': csrf_token || '',
+      }
     });
     
     if (!response.ok) {
@@ -98,7 +101,7 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
-        'XSRF-TOKEN': csrf_token,
+        'X-CSRF-Token': csrf_token,
       },
       body: JSON.stringify(tradeData),
     });
@@ -107,8 +110,6 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
       const errorData = await response.json();
       throw new Error(errorData.message || 'Trade failed');
     }
-
-    // const responseData = await response.json();
     
     dispatch(setTradeSuccess(
       `${tradeData.order_type} executed successfully! ${

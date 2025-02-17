@@ -43,7 +43,26 @@ db.init_app(app)
 Migrate(app, db)
 
 # Application Security
-CORS(app)
+CORS(
+    app,
+    resources={
+        r"/api/*": {
+            "origins": ["http://localhost:5174"],
+            "supports_credentials": True,
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": [
+                "Content-Type",
+                "X-CSRF-Token",
+                "XSRF-TOKEN",
+            ],  # Added XSRF-TOKEN
+            "expose_headers": [
+                "Content-Type",
+                "X-CSRF-Token",
+                "XSRF-TOKEN",
+            ],  # Added XSRF-TOKEN
+        }
+    },
+)
 
 
 # Since we are deploying with Docker and Flask,
