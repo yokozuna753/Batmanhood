@@ -27,6 +27,29 @@ const WatchlistComponent = () => {
         setExpandedWatchlist(expandedWatchlist === id ? null : id);
     };
 
+    const deleteStock = async (watchlistId, stockSymbol) => {
+        try {
+            const response = await fetch(`/api/watchlists/${watchlistId}/stocks/${stockSymbol}`, {
+                method: "DELETE",
+            });
+
+            if (!response.ok) {
+                throw new Error("Failed to delete stock from watchlist");
+            }
+
+            // Update state to remove the stock from the watchlist
+            setWatchlists((prevWatchlists) =>
+                prevWatchlists.map((watchlist) =>
+                    watchlist.id === watchlistId
+                        ? { ...watchlist, stocks: watchlist.stocks.filter((stock) => stock.symbol !== stockSymbol) }
+                        : watchlist
+                )
+            );
+        } catch (error) {
+            console.error("Error deleting stock:", error);
+        }
+    };
+
     return (
         <div className="watchlist-container">
             <h2 className="watchlist-container-header ">Lists</h2>
@@ -46,6 +69,12 @@ const WatchlistComponent = () => {
                                     watchlist.stocks.map((stock) => (
                                         <li key={stock.symbol}>
                                             {stock.symbol}
+                                            <button
+                                                onClick={() => deleteStock(watchlist.id, stock.symbol)}
+                                                style={{ marginLeft: "10px", cursor: "pointer", color: "red" }}
+                                            >
+                                                ❌
+                                            </button>
                                         </li>
                                     ))
                                 ) : (
