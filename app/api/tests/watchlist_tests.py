@@ -1,8 +1,4 @@
-# Browser console fetch commands to test watchlist routes
-
-## Testing rules
-
-### Watchlist 4 (belonging to user 2) should remain empty for testing null
+# Browser console fetch commands to test the ORIGINAL watchlist routes
 
 """
 #1 - Fetch-> GET session user's watchlists test
