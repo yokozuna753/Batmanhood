@@ -87,7 +87,7 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
       const requestId = Date.now().toString();
       const csrf_token = getCsrfToken();
       
-      const response = await fetch(`http://localhost:8000/api/stock_details/${stockId}/trade`, {
+      const response = await fetch(`/api/stock_details/${stockId}/trade`, {
           method: 'POST',
           credentials: 'include',  
           headers: {
