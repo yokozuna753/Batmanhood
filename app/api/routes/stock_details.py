@@ -44,7 +44,7 @@ CORS(
 # Cache setup
 market_data_cache = {}
 CACHE_DURATION = timedelta(minutes=5)
-processed_requests = set()  # Store processed request IDs
+processed_requests = set()
 
 
 def get_cached_market_data(ticker_symbol):

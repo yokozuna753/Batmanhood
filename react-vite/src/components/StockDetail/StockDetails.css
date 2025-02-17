@@ -240,8 +240,9 @@ input[type="number"]:focus {
 
 .bottom-section {
   display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 24px;
+  grid-template-columns: 1fr 1fr; 
+  gap: 20px;
+  padding: 20px 0;
 }
 
 .position-card,
@@ -250,7 +251,9 @@ input[type="number"]:focus {
   background: white;
   border: 1px solid rgb(229, 231, 235);
   border-radius: 8px;
-  padding: 24px;
+  padding: 20px;
+  height: 300px; 
+  overflow-y: auto; 
 }
 
 .position-card h2,

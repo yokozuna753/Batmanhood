@@ -89,7 +89,7 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
       
       const response = await fetch(`http://localhost:8000/api/stock_details/${stockId}/trade`, {
           method: 'POST',
-          credentials: 'include',  // Important for CORS with authentication
+          credentials: 'include',  
           headers: {
               'Content-Type': 'application/json',
               'X-CSRF-Token': csrf_token,
