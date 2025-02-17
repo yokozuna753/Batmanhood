@@ -44,35 +44,16 @@ watchlists = Blueprint("watchlists", __name__)
 #     return stock_data
 
 
-# @watchlists.route('/', methods=['GET'])
-# @login_required
-# def get_user_watchlists():  
-#     logger.info("Fetching watchlists for user with ID: %d", current_user.id)
-
-#     watchlists = Watchlist.query.filter_by(user_id=current_user.id).all()
-
-#     watchlist_data = []
-#     for watchlist in watchlists:
-#         watchlist_stocks = WatchlistStock.query.filter_by(watchlist_id=watchlist.id).all()
-#         stock_symbols = [ws.symbol for ws in watchlist_stocks]
-
-#         watchlist_data.append({
-#             "id": watchlist.id,
-#             "name": watchlist.name,
-#             "stocks": [{"symbol": symbol} for symbol in stock_symbols]
-#         })
-
-#     return jsonify(watchlist_data), 200
-
 @watchlists.route('/', methods=['GET'])
+@login_required
 def get_user_watchlists():  
-    logger.info("Fetching watchlists for user with ID: 2", 2)
+    logger.info("Fetching watchlists for user with ID: %d", current_user.id)
 
-    watchlists = Watchlist.query.filter_by(user_id=2).all()
+    watchlists = Watchlist.query.filter_by(user_id=current_user.id).all()
 
     watchlist_data = []
     for watchlist in watchlists:
-        watchlist_stocks = WatchlistStock.query.filter_by(watchlist_id=2).all()
+        watchlist_stocks = WatchlistStock.query.filter_by(watchlist_id=watchlist.id).all()
         stock_symbols = [ws.symbol for ws in watchlist_stocks]
 
         watchlist_data.append({
@@ -82,6 +63,7 @@ def get_user_watchlists():
         })
 
     return jsonify(watchlist_data), 200
+
 
 # 1. GET all session user watchlists
 # @watchlists.route('/', methods=['GET'])
@@ -214,24 +196,10 @@ def get_watchlists_with_stock(symbol):
     return jsonify([watchlist.to_dict() for watchlist in target_watchlists]), 200
 
 
-# @watchlists.route('/<int:watchlist_id>/stocks/<string:stock_symbol>', methods=['DELETE'])
-# @login_required
-# def delete_stock_from_watchlist(watchlist_id, stock_symbol):
-#     watchlist_stock = WatchlistStock.query.filter_by(watchlist_id=watchlist_id, stock_symbol=stock_symbol).first()
-    
-#     if not watchlist_stock:
-#         return jsonify({"error": "Stock not found in watchlist"}), 404
-    
-#     db.session.delete(watchlist_stock)
-#     db.session.commit()
-    
-#     return jsonify({"message": "Stock removed from watchlist successfully"}), 200
-
-
-# Temp test route for TestWatchListComponent
-@watchlists.route('/<int:watchlist_id>/stocks/<string:stock_symbol>', methods=['DELETE'])
-def delete_stock_from_watchlist(watchlist_id, stock_symbol):
-    watchlist_stock = WatchlistStock.query.filter_by(watchlist_id=watchlist_id, stock_symbol=stock_symbol).first()
+@watchlists.route('/<int:watchlist_id>/stocks/<string:symbol>', methods=['DELETE'])
+@login_required
+def delete_stock_from_watchlist(watchlist_id, symbol):
+    watchlist_stock = WatchlistStock.query.filter_by(watchlist_id=watchlist_id, symbol=symbol).first()
     
     if not watchlist_stock:
         return jsonify({"error": "Stock not found in watchlist"}), 404
@@ -240,6 +208,7 @@ def delete_stock_from_watchlist(watchlist_id, stock_symbol):
     db.session.commit()
     
     return jsonify({"message": "Stock removed from watchlist successfully"}), 200
+
 
 
 
