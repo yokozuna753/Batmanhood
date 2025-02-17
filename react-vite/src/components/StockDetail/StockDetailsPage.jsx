@@ -161,33 +161,43 @@ const StockDetailsPage = () => {
   const handleTradeSubmit = async (e) => {
     e.preventDefault();
 
+    // Form validation
     if (tradeForm.buyIn === 'Dollars' && (!tradeForm.amount || tradeForm.amount <= 0)) {
-      return;
+        return;
     }
     if (tradeForm.buyIn === 'Shares' && (!tradeForm.shares || tradeForm.shares <= 0)) {
-      return;
+        return;
     }
 
     const tradeData = {
-      order_type: tradeForm.orderType,
-      buy_in: tradeForm.buyIn,
-      shares: tradeForm.buyIn === 'Shares' ? Number(tradeForm.shares) : null,
-      amount: tradeForm.buyIn === 'Dollars' ? Number(tradeForm.amount) : null,
-      limit_price: tradeForm.limitPrice || 0
+        order_type: tradeForm.orderType,
+        buy_in: tradeForm.buyIn,
+        shares: tradeForm.buyIn === 'Shares' ? Number(tradeForm.shares) : null,
+        amount: tradeForm.buyIn === 'Dollars' ? Number(tradeForm.amount) : null,
+        limit_price: tradeForm.limitPrice || 0
     };
 
-    await dispatch(executeTrade(stockId, tradeData));
-
-    if (!tradeError) {
-      setTradeForm(prev => ({
-        ...prev,
-        shares: '',
-        amount: '',
-        limitPrice: 0
-      }));
-      dispatch(getStockDetails(stockId));
+    try {
+        // Wait for the trade to complete
+        const result = await dispatch(executeTrade(stockId, tradeData)).unwrap();
+        
+        // Only if trade was successful, reset form and fetch updated details
+        if (result) {
+            setTradeForm(prev => ({
+                ...prev,
+                shares: '',
+                amount: '',
+                limitPrice: 0
+            }));
+            // Add a small delay before refreshing details
+            setTimeout(() => {
+                dispatch(getStockDetails(stockId));
+            }, 500);
+        }
+    } catch (error) {
+        console.error('Trade failed:', error);
     }
-  };
+};
 
   return (
     <div className="stock-details">

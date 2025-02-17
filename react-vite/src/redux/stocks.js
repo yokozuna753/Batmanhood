@@ -84,6 +84,7 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
   dispatch(setTradeSuccess(null));
 
   try {
+    // Input validation
     if (!tradeData.order_type || 
         (tradeData.buy_in !== 'Dollars' && tradeData.buy_in !== 'Shares') ||
         (tradeData.buy_in === 'Dollars' && !tradeData.amount) ||
@@ -96,19 +97,24 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
       throw new Error('CSRF token not found in cookies');
     }
 
+    // Add request ID to prevent duplicate processing
+    const requestId = Date.now().toString();
+    
     const response = await fetch(`http://localhost:8000/api/stock_details/${stockId}/trade`, {
       method: 'POST',
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRF-Token': csrf_token,
+        'X-Request-ID': requestId  // Add request ID header
       },
       body: JSON.stringify(tradeData),
     });
 
+    const data = await response.json(); // Always parse the response
+
     if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || 'Trade failed');
+      throw new Error(data.message || data.details || 'Trade failed');
     }
     
     dispatch(setTradeSuccess(
@@ -119,6 +125,8 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
       }`
     ));
 
+    // Add a small delay before refreshing stock details
+    await new Promise(resolve => setTimeout(resolve, 500));
     await dispatch(getStockDetails(stockId));
     return true;
   } catch (err) {
