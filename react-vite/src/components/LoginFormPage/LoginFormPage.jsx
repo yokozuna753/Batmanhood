@@ -44,7 +44,7 @@ function LoginFormPage() {
         <div className='login'>Log In to Batmanhood</div>
         {errors.length > 0 &&
           errors.map((message) => <p key={message}>{message}</p>)}
-        <form onSubmit={handleSubmit}>
+        <form className="form" onSubmit={handleSubmit}>
           <label>
             Email
             <input

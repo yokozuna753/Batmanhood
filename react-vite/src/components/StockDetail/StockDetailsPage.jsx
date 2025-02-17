@@ -168,11 +168,11 @@ const StockDetailsPage = () => {
     
     // Form validation
     if (tradeForm.buyIn === 'Dollars' && (!tradeForm.amount || tradeForm.amount <= 0)) {
-        // Instead of dispatching setTradeError, we'll pass the error message to executeTrade
+        
         return;
     }
     if (tradeForm.buyIn === 'Shares' && (!tradeForm.shares || tradeForm.shares <= 0)) {
-        // Instead of dispatching setTradeError, we'll pass the error message to executeTrade
+        
         return;
     }
 
@@ -377,23 +377,7 @@ const StockDetailsPage = () => {
           </div>
         </div>
 
-        {stockDetails.News && stockDetails.News.length > 0 && (
-          <div className="news-card">
-            <h2>Latest News</h2>
-            <div className="news-list">
-              {stockDetails.News.map((newsItem) => (
-                <div key={newsItem.id} className="news-item">
-                  {newsItem.link && (
-                    <a href={newsItem.link} target="_blank" rel="noopener noreferrer">
-                      <h3>{newsItem.title || 'No Title Available'}</h3>
-                      <p className="news-source">{newsItem.source}</p>
-                    </a>
-                  )}
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        
       </div>
     </div>
   );
