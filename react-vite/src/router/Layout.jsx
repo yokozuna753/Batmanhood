@@ -11,7 +11,7 @@ export default function Layout() {
   const location = useLocation();
   const [isLoaded, setIsLoaded] = useState(false);
   
-  // Add this to track authentication state
+  
   const user = useSelector(state => state.session.user);
 
   useEffect(() => {

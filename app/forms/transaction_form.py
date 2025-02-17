@@ -20,7 +20,7 @@ class TransactionForm(FlaskForm):
 
     shares = IntegerField(
         "Shares",
-        validators=[Optional()],  # ✅ Allow shares to be optional
+        validators=[Optional()],
     )
 
     buy_in = SelectField(
