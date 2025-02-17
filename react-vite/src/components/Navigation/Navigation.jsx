@@ -7,7 +7,7 @@ import "./Navigation.css";
 function Navigation() {
   return (
     <ul>
-      <TestWatchlistComponent />
+  
       <li>
         <NavLink to="/">Home</NavLink>
         <NavLink to="/Watchlists/2/component"> Test Watchlist Component </NavLink>
