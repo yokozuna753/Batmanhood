@@ -69,7 +69,7 @@ function Portfolio() {
         datasets: [
           {
             label: "Portfolio Performance",
-            data: [0,0, ...portfolioData],
+            data: [0, 0, ...portfolioData],
           },
         ],
       },
@@ -102,7 +102,7 @@ function Portfolio() {
         chartRef.current.destroy();
       }
     };
-  }, [sessionUser,portfolio, dispatch]);
+  }, [sessionUser, portfolio, dispatch]);
 
   useEffect(() => {
     if (portfolio.tickers) {
@@ -237,7 +237,7 @@ function Portfolio() {
                         </h5>
                       </div>
 
-                      
+
                     </li>
                   );
                 })}

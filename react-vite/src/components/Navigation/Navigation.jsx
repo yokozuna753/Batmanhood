@@ -1,13 +1,16 @@
 import { NavLink } from "react-router-dom";
 import ProfileButton from "./ProfileButton";
 import SearchBar from '../SearchBar/SearchBar'
+import TestWatchlistComponent from "../TestWatchlistComponent";
 import "./Navigation.css";
 
 function Navigation() {
   return (
     <ul>
+      <TestWatchlistComponent />
       <li>
         <NavLink to="/">Home</NavLink>
+        <NavLink to="/Watchlists/2/component"> Test Watchlist Component </NavLink>
       </li>
 
       <li>
@@ -15,7 +18,7 @@ function Navigation() {
       </li>
 
       <li>
-    <SearchBar/>
+        <SearchBar />
       </li>
     </ul>
 

@@ -9,6 +9,7 @@ from .api.user_routes import user_routes
 from .api.auth_routes import auth_routes
 from .api.routes.portfolio import portfolio
 from .api.routes.search_bar import search_bar
+from .api.routes.watchlists import watchlists
 from .seeds import seed_commands
 from .config import Config
 from .api.routes.stock_details import stock_details_routes
@@ -24,6 +25,7 @@ app.register_blueprint(auth_routes, url_prefix="/api/auth")
 app.register_blueprint(portfolio, url_prefix="/api")
 app.register_blueprint(search_bar, url_prefix="/api")
 app.register_blueprint(stock_details_routes, url_prefix="/api/stock_details")
+app.register_blueprint(watchlists, url_prefix='/api/watchlists')
 
 # Setup login manager
 login = LoginManager(app)
@@ -39,6 +41,13 @@ def load_user(id):
 app.cli.add_command(seed_commands)
 
 app.config.from_object(Config)
+# app.register_blueprint(user_routes, url_prefix="/api/users")
+# app.register_blueprint(auth_routes, url_prefix="/api/auth")
+# app.register_blueprint(portfolio, url_prefix="/api")
+# app.register_blueprint(search_bar, url_prefix="/api")
+# app.register_blueprint(user_routes, url_prefix='/api/users')
+# app.register_blueprint(auth_routes, url_prefix='/api/auth')
+# app.register_blueprint(portfolio, url_prefix='/api')
 db.init_app(app)
 Migrate(app, db)
 

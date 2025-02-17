@@ -4,6 +4,9 @@ import SignupFormPage from "../components/SignupFormPage";
 import Layout from "./Layout";
 import Portfolio from "../components/Portfolio/Portfolio";
 import StockDetailsPage from "../components/StockDetail/StockDetailsPage";
+// import WatchlistPage from "../components/WatchlistPage/WatchlistPage";
+import WatchlistComponent from "../components/WatchlistComponent";
+
 
 export const router = createBrowserRouter([
   {
@@ -28,6 +31,14 @@ export const router = createBrowserRouter([
       {
         path: 'stocks/:ticker',
         element: <StockDetailsPage />
+      },
+      // {
+      //   path: 'watchlists/:watchlist_id',
+      //   element: <WatchlistPage />
+      // },
+      {
+        path: 'watchlists/:user_id/component',
+        element: <WatchlistComponent />
       }
     ],
   },

@@ -3,17 +3,31 @@ from sqlalchemy.sql import text
 
 
 # Adds a demo user, you can add other users here if you want
+
+## Retirement list should remain empty for testing empty list edge case
+## Lists owned by user 2 should be used to test watchlist with matching stocks
+
 def seed_watchlist():
     trending = Watchlist(
         user_id=1,name='Trending')
     popular = Watchlist(
         user_id=2,name='Popular')
+    retirement = Watchlist(
+        user_id=2,name='Retirement')
+    rocket = Watchlist(
+        user_id=2,name='Rocket')
+    innovative = Watchlist(
+        user_id=2,name='Innovative')
     long_term = Watchlist(
-        user_id=3,name='Long Term')
+        user_id=3,name='Long Term'
+    )
 
     db.session.add(trending)
     db.session.add(popular)
     db.session.add(long_term)
+    db.session.add(retirement)
+    db.session.add(rocket)
+    db.session.add(innovative)
     db.session.commit()
 
 
