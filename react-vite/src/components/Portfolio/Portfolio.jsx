@@ -18,8 +18,8 @@ function Portfolio() {
   // Use a ref array to store references to the individual stock charts
   const stockChartRefs = useRef([]);
 
-  // !!!!!!!!!!! FOR THE DATA POINTS IN THE PORTFOLIO CHART, 
-  // ! use an ARRAY 
+  // !!!!!!!!!!! FOR THE DATA POINTS IN THE PORTFOLIO CHART,
+  // ! use an ARRAY
   // ! every 5 seconds calculate the current price of each stock (see below)
   // ! add them up together and push it to the array of the chart
 
@@ -31,17 +31,14 @@ function Portfolio() {
       // Start the interval for fetching portfolio prices
       const intervalId = setInterval(() => {
         dispatch(fetchPortfolioPrices(sessionUser.id));
-      }, 5000); // 5000 ms = 5 seconds
+      }, 10000); // 5000 ms = 5 seconds
 
       // Cleanup the interval on component unmount or sessionUser change
       return () => clearInterval(intervalId);
     }
   }, [dispatch, sessionUser]);
 
-
   useEffect(() => {
-
-
     // the first data point should be $0 - account initiation
     // every data point is based on the performance of the portfolio
     // ! NOT based on account balance
@@ -57,7 +54,8 @@ function Portfolio() {
       { year: 2015, count: 30 },
       { year: 2016, count: 28 },
     ];
-
+    const portfolioData = [];
+    portfolioData.push(portfolio.livePortfolioValue);
     // Destroy the main chart if it already exists
     if (chartRef.current) {
       chartRef.current.destroy();
@@ -71,7 +69,7 @@ function Portfolio() {
         datasets: [
           {
             label: "Portfolio Performance",
-            data: [0, 59, 80, 81, 56, 55, 40],
+            data: [0, 0, ...portfolioData],
           },
         ],
       },
@@ -81,7 +79,7 @@ function Portfolio() {
             display: false,
           },
         },
-        responsive: true,
+        responsive: false,
         maintainAspectRatio: false, // Disable aspect ratio to allow for resizing
         scales: {
           x: {
@@ -100,12 +98,11 @@ function Portfolio() {
 
     // Clean up the chart when the component is unmounted
     return () => {
-
       if (chartRef.current) {
         chartRef.current.destroy();
       }
     };
-  }, [sessionUser, dispatch]);
+  }, [sessionUser, portfolio, dispatch]);
 
   useEffect(() => {
     if (portfolio.tickers) {
@@ -180,12 +177,10 @@ function Portfolio() {
     return <Navigate to="/login" replace={true} />;
   }
 
-
-
   // Portfolio chart - track performance of portfolio (everything combined)
   //! use a setInterval every 10 seconds to track the live value of each stock
   // first try loading the portfolio with a set interval every 10 seconds
-  // 
+  //
   // create a sum variable
   // 1. grab the live stock price.
   // 2. multiply the shares the user owns by the stock price
@@ -217,12 +212,10 @@ function Portfolio() {
                 {portfolio.tickers.map((stock, index) => {
                   return (
                     <li key={stock.id}>
-                      <p>{stock.ticker} </p>
-                      <p>{stock.shares_owned} shares </p>
-                      <h5>
-                        ${Math.round(stock.stock_info.currentPrice * 100) / 100}{" "}
-                      </h5>
-
+                      <div>
+                        <p>{stock.ticker} </p>
+                        <p>{stock.shares_owned} shares </p>
+                      </div>
                       {/* Render the individual stock chart (smaller version) */}
                       <div>
                         <canvas
@@ -236,6 +229,15 @@ function Portfolio() {
                           }} // CSS to ensure size restrictions
                         ></canvas>
                       </div>
+                      <div>
+                        <h5>
+                          $
+                          {Math.round(stock.stock_info.currentPrice * 100) /
+                            100}{" "}
+                        </h5>
+                      </div>
+
+
                     </li>
                   );
                 })}

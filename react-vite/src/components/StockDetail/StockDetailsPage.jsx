@@ -103,9 +103,10 @@ const StockChart = ({ stockDetails, timeRange, onTimeRangeChange }) => {
 };
 
 const StockDetailsPage = () => {
-  const { stockId } = useParams();
+  const { ticker } = useParams();
   const dispatch = useDispatch();
   
+  // const stockId = useSelector((state) => state.session.user.id)
   const stockDetails = useSelector(state => state.stocks.currentStock);
   const loading = useSelector(state => state.stocks.loading);
   const error = useSelector(state => state.stocks.error);
@@ -122,10 +123,10 @@ const StockDetailsPage = () => {
   });
 
   useEffect(() => {
-    if (stockId) {
-      dispatch(getStockDetails(stockId));
+    if (ticker) {
+      dispatch(getStockDetails(ticker));
     }
-  }, [dispatch, stockId]);
+  }, [dispatch, ticker]);
 
   if (loading) return (
     <div className="loading">
@@ -160,19 +161,14 @@ const StockDetailsPage = () => {
 
   const handleTradeSubmit = async (e) => {
     e.preventDefault();
-    
-    // Prevent submission if already submitting
-    if (tradeLoading) {
-        return;
-    }
-    
+
+    if (tradeLoading) return;
+
     // Form validation
     if (tradeForm.buyIn === 'Dollars' && (!tradeForm.amount || tradeForm.amount <= 0)) {
-        
         return;
     }
-    if (tradeForm.buyIn === 'Shares' && (!tradeForm.shares || tradeForm.shares <= 0)) {
-        
+    if (tradeForm.buyIn === 'Shares' && (!tradeForm.shares ||  tradeForm.shares <= 0)) {
         return;
     }
 
@@ -181,12 +177,19 @@ const StockDetailsPage = () => {
         buy_in: tradeForm.buyIn,
         shares: tradeForm.buyIn === 'Shares' ? Number(tradeForm.shares) : null,
         amount: tradeForm.buyIn === 'Dollars' ? Number(tradeForm.amount) : null,
-        limit_price: tradeForm.limitPrice || 0
+        limit_price: tradeForm.limitPrice || 0,
+        ticker: stockDetails.ticker
     };
 
     try {
-        const success = await dispatch(executeTrade(stockId, tradeData));
-        
+        // Get the stockId from stockDetails
+        if (!stockDetails ||  !stockDetails.id) {
+            console.error('No stock ID available');
+            return;
+        }
+
+        const success = await dispatch(executeTrade(stockDetails.id, tradeData));
+
         if (success) {
             setTradeForm(prev => ({
                 ...prev,
@@ -194,6 +197,9 @@ const StockDetailsPage = () => {
                 amount: '',
                 limitPrice: 0
             }));
+
+            // Refresh stock details after successful trade
+            dispatch(getStockDetails(ticker));
         }
     } catch (error) {
         console.error('Trade failed:', error);

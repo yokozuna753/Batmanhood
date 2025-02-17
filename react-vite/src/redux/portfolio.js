@@ -50,19 +50,19 @@ export const portfolioReducer = (state = initialState, action) => {
       return { ...state, ...action.payload };
     case LOAD_PRICES:{
       let tickersArray = action.payload.tickers;
+      // shares
       let portfolioSum = 0;
 
       tickersArray.forEach(ticker => {
         console.log('this is ticker ====>', ticker);
+        portfolioSum += ticker.shares_owned * ticker.stock_info.currentPrice
+
       });
-
       console.log('DATA FROM REDUCER ==>', tickersArray);
-
-      // console.log()
 
       return {
         ...state,
-        // "livePortfolioValue": 
+        "livePortfolioValue": Number(portfolioSum.toFixed(2))
       }
        }
     default:
