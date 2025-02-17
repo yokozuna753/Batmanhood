@@ -13,12 +13,18 @@ from .api.routes.watchlists import watchlists
 from .seeds import seed_commands
 from .config import Config
 from .api.routes.stock_details import stock_details_routes
-
+from flask_wtf.csrf import CSRFProtect, generate_csrf, ValidationError
 
 app = Flask(__name__, static_folder="../react-vite/dist", static_url_path="/")
 
+csrf = CSRFProtect(app)
 
-app.register_blueprint(stock_details_routes, url_prefix="/api/stocks")
+# Register blueprints
+app.register_blueprint(user_routes, url_prefix="/api/users")
+app.register_blueprint(auth_routes, url_prefix="/api/auth")
+app.register_blueprint(portfolio, url_prefix="/api")
+app.register_blueprint(search_bar, url_prefix="/api")
+app.register_blueprint(stock_details_routes, url_prefix="/api/stock_details")
 
 # Setup login manager
 login = LoginManager(app)
@@ -46,7 +52,26 @@ db.init_app(app)
 Migrate(app, db)
 
 # Application Security
-CORS(app)
+CORS(
+    app,
+    resources={
+        r"/api/*": {
+            "origins": ["http://localhost:5174"],
+            "supports_credentials": True,
+            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+            "allow_headers": [
+                "Content-Type",
+                "X-CSRF-Token",
+                "XSRF-TOKEN",
+            ],  # Added XSRF-TOKEN
+            "expose_headers": [
+                "Content-Type",
+                "X-CSRF-Token",
+                "XSRF-TOKEN",
+            ],  # Added XSRF-TOKEN
+        }
+    },
+)
 
 
 # Since we are deploying with Docker and Flask,
@@ -65,12 +90,13 @@ def https_redirect():
 
 @app.after_request
 def inject_csrf_token(response):
+    csrf_token = generate_csrf()
     response.set_cookie(
         "csrf_token",
-        generate_csrf(),
+        csrf_token,
         secure=True if os.environ.get("FLASK_ENV") == "production" else False,
-        samesite="Strict" if os.environ.get("FLASK_ENV") == "production" else None,
-        httponly=True,
+        samesite="Lax",  # Use "Lax" instead of "Strict" for better cross-site requests
+        httponly=False,  # Change to False so the frontend can access it
     )
     return response
 

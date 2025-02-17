@@ -1,5 +1,6 @@
 /* Watchlist container styling */
 .watchlist-container {
+    width: 200px;
     max-width: 300px;
     background-color: white;
     color: #1a1a1a;

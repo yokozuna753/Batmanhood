@@ -114,20 +114,20 @@ def delete_watchlist(id):
     return jsonify({"message": "Watchlist dropped successfully"}), 200
 
 # 3. GET all stocks in a session user's watchlist
-@watchlists.route('/<int:watchlist_id>/stocks', methods=['GET'])
-@login_required
-def get_stocks_in_watchlist(watchlist_id):
-    logger.info("Fetching stocks for watchlist with ID: %d", watchlist_id)
-    watchlist_stocks = WatchlistStock.query.filter_by(watchlist_id=watchlist_id).all()
-    stock_symbols = [ws.symbol for ws in watchlist_stocks]
+# @watchlists.route('/<int:watchlist_id>/stocks', methods=['GET'])
+# @login_required
+# def get_stocks_in_watchlist(watchlist_id):
+#     logger.info("Fetching stocks for watchlist with ID: %d", watchlist_id)
+#     watchlist_stocks = WatchlistStock.query.filter_by(watchlist_id=watchlist_id).all()
+#     stock_symbols = [ws.symbol for ws in watchlist_stocks]
     
-    if not stock_symbols:
-        logger.info("No stocks found in watchlist with ID: %d", watchlist_id)
-        return jsonify([]), 200
+#     if not stock_symbols:
+#         logger.info("No stocks found in watchlist with ID: %d", watchlist_id)
+#         return jsonify([]), 200
 
-    stock_data = fetch_stock_data(stock_symbols)
-    logger.info("Retrieved stock data for %d symbols in watchlist with ID: %d", len(stock_symbols), watchlist_id)
-    return jsonify(stock_data), 200
+#     stock_data = fetch_stock_data(stock_symbols)
+#     logger.info("Retrieved stock data for %d symbols in watchlist with ID: %d", len(stock_symbols), watchlist_id)
+#     return jsonify(stock_data), 200
 
 # 4. POST stock to a session user's watchlist(s)
 @watchlists.route('/stocks/<string:symbol>', methods=['POST'])
@@ -199,8 +199,8 @@ def get_watchlists_with_stock(symbol):
 
 
 
-# ORIGIONAL ROUTES WITHOUT LOGGER AND BEFORE TROUBLESHOOTING 401 UNAUTHOIRZED YAHOO FINANCE ERROR
-# ALL ROUTE WORK
+# ORIGIONAL BEFORE TROUBLESHOOTING 401 UNAUTHOIRZED YAHOO FINANCE ERROR
+# ALL ROUTES WORK
 
 # import yfinance as yf
 # from flask import Blueprint, request, jsonify

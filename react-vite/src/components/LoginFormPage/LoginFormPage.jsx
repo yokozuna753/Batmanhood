@@ -41,10 +41,10 @@ function LoginFormPage() {
         <img src='https://media4.giphy.com/media/v1.Y2lkPTc5MGI3NjExZ2xlM2o1cTJ6aDZ5MmUzMG9zMXplMXBydXV2Y2t1NGptZXd4aXhlNCZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/kg4e4Wksv20eY/giphy.gif' alt='Animated Image'></img>
       </div>
       <div className='right-half'>
-        <h1 className='login'>Log In to Batmanhood</h1>
+        <div className='login'>Log In to Batmanhood</div>
         {errors.length > 0 &&
           errors.map((message) => <p key={message}>{message}</p>)}
-        <form className='form' onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit}>
           <label>
             Email
             <input
