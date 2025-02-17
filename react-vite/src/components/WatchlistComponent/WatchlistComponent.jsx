@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-
+import "./WatchlistComponent.css";
 
 const WatchlistComponent = () => {
     const [watchlists, setWatchlists] = useState([]);
@@ -28,12 +28,13 @@ const WatchlistComponent = () => {
     };
 
     return (
-        <div>
-            <h2>Your Watchlists</h2>
-            <ul>
+        <div className="watchlist-container">
+            <h2 className="watchlist-container-header ">Lists</h2>
+            <hr />
+            <ul className="watchlist">
                 {watchlists.map((watchlist) => (
-                    <li key={watchlist.id}>
-                        {/* Clickable Watchlist Name */}
+                    <li className="list-title" key={watchlist.id}>
+
                         <div onClick={() => toggleWatchlist(watchlist.id)} style={{ cursor: "pointer", fontWeight: "bold" }}>
                             {watchlist.name}
                         </div>
@@ -55,7 +56,7 @@ const WatchlistComponent = () => {
                     </li>
                 ))}
             </ul>
-        </div>
+        </div >
     );
 }
 
