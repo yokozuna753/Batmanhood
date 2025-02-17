@@ -188,71 +188,45 @@ def get_stock_details(stockId):
 @stock_details_routes.route("/<int:stockId>/trade", methods=["POST"])
 @login_required
 def trade_stock(stockId):
-    """
-    Handle both buying and selling stock with market and limit orders
-    """
     try:
-        # Try multiple ways to get CSRF token
-        csrf_token = (
-            request.headers.get("X-CSRF-Token")
-            or request.headers.get("CSRF-Token")
-            or request.cookies.get("csrf_token")
-        )
+        data = request.get_json()
+        if not data:
+            return jsonify({"errors": ["No data provided"]}), 400
 
-        # Validate CSRF token
-        if not csrf_token:
-            logger.warning("CSRF token missing")
-            return jsonify({"errors": ["CSRF token is required"]}), 400
-
-        try:
-            validate_csrf(csrf_token)
-        except ValidationError:
-            logger.warning("Invalid CSRF token")
-            return jsonify({"errors": ["Invalid CSRF token"]}), 400
-
-        # Create form and validate
-        form = TransactionForm()
-        form.csrf_token.data = csrf_token
-
-        if not form.validate_on_submit():
-            logger.warning(f"Validation errors in trade_stock: {form.errors}")
-            return {"errors": validation_errors_to_error_messages(form.errors)}, 400
-
+        # Get the stock
         stock = StocksOwned.query.get(stockId)
+        if not stock:
+            return jsonify({"errors": ["Stock not found"]}), 404
 
         try:
             # Get market data with caching
-            try:
-                market_data = get_cached_market_data(stock.ticker)
-                current_price = market_data.get("regularMarketPrice")
+            market_data = get_cached_market_data(stock.ticker)
+            current_price = market_data.get("regularMarketPrice")
 
-                if not current_price:
-                    logger.error(f"Unable to retrieve price for {stock.ticker}")
-                    return jsonify(
-                        {
-                            "message": "Unable to fetch market price",
-                            "details": f"No price data available for {stock.ticker}",
-                        }
-                    ), 500
-
-            except Exception as data_error:
-                logger.error(f"Error fetching market data: {data_error}")
+            if not current_price:
+                logger.error(f"Unable to retrieve price for {stock.ticker}")
                 return jsonify(
-                    {"message": "Error fetching market data", "error": str(data_error)}
+                    {
+                        "message": "Unable to fetch market price",
+                        "details": f"No price data available for {stock.ticker}",
+                    }
                 ), 500
 
             # Calculate shares based on dollars if needed
-            shares_to_trade = form.shares.data
-            if form.buy_in.data == "Dollars":
-                shares_to_trade = form.amount.data / current_price
+            shares_to_trade = data.get("shares", 0)
+            if data.get("buy_in") == "Dollars":
+                amount = float(data.get("amount", 0))
+                shares_to_trade = amount / current_price
+            else:
+                shares_to_trade = float(shares_to_trade or 0)
 
             # Calculate total transaction value
             transaction_value = shares_to_trade * current_price
 
-            # Determine order type
-            order_type = (
-                "Buy Order" if form.order_type.data == "Buy Order" else "Sell Order"
-            )
+            # Determine if it's a buy or sell based on order type
+            is_buy = (
+                data.get("order_type") == "Market Order"
+            )  # Market Order = Buy, Limit Order = Sell
 
             # Create a new order record
             new_order = Order(
@@ -260,39 +234,29 @@ def trade_stock(stockId):
                 ticker=stock.ticker,
                 price_purchased=current_price,
                 shares_purchased=shares_to_trade,
-                order_type=order_type,
+                order_type="Buy Order" if is_buy else "Sell Order",  # Changed this line
             )
 
             # Buying logic
-            if order_type == "Buy Order":
+            if is_buy:
                 if transaction_value > current_user.account_balance:
-                    logger.warning("Insufficient funds for transaction")
                     return jsonify({"message": "Insufficient funds"}), 400
 
-                # Create new position if doesn't exist
-                if not stock:
-                    stock = StocksOwned(
-                        owner_id=current_user.id,
-                        ticker=stock.ticker,
-                        shares_owned=0,
-                        estimated_cost=0,
-                    )
-                    db.session.add(stock)
-
                 # Calculate new average cost
-                total_existing_cost = stock.estimated_cost * stock.shares_owned
+                total_existing_cost = (
+                    stock.total_cost * stock.shares_owned
+                )  # Changed estimated_cost to total_cost
                 total_new_cost = total_existing_cost + transaction_value
                 total_new_shares = stock.shares_owned + shares_to_trade
 
                 # Update stock details
-                stock.estimated_cost = total_new_cost / total_new_shares
+                stock.total_cost = total_new_cost  # Changed this line
                 stock.shares_owned += shares_to_trade
                 current_user.account_balance -= transaction_value
 
             # Selling logic
             else:
                 if shares_to_trade > stock.shares_owned:
-                    logger.warning("Cannot sell more shares than owned")
                     return jsonify(
                         {"message": "Cannot sell more shares than owned"}
                     ), 400
@@ -301,27 +265,25 @@ def trade_stock(stockId):
                 current_user.account_balance += transaction_value
                 stock.shares_owned -= shares_to_trade
 
-                # Recalculate average cost if shares remain
+                # Recalculate total cost if shares remain
                 if stock.shares_owned > 0:
-                    stock.estimated_cost *= stock.shares_owned / (
+                    stock.total_cost = (stock.total_cost * stock.shares_owned) / (
                         stock.shares_owned + shares_to_trade
                     )
                 else:
-                    stock.estimated_cost = 0
-                    db.session.delete(stock)
+                    stock.total_cost = 0
 
             # Add the new order to the session
             db.session.add(new_order)
             db.session.commit()
 
-            logger.info(f"Transaction successful: {shares_to_trade} shares traded")
             return jsonify(
                 {
                     "message": "Transaction successful",
                     "shares_traded": shares_to_trade,
                     "price": current_price,
                     "total_value": transaction_value,
-                    "new_average_cost": stock.estimated_cost,
+                    "new_total_cost": stock.total_cost,
                 }
             )
 
