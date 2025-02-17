@@ -117,23 +117,20 @@ def auto_login():
     return jsonify({"message": "No users found"}), 404
 
 
-@stock_details_routes.route("/<int:stockId>", methods=["GET"])
+@stock_details_routes.route("/stocks/<string:ticker>", methods=["GET"])
 @login_required
-def get_stock_details(stockId):
+def get_stock_by_ticker(ticker):
     try:
-        stock = StocksOwned.query.get(stockId)
-        if not stock or stock.owner_id != current_user.id:
-            return jsonify({"message": "Stock not found"}), 404
-
         # Get market data with caching
         try:
-            ticker = yf.Ticker(stock.ticker)
+            print('          response         ', ticker)
+            ticker_obj = yf.Ticker(ticker)
 
             # Get historical data for different time periods
-            hist_1d = ticker.history(period="1d", interval="5m")
-            hist_1w = ticker.history(period="5d")
-            hist_1m = ticker.history(period="1mo")
-            hist_1y = ticker.history(period="1y")
+            hist_1d = ticker_obj.history(period="1d", interval="5m")
+            hist_1w = ticker_obj.history(period="5d")
+            hist_1m = ticker_obj.history(period="1mo")
+            hist_1y = ticker_obj.history(period="1y")
 
             # Format historical data
             def format_historical_data(df, interval="1d"):
@@ -152,7 +149,7 @@ def get_stock_details(stockId):
             market_data = None
             for attempt in range(retries):
                 try:
-                    market_data = get_cached_market_data(stock.ticker)
+                    market_data = get_cached_market_data(ticker)
                     if market_data and "regularMarketPrice" in market_data:
                         break
                 except Exception as e:
@@ -170,12 +167,19 @@ def get_stock_details(stockId):
                 "regularMarketPreviousClose", current_price
             )
 
+            # Check if user owns this stock
+            owned_stock = StocksOwned.query.filter_by(
+                owner_id=current_user.id, 
+                ticker=ticker
+            ).first()
+
+            orders = Order.query.filter(Order.owner_id == current_user.id).all()
+
             response = {
-                "id": stock.id,
-                "ownerId": stock.owner_id,
-                "ticker": stock.ticker,
-                "shares_owned": stock.shares_owned,
-                "estimated_cost": stock.total_cost,
+                "id": owned_stock.id if owned_stock else None,
+                "ticker": ticker,
+                "shares_owned": owned_stock.shares_owned if owned_stock else 0,
+                "estimated_cost": owned_stock.total_cost if owned_stock else 0,
                 "regularMarketPrice": current_price,
                 "previousClose": previous_close,
                 "dayHigh": market_data.get("dayHigh", 0),
@@ -187,6 +191,7 @@ def get_stock_details(stockId):
                     "1M": format_historical_data(hist_1m),
                     "1Y": format_historical_data(hist_1y),
                 },
+                
                 "News": [
                     {
                         "id": idx + 1,
@@ -194,23 +199,20 @@ def get_stock_details(stockId):
                         "source": "Yahoo Finance",
                         "title": item.get("title"),
                     }
-                    for idx, item in enumerate(ticker.news[:5])
+                    for idx, item in enumerate(ticker_obj.news[:5])
                 ],
-                "OrderHistory": [
-                    {
-                        "id": order.id,
-                        "shares": order.shares_purchased,
-                        "price": order.price_purchased,
-                        "order_type": order.order_type,
-                        "date": order.created_at.isoformat()
-                        if hasattr(order, "created_at")
-                        else None,
-                    }
-                    for order in Order.query.filter_by(
-                        owner_id=current_user.id, ticker=stock.ticker
-                    ).all()
-                ],
-            }
+                "OrderHistory": [  # Make sure this matches the case in your frontend
+                {
+                    "id": order.id,
+                    "shares": order.shares_purchased,
+                    "price": order.price_purchased,
+                    "order_type": order.order_type,
+                    "date": order.created_at.isoformat() if hasattr(order, "created_at") else None,
+                }
+                for order in orders
+            ]
+        }
+            
 
             return jsonify(response)
 
@@ -224,6 +226,9 @@ def get_stock_details(stockId):
         logger.error(f"Unexpected error: {e}")
         return jsonify({"message": "Server error", "error": str(e)}), 500
 
+
+
+# @stock_details_routes.route("/<int:stockId>", methods=["GET"]) 
 
 @stock_details_routes.route("/<int:stockId>/trade", methods=["POST"])
 @login_required
@@ -243,6 +248,7 @@ def trade_stock(stockId):
             return jsonify({"errors": ["No data provided"]}), 400
 
         # Get the stock
+        print('       HWLLO ID     ', stockId)
         stock = StocksOwned.query.get(stockId)
         if not stock:
             logger.error(f"Stock not found with ID: {stockId}")
@@ -363,6 +369,7 @@ def trade_stock(stockId):
                     "price": current_price,
                     "total_value": transaction_value,
                     "new_total_cost": stock.total_cost,
+                    "ticker": stock.ticker,
                 }
             )
 

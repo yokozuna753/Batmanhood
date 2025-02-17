@@ -42,19 +42,21 @@ const getCsrfToken = () => {
 };
 
 // Thunk Actions
-export const getStockDetails = (stockId) => async (dispatch) => {
+export const getStockDetails = (ticker) => async (dispatch) => {
   dispatch(setLoading(true));
   dispatch(setError(null));
   
+
   try {
     const csrf_token = getCsrfToken();
-    const response = await fetch(`/api/stock_details/${stockId}`, {
+    const response = await fetch(`/api/stock_details/stocks/${ticker}`, {
       credentials: 'include',
       headers: {
         'Content-Type': 'application/json',
         'X-CSRF-Token': csrf_token || '',
       }
     });
+
     
     if (!response.ok) {
       const errorData = await response.json();
@@ -86,7 +88,7 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
   try {
       const requestId = Date.now().toString();
       const csrf_token = getCsrfToken();
-      
+     
       const response = await fetch(`/api/stock_details/${stockId}/trade`, {
           method: 'POST',
           credentials: 'include',  
@@ -102,17 +104,24 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
           const errorData = await response.json();
           throw new Error(errorData.message || 'Trade failed');
       }
-      
+     
       const data = await response.json();
       dispatch(setTradeSuccess(
           `Transaction successful! ${
-              tradeData.buy_in === 'Shares' 
-                  ? `${data.shares_traded.toFixed(2)} shares at $${data.price.toFixed(2)}` 
+              tradeData.buy_in === 'Shares'
+                  ? `${data.shares_traded.toFixed(2)} shares at $${data.price.toFixed(2)}`
                   : `$${data.total_value.toFixed(2)} worth of shares`
           }`
       ));
 
-      await dispatch(getStockDetails(stockId));
+      // Use the ticker from tradeData
+      if (tradeData.ticker) {
+          // Add a small delay to allow the backend to complete the transaction
+          setTimeout(() => {
+              dispatch(getStockDetails(tradeData.ticker));
+          }, 1000);
+      }
+
       return true;
   } catch (err) {
       console.error('Trade execution error:', err);
