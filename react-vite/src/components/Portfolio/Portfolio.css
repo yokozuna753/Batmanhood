@@ -1,21 +1,202 @@
-li {
+#portfolio-base {
+  max-width: 1024px;
+  margin: 84px auto 0;
+  padding: 24px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  display: flex;
+  gap: 24px;
+}
+
+.left-column {
+  flex: 1;
+  max-width: 650px;
+}
+
+.right-column {
+  width: 300px;
+  margin-top: 20px;
+}
+
+/* Portfolio Chart */
+#canvas-div {
+  width: 100%;
+  max-width: 650px;
+  margin: 20px 0;
+}
+
+#acquisitions {
+  width: 100% !important;
+  height: 300px !important;
+  background-color: white;
+}
+
+/* Buying Power Section */
+#bp-div {
+  border-top: 1px solid #e6e9ed;
+  border-bottom: 1px solid #e6e9ed;
+  padding: 16px 0;
+  margin: 24px 0;
+}
+
+#portfolio-buying-power {
+  font-size: 13px;
+  color: #6c7693;
+  margin: 0;
+  font-weight: 400;
+}
+
+#portfolio-money {
+  font-size: 24px;
+  color: black;
+  margin: 8px 0 0 0;
+  font-weight: 500;
+}
+
+/* Section Headers */
+.holdings-section, .news-section {
+  margin-top: 32px;
+}
+
+#portfolio-base h3 {
+  font-size: 24px;
+  font-weight: 500;
+  margin: 24px 0;
+  color: black;
+}
+
+/* Holdings Section */
+.holdings-section ul {
+  padding: 0;
+  margin: 0;
   list-style-type: none;
 }
 
-#bp-div {
-  border-top: 1px solid black;
-  border-bottom: 1px solid black;
+.holdings-section li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 0;
+  border-bottom: 1px solid #e6e9ed;
+  margin-bottom: 8px;
+}
+
+.holdings-section li:last-child {
+  margin-bottom: 0;
+}
+
+/* Stock Info */
+.holdings-section li > div:first-child {
+  flex: 1;
+  padding-right: 16px;
+}
+
+.holdings-section li > div:first-child p:first-child {
+  font-size: 16px;
+  font-weight: 500;
+  color: black;
+  margin: 0;
+}
+
+.holdings-section li > div:first-child p:last-child {
+  font-size: 13px;
+  color: #6c7693;
+  margin: 8px 0 0 0;
+}
+
+/* Stock Charts */
+.holdings-section li canvas {
+  width: 180px;
+  height: 100px;
+  margin: 0 16px;
+}
+
+/* Stock Price */
+.holdings-section li h5 {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0;
+  min-width: 80px;
+  text-align: right;
+}
+
+/* News Section */
+.news-section {
+  margin-top: 40px;
+}
+
+.news-section ul {
+  padding: 0;
+  margin: 0;
+  list-style-type: none;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 16px;
+}
+
+.news-section li {
+  margin: 0;
+  background: white;
+  border: 1px solid #e6e9ed;
+  border-radius: 4px;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.news-section li:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.news-section button {
+  width: 100%;
+  min-height: 100px;
+  text-align: left;
+  padding: 16px;
+  border: none;
+  background: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+.news-section button h5 {
+  font-size: 15px;
+  font-weight: 500;
+  margin: 0;
+  line-height: 1.4;
+}
+
+.news-section button p {
+  font-size: 13px;
+  color: #6c7693;
+  margin: 12px 0 0;
+}
+
+@media (max-width: 768px) {
+  .news-section ul {
+    grid-template-columns: 1fr;
+  }
 }
 
 
-#canvas-div{
-    width: 800px;
+/* Media Queries */
+@media (max-width: 1024px) {
+  #portfolio-base {
+    flex-direction: column;
+    padding: 16px;
+  }
+  
+  .left-column, .right-column {
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  #canvas-div {
+    max-width: 100%;
+  }
+  
+  .holdings-section li canvas {
+    width: 120px;
+  }
 }
 
-/* Add this in Portfolio.css */
-.small-chart {
-  width: 200px !important;  /* Ensures width is controlled */
-  height: 100px !important; /* Ensures height is controlled */
-  display: block;           /* Prevents inline/block issues */
-  margin: 0 auto;           /* Optional: centers the canvas if you want */
-}

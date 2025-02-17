@@ -1,3 +1,48 @@
-.profile-dropdown {
-  position: absolute;
+/* Navigation.css */
+nav {
+  border-bottom: 1px solid #e6e9ed;
+  background-color: white;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  width: 100%;
+  z-index: 100;
+  height: 64px;
+}
+
+ul {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  max-width: 1024px;
+  margin: 0 auto;
+  padding: 0 24px;
+  height: 100%;
+  list-style-type: none;
+}
+
+/* Home link */
+nav a {
+  text-decoration: none;
+  color: black;
+  font-weight: 500;
+  padding: 8px 16px;
+  border-radius: 4px;
+}
+
+nav a:hover {
+  background-color: #f5f8fa;
+}
+
+/* Profile button container */
+nav li:last-child {
+  margin-left: auto;
+}
+
+/* Adjust search bar positioning */
+nav li:nth-child(2) {
+  flex: 1;
+  max-width: 480px;
+  margin: 0 24px;
 }

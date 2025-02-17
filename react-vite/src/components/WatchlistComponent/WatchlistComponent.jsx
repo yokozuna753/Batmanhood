@@ -62,41 +62,40 @@ const WatchlistComponent = () => {
 
     return (
         <div className="watchlist-container">
-            <h2 className="watchlist-container-header ">Lists</h2>
+            <h2 className="watchlist-container-header">WatchLists</h2>
             <hr />
             <ul className="watchlist">
                 {watchlists.map((watchlist) => (
-                    <li className="list-title" key={watchlist.id}>
-
-                        <div onClick={() => toggleWatchlist(watchlist.id)} style={{ cursor: "pointer", fontWeight: "bold" }}>
+                    <li 
+                        className={`list-title ${expandedWatchlist === watchlist.id ? 'expanded' : ''}`} 
+                        key={watchlist.id}
+                    >
+                        <div onClick={() => toggleWatchlist(watchlist.id)}>
                             {watchlist.name}
                         </div>
-
-                        {/* Show Stocks if Watchlist is Expanded */}
-                        {expandedWatchlist === watchlist.id && (
-                            <ul style={{ marginLeft: "20px", marginTop: "5px" }}>
-                                {watchlist.stocks.length > 0 ? (
-                                    watchlist.stocks.map((stock) => (
-                                        <li key={stock.symbol}>
-                                            {stock.symbol}
-                                            {/* Delete stock from a watchlist */}
-                                            <button
-                                                onClick={() => deleteStock(watchlist.id, stock.symbol)}
-                                                style={{ marginLeft: "10px", cursor: "pointer", color: "red" }}
-                                            >
-                                                ❌
-                                            </button>
-                                        </li>
-                                    ))
-                                ) : (
-                                    <li>No stocks in this watchlist</li>
-                                )}
-                            </ul>
-                        )}
+                        <ul>
+                            {watchlist.stocks.length > 0 ? (
+                                watchlist.stocks.map((stock) => (
+                                    <li key={stock.symbol}>
+                                        {stock.symbol}
+                                        <button
+                                            onClick={(e) => {
+                                                e.stopPropagation();
+                                                deleteStock(watchlist.id, stock.symbol);
+                                            }}
+                                        >
+                                            ×
+                                        </button>
+                                    </li>
+                                ))
+                            ) : (
+                                <li>No stocks in this watchlist</li>
+                            )}
+                        </ul>
                     </li>
                 ))}
             </ul>
-        </div >
+        </div>
     );
 }
 
