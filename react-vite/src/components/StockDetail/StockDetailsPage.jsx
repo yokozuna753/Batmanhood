@@ -111,7 +111,7 @@ const StockDetailsPage = () => {
   const error = useSelector(state => state.stocks.error);
   const tradeSuccess = useSelector(state => state.stocks.tradeSuccess);
   const tradeError = useSelector(state => state.stocks.tradeError);
-
+  const tradeLoading = useSelector(state => state.stocks.tradeLoading);
   const [timeRange, setTimeRange] = useState('1D');
   const [tradeForm, setTradeForm] = useState({
     orderType: 'Market Order',
@@ -160,12 +160,19 @@ const StockDetailsPage = () => {
 
   const handleTradeSubmit = async (e) => {
     e.preventDefault();
-
+    
+    // Prevent submission if already submitting
+    if (tradeLoading) {
+        return;
+    }
+    
     // Form validation
     if (tradeForm.buyIn === 'Dollars' && (!tradeForm.amount || tradeForm.amount <= 0)) {
+        // Instead of dispatching setTradeError, we'll pass the error message to executeTrade
         return;
     }
     if (tradeForm.buyIn === 'Shares' && (!tradeForm.shares || tradeForm.shares <= 0)) {
+        // Instead of dispatching setTradeError, we'll pass the error message to executeTrade
         return;
     }
 
@@ -178,21 +185,15 @@ const StockDetailsPage = () => {
     };
 
     try {
-        // Wait for the trade to complete
-        const result = await dispatch(executeTrade(stockId, tradeData)).unwrap();
+        const success = await dispatch(executeTrade(stockId, tradeData));
         
-        // Only if trade was successful, reset form and fetch updated details
-        if (result) {
+        if (success) {
             setTradeForm(prev => ({
                 ...prev,
                 shares: '',
                 amount: '',
                 limitPrice: 0
             }));
-            // Add a small delay before refreshing details
-            setTimeout(() => {
-                dispatch(getStockDetails(stockId));
-            }, 500);
         }
     } catch (error) {
         console.error('Trade failed:', error);

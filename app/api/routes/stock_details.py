@@ -1,4 +1,5 @@
 from flask import Blueprint, jsonify, request
+from flask_cors import CORS
 from flask_login import login_required, current_user, login_user
 from flask_wtf.csrf import validate_csrf, ValidationError
 from app.models.stocks_owned import StocksOwned
@@ -16,9 +17,34 @@ logger = logging.getLogger(__name__)
 
 stock_details_routes = Blueprint("stock_details", __name__)
 
+
+CORS(
+    stock_details_routes,
+    resources={
+        r"/*": {
+            "origins": ["http://localhost:5174"],
+            "methods": ["GET", "POST", "DELETE", "OPTIONS"],
+            "allow_headers": [
+                "Content-Type",
+                "X-CSRF-Token",
+                "XSRF-TOKEN",
+                "X-Request-ID",
+            ],
+            "supports_credentials": True,
+            "expose_headers": [
+                "Content-Type",
+                "X-CSRF-Token",
+                "XSRF-TOKEN",
+                "X-Request-ID",
+            ],
+        }
+    },
+)
+
 # Cache setup
 market_data_cache = {}
 CACHE_DURATION = timedelta(minutes=5)
+processed_requests = set()  # Store processed request IDs
 
 
 def get_cached_market_data(ticker_symbol):
@@ -34,31 +60,29 @@ def get_cached_market_data(ticker_symbol):
     try:
         ticker = yf.Ticker(ticker_symbol)
 
-        # Create a new session if none exists
-        if not hasattr(ticker, "session") or ticker.session is None:
-            import requests
-
-            ticker.session = requests.Session()
-
-        # Update headers
-        ticker.session.headers.update(
-            {
-                "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36",
-                "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
-                "Accept-Language": "en-US,en;q=0.5",
-            }
-        )
-
+        # Try multiple methods to get the price
         try:
+            # Method 1: Try getting from info
             data = ticker.info
-        except Exception as e:
-            logger.warning(f"Failed to get ticker info: {e}")
-            # Fallback to history
-            history = ticker.history(period="1d")
-            if not history.empty:
-                data = {"regularMarketPrice": history["Close"].iloc[-1]}
-            else:
-                raise Exception("Unable to fetch market data")
+            if "regularMarketPrice" not in data:
+                raise Exception("No regular market price in info")
+
+        except Exception as e1:
+            try:
+                # Method 2: Try getting from history
+                history = ticker.history(period="1d")
+                if not history.empty:
+                    data = {"regularMarketPrice": float(history["Close"].iloc[-1])}
+                else:
+                    raise Exception("Empty history data")
+
+            except Exception as e2:
+                try:
+                    # Method 3: Try getting from fast_info
+                    data = {"regularMarketPrice": float(ticker.fast_info["lastPrice"])}
+                except Exception as e3:
+                    logger.error(f"All price fetch methods failed: {e1}, {e2}, {e3}")
+                    raise Exception("Unable to fetch market data through any method")
 
         market_data_cache[ticker_symbol] = (now, data)
         return data
@@ -123,8 +147,24 @@ def get_stock_details(stockId):
                     for index, row in df.iterrows()
                 ]
 
-            # Get current market data
-            market_data = ticker.info
+            # Get current market data with retry
+            retries = 3
+            market_data = None
+            for attempt in range(retries):
+                try:
+                    market_data = get_cached_market_data(stock.ticker)
+                    if market_data and "regularMarketPrice" in market_data:
+                        break
+                except Exception as e:
+                    if attempt == retries - 1:
+                        raise Exception(
+                            f"Failed to get market data after {retries} attempts"
+                        )
+                    continue
+
+            if not market_data:
+                raise Exception("Failed to fetch market data")
+
             current_price = market_data.get("regularMarketPrice", 0)
             previous_close = market_data.get(
                 "regularMarketPreviousClose", current_price
@@ -154,7 +194,7 @@ def get_stock_details(stockId):
                         "source": "Yahoo Finance",
                         "title": item.get("title"),
                     }
-                    for idx, item in enumerate(ticker.news[:5])  # Get more news items
+                    for idx, item in enumerate(ticker.news[:5])
                 ],
                 "OrderHistory": [
                     {
@@ -188,30 +228,65 @@ def get_stock_details(stockId):
 @stock_details_routes.route("/<int:stockId>/trade", methods=["POST"])
 @login_required
 def trade_stock(stockId):
+    request_id = request.headers.get("X-Request-ID")
     try:
+        # Check for duplicate request
+        if request_id:
+            if request_id in processed_requests:
+                logger.info(f"Duplicate request detected: {request_id}")
+                return jsonify({"message": "Request already processed"}), 409
+            processed_requests.add(request_id)
+
         data = request.get_json()
         if not data:
+            logger.error("No data provided in request")
             return jsonify({"errors": ["No data provided"]}), 400
 
         # Get the stock
         stock = StocksOwned.query.get(stockId)
         if not stock:
+            logger.error(f"Stock not found with ID: {stockId}")
             return jsonify({"errors": ["Stock not found"]}), 404
 
+        # Input validation
+        if "order_type" not in data:
+            return jsonify({"message": "Order type is required"}), 400
+        if "buy_in" not in data:
+            return jsonify({"message": "Buy in type is required"}), 400
+        if data["buy_in"] == "Dollars" and not data.get("amount"):
+            return jsonify(
+                {"message": "Amount is required for dollar-based trades"}
+            ), 400
+        if data["buy_in"] == "Shares" and not data.get("shares"):
+            return jsonify(
+                {"message": "Number of shares is required for share-based trades"}
+            ), 400
+
+        # Get market data with retry
+        retries = 3
+        current_price = None
+        for attempt in range(retries):
+            try:
+                market_data = get_cached_market_data(stock.ticker)
+                current_price = market_data.get("regularMarketPrice")
+                if current_price:
+                    break
+            except Exception as e:
+                logger.warning(f"Attempt {attempt + 1} failed: {e}")
+                if attempt == retries - 1:
+                    logger.error(f"Failed to get market data after {retries} attempts")
+                    return jsonify(
+                        {
+                            "message": "Unable to fetch market price",
+                            "details": f"Price data unavailable for {stock.ticker} after multiple attempts",
+                        }
+                    ), 500
+                continue
+
+        if not current_price:
+            return jsonify({"message": "Unable to fetch current price"}), 500
+
         try:
-            # Get market data with caching
-            market_data = get_cached_market_data(stock.ticker)
-            current_price = market_data.get("regularMarketPrice")
-
-            if not current_price:
-                logger.error(f"Unable to retrieve price for {stock.ticker}")
-                return jsonify(
-                    {
-                        "message": "Unable to fetch market price",
-                        "details": f"No price data available for {stock.ticker}",
-                    }
-                ), 500
-
             # Calculate shares based on dollars if needed
             shares_to_trade = data.get("shares", 0)
             if data.get("buy_in") == "Dollars":
@@ -220,37 +295,41 @@ def trade_stock(stockId):
             else:
                 shares_to_trade = float(shares_to_trade or 0)
 
+            # Validate the calculated shares
+            if shares_to_trade <= 0:
+                return jsonify({"message": "Invalid number of shares"}), 400
+
             # Calculate total transaction value
             transaction_value = shares_to_trade * current_price
+        except (ValueError, TypeError) as e:
+            logger.error(f"Error calculating trade values: {e}")
+            return jsonify({"message": "Invalid trade values"}), 400
 
-            # Determine if it's a buy or sell based on order type
-            is_buy = (
-                data.get("order_type") == "Market Order"
-            )  # Market Order = Buy, Limit Order = Sell
+        # Determine if it's a buy or sell based on order type
+        is_buy = data.get("order_type") == "Market Order"
 
-            # Create a new order record
-            new_order = Order(
-                owner_id=current_user.id,
-                ticker=stock.ticker,
-                price_purchased=current_price,
-                shares_purchased=shares_to_trade,
-                order_type="Buy Order" if is_buy else "Sell Order",  # Changed this line
-            )
+        # Create a new order record
+        new_order = Order(
+            owner_id=current_user.id,
+            ticker=stock.ticker,
+            price_purchased=current_price,
+            shares_purchased=shares_to_trade,
+            order_type="Buy Order" if is_buy else "Sell Order",
+        )
 
+        try:
             # Buying logic
             if is_buy:
                 if transaction_value > current_user.account_balance:
                     return jsonify({"message": "Insufficient funds"}), 400
 
                 # Calculate new average cost
-                total_existing_cost = (
-                    stock.total_cost * stock.shares_owned
-                )  # Changed estimated_cost to total_cost
+                total_existing_cost = stock.total_cost * stock.shares_owned
                 total_new_cost = total_existing_cost + transaction_value
                 total_new_shares = stock.shares_owned + shares_to_trade
 
                 # Update stock details
-                stock.total_cost = total_new_cost  # Changed this line
+                stock.total_cost = total_new_cost
                 stock.shares_owned += shares_to_trade
                 current_user.account_balance -= transaction_value
 
@@ -287,15 +366,16 @@ def trade_stock(stockId):
                 }
             )
 
-        except Exception as e:
+        except Exception as db_error:
             db.session.rollback()
-            logger.error(f"Error processing transaction: {e}")
-            return jsonify(
-                {"message": "Error processing transaction", "error": str(e)}
-            ), 500
+            logger.error(f"Database error during trade: {db_error}")
+            if request_id:
+                processed_requests.remove(request_id)
+            return jsonify({"message": "Database error during trade"}), 500
 
     except Exception as e:
-        db.session.rollback()
+        if request_id:
+            processed_requests.remove(request_id)
         logger.error(f"Unexpected error in trade_stock: {e}")
         return jsonify({"message": "Unexpected error", "error": str(e)}), 500
 
@@ -312,15 +392,25 @@ def sell_all_shares(stockId):
         return jsonify({"message": "Stock couldn't be found"}), 404
 
     try:
-        # Get market data with caching
-        try:
-            market_data = get_cached_market_data(stock.ticker)
-            current_price = market_data.get("regularMarketPrice")
-        except Exception as data_error:
-            logger.error(f"Error fetching market data: {data_error}")
-            return jsonify(
-                {"message": "Error fetching market data", "error": str(data_error)}
-            ), 500
+        # Get market data with retry
+        retries = 3
+        current_price = None
+        for attempt in range(retries):
+            try:
+                market_data = get_cached_market_data(stock.ticker)
+                current_price = market_data.get("regularMarketPrice")
+                if current_price:
+                    break
+            except Exception as e:
+                if attempt == retries - 1:
+                    logger.error(f"Failed to get market data after {retries} attempts")
+                    return jsonify(
+                        {
+                            "message": "Unable to fetch market price",
+                            "details": f"Price data unavailable for {stock.ticker} after multiple attempts",
+                        }
+                    ), 500
+                continue
 
         # Calculate sale proceeds
         sale_proceeds = stock.shares_owned * current_price
