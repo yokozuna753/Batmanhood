@@ -1,10 +1,9 @@
-
 * {
     margin: 0;
     padding: 0;
-    box-sizing: border-box; /* This ensures padding and border are included in width/height calculations */
+    box-sizing: border-box;
 }
-/* The container holding both halves */
+
 .container {
     display: flex;
     height: 100vh;
@@ -28,44 +27,44 @@
     flex: 1;
     display: flex;
     flex-direction: column;
-    align-items: center; /* Center horizontally */
-    justify-content: flex-start; /* Align from the top */
+    align-items: center;
+    justify-content: flex-start;
     padding: 20px;
-    background-color: #000000; /* Optional background color */
+    background-color: #000000;
     color: white;
     position: relative;
 }
 
 .right-half .login {
     font-size: 24px;
-    margin-top: 14vh; /* Moves it 1/7th down from the top */
-    margin-bottom: 20px; /* Space between "Log In" and the form */
+    margin-top: 14vh;
+    margin-bottom: 20px;
 }
 
 .right-half form {
     width: 100%;
-    max-width: 400px; /* Max width of the form */
+    max-width: 400px;
 }
 
 .right-half label {
     display: block;
-    margin-bottom: 8px; /* Space between label and input */
+    margin-bottom: 8px;
 }
 
 .right-half input {
     width: 100%;
     padding: 10px;
-    margin-bottom: 10px; /* Space between inputs */
+    margin-bottom: 10px;
     border: 1px solid #ccc;
     border-radius: 4px;
     background-color: black;
-    color: white; /* Text color inside the textbox */
+    color: white;
     font-size: 16px;
 }
 
 .right-half input:focus {
-    border-color: white; /* White border on focus */
-    outline: none; /* Remove default outline */
+    border-color: white;
+    outline: none;
 }
 
 .right-half button {
@@ -76,9 +75,30 @@
     border: none;
     border-radius: 50px;
     cursor: pointer;
-    margin-top: 10px; /* Space between form and button */
+    margin-top: 10px;
 }
 
 .right-half button:hover {
-    box-shadow: 0 4px 8px rgba(169, 169, 169, 0.6); /* Gray shadow */
+    box-shadow: 0 4px 8px rgba(169, 169, 169, 0.6);
+}
+
+.button-container {
+    display: flex;
+    gap: 10px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.button-container button {
+    width: 50%;
+    padding: 10px;
+    background-color: white;
+    color: black;
+    border: none;
+    border-radius: 50px;
+    cursor: pointer;
+}
+
+.button-container button:hover {
+    box-shadow: 0 4px 8px rgba(169, 169, 169, 0.6);
 }
