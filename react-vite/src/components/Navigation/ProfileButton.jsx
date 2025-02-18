@@ -1,11 +1,12 @@
 import { useState, useEffect, useRef } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { FaUserCircle } from 'react-icons/fa';
-import { thunkLogout } from "../../redux/session";
+import { thunkLogout, thunkDelete } from "../../redux/session";
 import OpenModalMenuItem from "./OpenModalMenuItem";
 import LoginFormModal from "../LoginFormModal";
 import SignupFormModal from "../SignupFormModal";
 import "./ProfileButton.css";
+import { redirect } from "react-router-dom";
 
 
 function ProfileButton() {
@@ -41,6 +42,13 @@ function ProfileButton() {
     closeMenu();
   };
 
+  const deleteAccount = (e) => {
+    e.preventDefault()
+    dispatch(thunkDelete(user.id))
+    redirect('/login')
+    closeMenu()
+  }
+
   return (
     <div className="profile-button-container">
       <button className="profile-button" onClick={toggleMenu}>
@@ -54,6 +62,9 @@ function ProfileButton() {
               <li className="user-email">{user.email}</li>
               <li>
                 <button onClick={logout}>Log Out</button>
+              </li>
+              <li>
+                <button onClick={deleteAccount}>Delete Account</button>
               </li>
             </>
           ) : (
