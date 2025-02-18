@@ -51,12 +51,16 @@ export const thunkLogin = (credentials) => async (dispatch) => {
 };
 
 export const thunkSignup = (user) => async (dispatch) => {
+  const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1];
   const response = await fetch("/api/auth/signup", {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { 
+      "Content-Type": "application/json",
+      "X-CSRFToken": csrfToken  // Include the CSRF token in the headers
+     },  
+    
     body: JSON.stringify(user)
   });
-
   if(response.ok) {
     const data = await response.json();
     dispatch(setUser(data));
