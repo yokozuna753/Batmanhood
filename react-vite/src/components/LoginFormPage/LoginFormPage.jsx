@@ -2,6 +2,8 @@ import { useState } from "react";
 import { thunkLogin } from "../../redux/session";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate } from "react-router-dom";
+import OpenModalButton from "../OpenModalButton";
+import SignupFormModal from "../SignupFormModal";
 import "./LoginForm.css";
 
 function LoginFormPage() {
@@ -65,7 +67,13 @@ function LoginFormPage() {
             />
           </label>
           {errors.password && <p>{errors.password}</p>}
-          <button type="submit">Log In</button>
+          <div className="button-container">
+            <button type="submit">Log In</button>
+            <OpenModalButton
+              buttonText="Sign Up"
+              modalComponent={<SignupFormModal />}
+            />
+          </div>
         </form>
       </div>
     </div>
