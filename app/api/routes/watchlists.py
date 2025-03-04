@@ -102,10 +102,7 @@ def delete_watchlist(id):
     return jsonify({"message": "Watchlist dropped successfully"}), 200
 
 
-
-
-
-
+# 5. ADD a stock to a session user's watchlist(s)
 @watchlists.route('/stocks/<string:symbol>', methods=['POST'])
 @login_required
 def add_stock_to_watchlists(symbol):
@@ -118,6 +115,11 @@ def add_stock_to_watchlists(symbol):
         return jsonify({"error": "Invalid data format, expected a list"}), 400
 
     for watchlist_id in watchlist_ids:
+        # Verify the watchlist belongs to the current user
+        watchlist = Watchlist.query.filter_by(id=watchlist_id, user_id=current_user.id).first()
+        if not watchlist:
+            continue
+            
         existing_entry = WatchlistStock.query.filter_by(
             watchlist_id=watchlist_id, symbol=symbol
         ).first()
