@@ -4,11 +4,14 @@ from flask import Blueprint, request, jsonify
 from flask_login import current_user, login_required
 from app.models import db, Watchlist, WatchlistStock
 
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 watchlists = Blueprint("watchlists", __name__)
+
 
 # 1. CREATE a new watchlist
 @watchlists.route('/', methods=['POST'])
@@ -33,6 +36,7 @@ def create_watchlist():
         "name": new_watchlist.name,
         "stocks": []
     }), 201
+
 
 # 2. GET all session user watchlists
 @watchlists.route('/', methods=['GET'])

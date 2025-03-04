@@ -37,6 +37,22 @@ fetch('/api/watchlists/', {
 """
 
 """
+#3 - Fetch-> UPDATE a watchlist name
+fetch('/api/watchlists/1', {  // Replace "1" with the actual watchlist ID you want to update
+  method: 'PUT',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCsrfToken()
+  },
+  credentials: 'include',  // Ensures cookies (e.g., session authentication) are sent
+  body: JSON.stringify({ name: 'Updated Watchlist Name' })  // Replace with the new name
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+"""
+
+"""
 #2 - Fetch-> DELETE a session user's watchlist test
 fetch('/api/watchlists/2', {
   method: 'DELETE',
