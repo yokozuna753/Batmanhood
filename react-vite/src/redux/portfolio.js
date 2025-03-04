@@ -1,5 +1,6 @@
 const GET_PORTFOLIO = "portfolio/getPortfolio";
 const LOAD_PRICES = "portfolio/loadPortfolioPrices";
+const CLEAR_PORTFOLIO = "portfolio/clearPortfolio";
 
 const getPortfolio = (data) => {
   return {
@@ -7,6 +8,18 @@ const getPortfolio = (data) => {
     payload: data,
   };
 };
+
+const clearPortfolio = () => {
+  return {
+    type: CLEAR_PORTFOLIO,
+  }
+}
+
+export const thunkClearPortfolio = () => async (dispatch) => {
+  await dispatch(clearPortfolio());
+  return {"message": "success"}
+
+}
 
 export const loadPortfolio = (userId) => async (dispatch) => {
   try {
@@ -48,6 +61,8 @@ export const portfolioReducer = (state = initialState, action) => {
   switch (action.type) {
     case GET_PORTFOLIO:
       return { ...state, ...action.payload };
+    case CLEAR_PORTFOLIO:
+      return { ...state, ...initialState };
     case LOAD_PRICES:{
       let tickersArray = action.payload.tickers;
       // shares
