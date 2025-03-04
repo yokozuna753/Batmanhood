@@ -145,7 +145,15 @@ border-bottom: none;
 }
 
 .no-stocks{
-    font-size: 0.7rem;
+    font-size: 0.65rem;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    width: 100%;
+}
+
+.no-watchlists {
+    font-size: 0.65rem;
 }
 
 .delete-stock-button {

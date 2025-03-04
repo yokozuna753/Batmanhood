@@ -105,9 +105,7 @@
 import { useState, useEffect } from "react";
 import { FaChevronDown, FaChevronRight, FaEdit, FaTrash, FaPlus } from "react-icons/fa";
 import { useModal } from "../../context/Modal";
-import AddWatchlistModal from "../AddWatchlistModal";
-import EditWatchlistModal from "../EditWatchlistModal";
-import AddStockModal from "../AddStockModal/AddStockModal";
+import { AddWatchlistModal, EditWatchlistModal, AddStockModal } from "../WatchlistModals";
 import "./WatchlistComponent.css";
 
 const WatchlistComponent = () => {
