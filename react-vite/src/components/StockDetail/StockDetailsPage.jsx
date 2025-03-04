@@ -19,7 +19,7 @@ import {
 import { getStockDetails, executeTrade } from "../../redux/stocks";
 import "./StockDetails.css";
 import { fetchPortfolioPrices, loadPortfolio } from "../../redux/portfolio";
-import { thunkUpdateUserInfo } from "../../redux/session";
+// import { thunkUpdateUserInfo } from "../../redux/session";
 
 const StockChart = ({ stockDetails, timeRange, onTimeRangeChange }) => {
   const timeRanges = [

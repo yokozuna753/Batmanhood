@@ -34,15 +34,14 @@ function Portfolio() {
     { label: "1Y", value: "1Y" },
   ];
 
-  useEffect(()=>{
+  useEffect(() => {
     dispatch(thunkUpdateUserInfo(sessionUser?.id));
-  },[sessionUser?.id])
+  }, [dispatch, sessionUser?.id]);
 
   // Initial portfolio load and periodic price updates
   useEffect(() => {
     if (sessionUser) {
       // Initial portfolio load
-      
       dispatch(loadPortfolio(sessionUser?.id));
       dispatch(fetchPortfolioPrices(sessionUser?.id));
 
@@ -87,7 +86,7 @@ function Portfolio() {
         portfolioValueRef.current = portfolio.livePortfolioValue;
       }
     }
-  }, [portfolio.livePortfolioValue, portfolioChartData.length, sessionUser]);
+  }, [portfolio,portfolio.livePortfolioValue, portfolioChartData.length, sessionUser]);
 
   // Calculation for chart color and trend
   const latestPrice =
@@ -199,7 +198,7 @@ function Portfolio() {
               </div>
             </div>
 
-            <div>
+            <div className="holdings-section">
               <h3>Holdings</h3>
               {portfolio.tickers && portfolio.tickers.length > 0 ? (
                 <ul>
@@ -229,12 +228,12 @@ function Portfolio() {
               )}
             </div>
 
-            <div>
+            <div className="news-section">
               <h3>News</h3>
               {portfolio.news ? (
-                <ul>
+                <ul className="news-section">
                   {portfolio.news.map((ele) => (
-                    <li key={ele.providerPublishTime}>
+                    <li key={ele.providerPublishTime} className="news-section-li">
                       <button
                         onClick={() => {
                           let link = ele.link;
