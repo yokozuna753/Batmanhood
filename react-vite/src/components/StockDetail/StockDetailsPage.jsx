@@ -19,6 +19,7 @@ import {
 import { getStockDetails, executeTrade } from "../../redux/stocks";
 import "./StockDetails.css";
 import { fetchPortfolioPrices, loadPortfolio } from "../../redux/portfolio";
+import { thunkUpdateUserInfo } from "../../redux/session";
 
 const StockChart = ({ stockDetails, timeRange, onTimeRangeChange }) => {
   const timeRanges = [
@@ -147,13 +148,16 @@ const StockDetailsPage = () => {
     amount: "",
     limitPrice: 0,
   });
+  // useEffect(()=>{
+  //   dispatch(thunkUpdateUserInfo(sessionUser?.id));
+  // },[sessionUser?.id])
 
   useEffect(() => {
     if (sessionUser) {
-      dispatch(loadPortfolio(sessionUser.id));
-      dispatch(fetchPortfolioPrices(sessionUser.id));
+      dispatch(loadPortfolio(sessionUser?.id));
+      dispatch(fetchPortfolioPrices(sessionUser?.id));
     }
-  }, [dispatch, sessionUser, sessionUser.id]);
+  }, [dispatch, sessionUser, sessionUser?.id]);
   useEffect(() => {
     if (ticker) {
       dispatch(getStockDetails(ticker));
