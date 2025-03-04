@@ -1,13 +1,13 @@
 import { useState, useRef, useEffect } from 'react';
 import '../SearchBar/SearchBar.css'
 
-/* Watchlist Search Bar adopts but modifies the origional Search Bar
+/* Watchlist Search Bar adopts but modifies the original Search Bar
    design and implementation.
    
-   Adoptations: Search bar component design and search yFinance route
+   Adaptions: Search bar component design and search yFinance route
 
    Modifications: Adds debounce tactic to limit api calls as user types,
-                  Accepts onStockSelect callback which procces selected stock through the backend
+                  Expects onStockSelect callback to action adding stock to watchlist
 */
 
 // Will be nested in the AddStockModal component
@@ -16,6 +16,7 @@ const WatchlistSearchBar = ({ onStockSelect }) => {
     const [results, setResults] = useState([]);
     const [error, setError] = useState('');
     const searchRef = useRef(null);
+    const debounceTimeout = useRef(null);
   
     useEffect(() => {
       const handleClickOutside = (event) => {
@@ -31,6 +32,31 @@ const WatchlistSearchBar = ({ onStockSelect }) => {
       };
     }, []);
   
+    
+    // Implements debounce on search to limit api calls
+    useEffect(() => {
+      // Clear previous timeout if it exists
+      if (debounceTimeout.current) {
+        clearTimeout(debounceTimeout.current);
+      }
+      
+      // Search 300ms after user stops typing and there are at least 2 letters
+      if (query.length >= 2) {
+        debounceTimeout.current = setTimeout(() => {
+          handleSearch();
+        }, 300); 
+      } else {
+        setResults([]);
+      }
+      
+      // Clear timeout when component unmounts or query changes
+      return () => {
+        if (debounceTimeout.current) {
+          clearTimeout(debounceTimeout.current);
+        }
+      };
+    }, [query]);
+
     const handleSearch = async () => {
       console.log("***** INSIDE SEARCH! *****")
       if (!query) {
@@ -39,7 +65,9 @@ const WatchlistSearchBar = ({ onStockSelect }) => {
       }
   
       try {
-        const response = await fetch(`/api/search?query=${query}&max_results=5`);
+        //const response = await fetch(`/api/search?query=${query}&max_results=5`);
+        const response = await fetch(`/api/search?query=${encodeURIComponent(query)}&max_results=5`);
+
         if (!response.ok) {
           throw new Error('Failed to fetch results');
         }
@@ -51,12 +79,12 @@ const WatchlistSearchBar = ({ onStockSelect }) => {
         setResults([]);
       }
     };
-  
+    
     const handleInputChange = (e) => {
       setQuery(e.target.value);
-      if (e.target.value.length >= 2) {
-        handleSearch();
-      }
+      // if (e.target.value.length >= 2) {            // handled in debounce
+      //   handleSearch();
+      // }
     };
   
     return (
@@ -66,7 +94,7 @@ const WatchlistSearchBar = ({ onStockSelect }) => {
             type="text"
             value={query}
             onChange={handleInputChange}
-            placeholder="Search"
+            placeholder="Search for stock to add"
             className="search-input"
           />
         </div>
