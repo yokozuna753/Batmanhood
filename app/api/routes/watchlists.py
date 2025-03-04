@@ -134,6 +134,22 @@ def add_stock_to_watchlists(symbol):
     return jsonify({"message": "Stock added to watchlists successfully"}), 200
 
 
+# 6. GET all session user watchlists that contain a specific stock symbol - come back to test later if building add/remove modal
+@watchlists.route('/stocks/<string:symbol>', methods=['GET'])
+@login_required
+def get_watchlists_with_stock(symbol):
+    logger.info("Fetching watchlists containing stock %s", symbol)
+    watchlist_stocks = WatchlistStock.query.filter_by(symbol=symbol).all()
+    watchlist_ids = [ws.watchlist_id for ws in watchlist_stocks]
+    target_watchlists = Watchlist.query.filter(
+        Watchlist.id.in_(watchlist_ids),
+        Watchlist.user_id == current_user.id
+    ).all()
+
+    logger.info("Found %d watchlists containing stock %s", len(target_watchlists), symbol)
+    return jsonify([watchlist.to_dict() for watchlist in target_watchlists]), 200
+
+
 # 5. DELETE stock from a session user's watchlist(s)
 @watchlists.route("/stocks/<string:symbol>", methods=["DELETE"])
 @login_required
@@ -159,20 +175,6 @@ def remove_stock_from_watchlists(symbol):
     logger.info("Successfully removed stock %s from selected watchlists", symbol)
     return jsonify({"message": "Stock removed from watchlists successfully"}), 200
 
-# 6. GET all session user watchlists that contain a specific stock symbol - come back to test later if building add/remove modal
-@watchlists.route('/stocks/<string:symbol>', methods=['GET'])
-@login_required
-def get_watchlists_with_stock(symbol):
-    logger.info("Fetching watchlists containing stock %s", symbol)
-    watchlist_stocks = WatchlistStock.query.filter_by(symbol=symbol).all()
-    watchlist_ids = [ws.watchlist_id for ws in watchlist_stocks]
-    target_watchlists = Watchlist.query.filter(
-        Watchlist.id.in_(watchlist_ids),
-        Watchlist.user_id == current_user.id
-    ).all()
-
-    logger.info("Found %d watchlists containing stock %s", len(target_watchlists), symbol)
-    return jsonify([watchlist.to_dict() for watchlist in target_watchlists]), 200
 
 
 @watchlists.route('/<int:watchlistId>/stocks/<string:symbol>', methods=['DELETE'])
