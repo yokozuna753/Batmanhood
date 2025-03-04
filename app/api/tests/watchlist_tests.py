@@ -53,11 +53,12 @@ fetch('/api/watchlists/1', {  // Replace "1" with the actual watchlist ID you wa
 """
 
 """
-#2 - Fetch-> DELETE a session user's watchlist test
+#4 - Fetch-> DELETE a session user's watchlist
 fetch('/api/watchlists/2', {
   method: 'DELETE',
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCsrfToken()
   },
   credentials: 'include'
 })

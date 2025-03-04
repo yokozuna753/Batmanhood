@@ -85,7 +85,7 @@ def update_watchlist(id):
     }), 200
 
 
-# 2. DELETE a session user's watchlist
+# 4. DELETE a session user's watchlist
 @watchlists.route('/<int:id>', methods=['DELETE'])
 @login_required
 def delete_watchlist(id):
