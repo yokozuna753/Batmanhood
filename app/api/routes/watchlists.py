@@ -159,7 +159,7 @@ def remove_stock_from_watchlists(symbol):
     logger.info("Successfully removed stock %s from selected watchlists", symbol)
     return jsonify({"message": "Stock removed from watchlists successfully"}), 200
 
-# 6. GET all session user watchlists that contain a specific stock symbol
+# 6. GET all session user watchlists that contain a specific stock symbol - come back to test later if building add/remove modal
 @watchlists.route('/stocks/<string:symbol>', methods=['GET'])
 @login_required
 def get_watchlists_with_stock(symbol):
