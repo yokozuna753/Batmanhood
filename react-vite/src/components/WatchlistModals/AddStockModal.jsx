@@ -1,66 +1,21 @@
 import { useState, useEffect } from "react";
 import { useModal } from "../../context/Modal";
+import WatchlistSearchBar from "./WatchlistSearchBar";
 import "./WatchlistModals.css";
 
 function AddStockModal({ watchlistId, onSuccess }) {
-    const [query, setQuery] = useState("");
-    const [results, setResults] = useState([]);
-    const [selected, setSelected] = useState(null);
+    const [selectedStock, setSelectedStock] = useState(null);
     const [errors, setErrors] = useState({});
-    const [isSearching, setIsSearching] = useState(false);
     const { closeModal } = useModal();
-    
+
     const getCsrfToken = () => {
         return document.cookie.split('; ').find(row => row.startsWith('csrf_token='))?.split('=')[1];
-    };
-
-    useEffect(() => {
-        // Debounce search to avoid excessive API calls
-        const timeoutId = setTimeout(() => {
-            if (query.length >= 2) {
-                searchStocks();
-            } else {
-                setResults([]);
-            }
-        }, 300);
-        
-        return () => clearTimeout(timeoutId);
-    }, [query]);
-
-    const searchStocks = async () => {
-        setIsSearching(true);
-        try {
-            const response = await fetch(`/api/search?query=${encodeURIComponent(query)}&max_results=5`, {
-                credentials: 'include',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'X-CSRF-Token': getCsrfToken() || ''
-                }
-            });
-            
-            if (!response.ok) {
-                throw new Error("Failed to search stocks");
-            }
-            
-            const data = await response.json();
-            setResults(data);
-        } catch (error) {
-            console.error("Error searching stocks:", error);
-        } finally {
-            setIsSearching(false);
-        }
-    };
-
-    const handleSelectStock = (stock) => {
-        setSelected(stock);
-        setQuery(stock.symbol);
-        setResults([]);
     };
 
     const handleSubmit = async (e) => {
         e.preventDefault();
         
-        if (!selected) {
+        if (!selectedStock) {
             setErrors({ stock: "Please select a stock from the search results" });
             return;
         }
@@ -68,7 +23,7 @@ function AddStockModal({ watchlistId, onSuccess }) {
         try {
             const csrf_token = getCsrfToken();
             
-            const response = await fetch(`/api/watchlists/stocks/${selected.symbol}`, {
+            const response = await fetch(`/api/watchlists/stocks/${selectedStock.symbol}`, {
                 method: "POST",
                 credentials: 'include',
                 headers: {
@@ -85,38 +40,21 @@ function AddStockModal({ watchlistId, onSuccess }) {
             }
             
             if (onSuccess) onSuccess();
+            closeModal();
         } catch (error) {
             console.error("Error adding stock to watchlist:", error);
             setErrors({ stock: "An unexpected error occurred" });
         }
     };
-    
+
     return (
         <div className="watchlist-modal">
             <h2>Add Stock to Watchlist</h2>
             <form onSubmit={handleSubmit}>
                 <div className="form-group">
-                    <label htmlFor="stock-search">Search for a stock</label>
-                    <input
-                        id="stock-search"
-                        type="text"
-                        value={query}
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Enter stock symbol or name"
-                        autoComplete="off"
-                    />
-                    {isSearching && <p className="searching">Searching...</p>}
-                    {results.length > 0 && !selected && (
-                        <ul className="search-results">
-                            {results.map((stock) => (
-                                <li 
-                                    key={stock.symbol} 
-                                    onClick={() => handleSelectStock(stock)}
-                                >
-                                    <strong>{stock.symbol}</strong> - {stock.name}
-                                </li>
-                            ))}
-                        </ul>
+                    <WatchlistSearchBar onStockSelect={(stock) => setSelectedStock(stock)} /> {/* Pass callback */}
+                    {selectedStock && (
+                        <p>Selected Stock: <strong>{selectedStock.symbol}</strong> - {selectedStock.name}</p>
                     )}
                     {errors.stock && <p className="error">{errors.stock}</p>}
                 </div>
@@ -127,7 +65,7 @@ function AddStockModal({ watchlistId, onSuccess }) {
                     <button 
                         type="submit" 
                         className="submit-button"
-                        disabled={!selected}
+                        disabled={!selectedStock}
                     >
                         Add Stock
                     </button>
