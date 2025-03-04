@@ -15,6 +15,7 @@ export const loadPortfolio = (userId) => async (dispatch) => {
       throw new Error('Failed to load portfolio');
     }
     const data = await response.json();
+    console.log('     DATA FROM LOAD PORTFOLIO ==>    ', data);
     dispatch(getPortfolio(data));
     return data;
   } catch (error) {
