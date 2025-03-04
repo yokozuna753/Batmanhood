@@ -149,7 +149,7 @@ def remove_stock_from_watchlists(symbol):
     if not watchlist_ids:
         logger.info("No watchlist IDs provided for stock %s removal, nothing to remove", symbol)
         return jsonify({"message": "No watchlist IDs provided, nothing to remove"}), 200
-
+ 
     WatchlistStock.query.filter(
         WatchlistStock.watchlist_id.in_(watchlist_ids),
         WatchlistStock.symbol == symbol
@@ -158,9 +158,6 @@ def remove_stock_from_watchlists(symbol):
     db.session.commit()
     logger.info("Successfully removed stock %s from selected watchlists", symbol)
     return jsonify({"message": "Stock removed from watchlists successfully"}), 200
-
-
-
 
 # 6. GET all session user watchlists that contain a specific stock symbol
 @watchlists.route('/stocks/<string:symbol>', methods=['GET'])

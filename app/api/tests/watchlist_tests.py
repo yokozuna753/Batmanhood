@@ -80,7 +80,7 @@ fetch('/api/watchlists/stocks/MDB', {
         'X-CSRFToken': getCsrfToken()
     },
     credentials: 'include',
-    body: JSON.stringify({ watchlist_ids: [2] })
+    body: JSON.stringify({ watchlist_ids: [5, 7] })
 })
 .then(response => response.json())
 .then(data => console.log('Success:', data))
@@ -100,7 +100,7 @@ fetch('/api/watchlists/stocks/NVDA', {
         'X-CSRFToken': getCsrfToken()
     },
     credentials: 'include',
-    body: JSON.stringify({ watchlist_ids: [6, 5] })
+    body: JSON.stringify({ watchlist_ids: [5] })
 })
 .then(response => response.json())
 .then(data => console.log('Success:', data))
