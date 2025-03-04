@@ -102,7 +102,7 @@ def delete_watchlist(id):
     return jsonify({"message": "Watchlist dropped successfully"}), 200
 
 
-# 5. ADD a stock to a session user's watchlist(s)
+# 5. ADD a stock to a session user's watchlist(s) - [supports simultaneous add/remove stock, checkbox modal]
 @watchlists.route('/stocks/<string:symbol>', methods=['POST'])
 @login_required
 def add_stock_to_watchlists(symbol):
@@ -134,7 +134,7 @@ def add_stock_to_watchlists(symbol):
     return jsonify({"message": "Stock added to watchlists successfully"}), 200
 
 
-# 6. GET all session user watchlists that contain a specific stock symbol - come back to test later if building add/remove modal
+# 6. GET all session user watchlists that contain a specific stock symbol - [supports simultaneous add/remove stock, checkbox modal]
 @watchlists.route('/stocks/<string:symbol>', methods=['GET'])
 @login_required
 def get_watchlists_with_stock(symbol):
@@ -150,7 +150,7 @@ def get_watchlists_with_stock(symbol):
     return jsonify([watchlist.to_dict() for watchlist in target_watchlists]), 200
 
 
-# 5. DELETE stock from a session user's watchlist(s)
+# 7. REMOVE stock from a session user's watchlist(s) 
 @watchlists.route("/stocks/<string:symbol>", methods=["DELETE"])
 @login_required
 def remove_stock_from_watchlists(symbol):
@@ -176,7 +176,7 @@ def remove_stock_from_watchlists(symbol):
     return jsonify({"message": "Stock removed from watchlists successfully"}), 200
 
 
-
+# 8. REMOVE stock from a specific watchlist
 @watchlists.route('/<int:watchlistId>/stocks/<string:symbol>', methods=['DELETE'])
 @login_required
 def delete_stock_from_watchlist(watchlistId, symbol):
@@ -190,3 +190,27 @@ def delete_stock_from_watchlist(watchlistId, symbol):
     
     return jsonify({"message": "Stock removed from watchlist successfully"}), 200
 
+
+# 9. Add stock to a specific watchlist
+@watchlists.route('/<int:watchlist_id>/stocks/<string:symbol>', methods=['POST'])
+@login_required
+def add_stock_to_watchlist(watchlist_id, symbol):
+    watchlist = Watchlist.query.filter_by(id=watchlist_id, user_id=current_user.id).first()
+    if not watchlist:
+        return jsonify({"error": "Watchlist not found"}), 404
+    
+    existing_entry = WatchlistStock.query.filter_by(
+        watchlist_id=watchlist_id, symbol=symbol
+    ).first()
+    
+    if existing_entry:
+        return jsonify({"message": "Stock already in watchlist"}), 200
+    
+    new_entry = WatchlistStock(watchlist_id=watchlist_id, symbol=symbol)
+    db.session.add(new_entry)
+    db.session.commit()
+    
+    return jsonify({"message": "Stock added to watchlist successfully"}), 201
+
+
+""" note: when ui does not ensure authroization, make sure all routes enforce auth... a few do not """
