@@ -1,5 +1,7 @@
 # Browser console fetch commands to test the ORIGINAL watchlist routes
 
+
+
 """
 #1 - Fetch-> GET session user's watchlists test
 fetch('/api/watchlists/', {
@@ -14,7 +16,24 @@ fetch('/api/watchlists/', {
 .catch(error => console.error('Error:', error));
 """
 
+"""
+function getCsrfToken() {
+    return document.cookie.split('; ').find(row => row.startsWith('csrf_token='))?.split('=')[1];
+}
 
+fetch('/api/watchlists/', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCsrfToken()
+  },
+  credentials: 'include',  // Ensures cookies (e.g., session authentication) are sent
+  body: JSON.stringify({ name: 'My New Watchlist' })  // Replace with desired watchlist name
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+"""
 
 """
 #2 - Fetch-> DELETE a session user's watchlist test
