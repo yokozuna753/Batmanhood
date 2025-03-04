@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useModal } from "../context/Modal";
+import { useModal } from "../../context/Modal";
 //import "./WatchlistModals.css";
 
 function AddStockModal({ watchlistId, onSuccess }) {

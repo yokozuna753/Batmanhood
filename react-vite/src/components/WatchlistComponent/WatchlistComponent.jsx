@@ -107,7 +107,7 @@ import { FaChevronDown, FaChevronRight, FaEdit, FaTrash, FaPlus } from "react-ic
 import { useModal } from "../../context/Modal";
 import AddWatchlistModal from "../AddWatchlistModal";
 import EditWatchlistModal from "../EditWatchlistModal";
-import AddStockModal from "../AddStockModal";
+import AddStockModal from "../AddStockModal/AddStockModal";
 import "./WatchlistComponent.css";
 
 const WatchlistComponent = () => {
