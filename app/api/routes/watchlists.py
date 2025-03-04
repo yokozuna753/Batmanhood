@@ -11,7 +11,7 @@ logger = logging.getLogger(__name__)
 watchlists = Blueprint("watchlists", __name__)
 
 
-
+# 1. GET all session user watchlists
 @watchlists.route('/', methods=['GET'])
 @login_required
 def get_user_watchlists():  
