@@ -14,6 +14,8 @@ fetch('/api/watchlists/', {
 .catch(error => console.error('Error:', error));
 """
 
+
+
 """
 #2 - Fetch-> DELETE a session user's watchlist test
 fetch('/api/watchlists/2', {
