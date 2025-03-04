@@ -1,6 +1,10 @@
 # Browser console fetch commands to test the ORIGINAL watchlist routes
 
-
+"""
+function getCsrfToken() {
+    return document.cookie.split('; ').find(row => row.startsWith('csrf_token='))?.split('=')[1];
+}
+"""
 
 """
 #1 - Fetch-> GET session user's watchlists test
@@ -17,10 +21,7 @@ fetch('/api/watchlists/', {
 """
 
 """
-function getCsrfToken() {
-    return document.cookie.split('; ').find(row => row.startsWith('csrf_token='))?.split('=')[1];
-}
-
+#2 - Fetch-> CREATE a watchlist
 fetch('/api/watchlists/', {
   method: 'POST',
   headers: {
