@@ -16,137 +16,137 @@ function Portfolio() {
   const chartRef = useRef(null);
   const stockChartRefs = useRef([]);
 
-  useEffect(() => {
-    if (sessionUser) {
-      dispatch(loadPortfolio(sessionUser.id));
-      const intervalId = setInterval(() => {
-        dispatch(fetchPortfolioPrices(sessionUser.id));
-      }, 10000);
-      return () => clearInterval(intervalId);
-    }
-  }, [dispatch, sessionUser]);
+  // useEffect(() => {
+  //   if (sessionUser) {
+  //     dispatch(loadPortfolio(sessionUser.id));
+  //     const intervalId = setInterval(() => {
+  //       dispatch(fetchPortfolioPrices(sessionUser.id));
+  //     }, 10000);
+  //     return () => clearInterval(intervalId);
+  //   }
+  // }, [dispatch, sessionUser]);
 
-  useEffect(() => {
-    const data = [
-      { year: 2010, count: 10 },
-      { year: 2011, count: 20 },
-      { year: 2012, count: 15 },
-      { year: 2013, count: 25 },
-      { year: 2014, count: 22 },
-      { year: 2015, count: 30 },
-      { year: 2016, count: 28 },
-    ];
-    const portfolioData = [];
-    portfolioData.push(portfolio.livePortfolioValue);
+  // useEffect(() => {
+  //   const data = [
+  //     { year: 2010, count: 10 },
+  //     { year: 2011, count: 20 },
+  //     { year: 2012, count: 15 },
+  //     { year: 2013, count: 25 },
+  //     { year: 2014, count: 22 },
+  //     { year: 2015, count: 30 },
+  //     { year: 2016, count: 28 },
+  //   ];
+  //   const portfolioData = [];
+  //   portfolioData.push(portfolio.livePortfolioValue);
 
-    if (chartRef.current) {
-      chartRef.current.destroy();
-    }
+  //   if (chartRef.current) {
+  //     chartRef.current.destroy();
+  //   }
 
-    chartRef.current = new Chart(document.getElementById("acquisitions"), {
-      type: "line",
-      data: {
-        labels: data.map(() => ""),
-        datasets: [
-          {
-            label: "Portfolio Performance",
-            data: [0, 0, ...portfolioData],
-          },
-        ],
-      },
-      options: {
-        plugins: {
-          legend: {
-            display: false,
-          },
-        },
-        responsive: false,
-        maintainAspectRatio: false,
-        scales: {
-          x: {
-            ticks: {
-              font: {
-                size: 10,
-              },
-            },
-          },
-          y: {
-            display: false,
-          },
-        },
-      },
-    });
+  //   chartRef.current = new Chart(document.getElementById("acquisitions"), {
+  //     type: "line",
+  //     data: {
+  //       labels: data.map(() => ""),
+  //       datasets: [
+  //         {
+  //           label: "Portfolio Performance",
+  //           data: [0, 0, ...portfolioData],
+  //         },
+  //       ],
+  //     },
+  //     options: {
+  //       plugins: {
+  //         legend: {
+  //           display: false,
+  //         },
+  //       },
+  //       responsive: false,
+  //       maintainAspectRatio: false,
+  //       scales: {
+  //         x: {
+  //           ticks: {
+  //             font: {
+  //               size: 10,
+  //             },
+  //           },
+  //         },
+  //         y: {
+  //           display: false,
+  //         },
+  //       },
+  //     },
+  //   });
 
-    return () => {
-      if (chartRef.current) {
-        chartRef.current.destroy();
-      }
-    };
-  }, [sessionUser, portfolio, dispatch]);
+  //   return () => {
+  //     if (chartRef.current) {
+  //       chartRef.current.destroy();
+  //     }
+  //   };
+  // }, [sessionUser, portfolio, dispatch]);
 
-  useEffect(() => {
-    if (portfolio.tickers) {
-      portfolio.tickers.forEach((stock, index) => {
-        const history = stock.historical_data || [];
-        const chartData = {
-          labels: history.map((_, i) => `Day ${i + 1}`),
-          datasets: [
-            {
-              label: `${stock.ticker} Performance`,
-              data: history,
-              borderColor: "rgb(22, 228, 60)",
-              backgroundColor: "rgb(39, 235, 13)",
-              fill: false,
-              pointRadius: 0,
-            },
-          ],
-        };
+  // useEffect(() => {
+  //   if (portfolio.tickers) {
+  //     portfolio.tickers.forEach((stock, index) => {
+  //       const history = stock.historical_data || [];
+  //       const chartData = {
+  //         labels: history.map((_, i) => `Day ${i + 1}`),
+  //         datasets: [
+  //           {
+  //             label: `${stock.ticker} Performance`,
+  //             data: history,
+  //             borderColor: "rgb(22, 228, 60)",
+  //             backgroundColor: "rgb(39, 235, 13)",
+  //             fill: false,
+  //             pointRadius: 0,
+  //           },
+  //         ],
+  //       };
 
-        const canvas = stockChartRefs.current[index];
+  //       const canvas = stockChartRefs.current[index];
 
-        if (canvas && canvas.chartInstance) {
-          canvas.chartInstance.destroy();
-        }
+  //       if (canvas && canvas.chartInstance) {
+  //         canvas.chartInstance.destroy();
+  //       }
 
-        if (canvas) {
-          canvas.chartInstance = new Chart(canvas, {
-            type: "line",
-            data: chartData,
-            options: {
-              plugins: {
-                legend: {
-                  display: false,
-                },
-              },
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                x: {
-                  type: "category",
-                  ticks: {
-                    font: {
-                      size: 3,
-                    },
-                  },
-                },
-                y: {
-                  display: false,
-                },
-              },
-              layout: {
-                padding: {
-                  top: 0,
-                  right: 0,
-                  bottom: 0,
-                  left: 0,
-                },
-              },
-            },
-          });
-        }
-      });
-    }
-  }, [portfolio.tickers]);
+  //       if (canvas) {
+  //         canvas.chartInstance = new Chart(canvas, {
+  //           type: "line",
+  //           data: chartData,
+  //           options: {
+  //             plugins: {
+  //               legend: {
+  //                 display: false,
+  //               },
+  //             },
+  //             responsive: true,
+  //             maintainAspectRatio: false,
+  //             scales: {
+  //               x: {
+  //                 type: "category",
+  //                 ticks: {
+  //                   font: {
+  //                     size: 3,
+  //                   },
+  //                 },
+  //               },
+  //               y: {
+  //                 display: false,
+  //               },
+  //             },
+  //             layout: {
+  //               padding: {
+  //                 top: 0,
+  //                 right: 0,
+  //                 bottom: 0,
+  //                 left: 0,
+  //               },
+  //             },
+  //           },
+  //         });
+  //       }
+  //     });
+  //   }
+  // }, [portfolio.tickers]);
 
   if (!sessionUser) {
     return <Navigate to="/login" replace={true} />;

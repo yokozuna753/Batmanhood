@@ -10,8 +10,31 @@ logger = logging.getLogger(__name__)
 
 watchlists = Blueprint("watchlists", __name__)
 
+# 1. CREATE a new watchlist
+@watchlists.route('/', methods=['POST'])
+@login_required
+def create_watchlist():
+    data = request.json
+    name = data.get('name')
+    
+    if not name:
+        return jsonify({"errors": {"name": "Watchlist name is required"}}), 400
+    
+    new_watchlist = Watchlist(
+        user_id=current_user.id,
+        name=name
+    )
+    
+    db.session.add(new_watchlist)
+    db.session.commit()
+    
+    return jsonify({
+        "id": new_watchlist.id,
+        "name": new_watchlist.name,
+        "stocks": []
+    }), 201
 
-# 1. GET all session user watchlists
+# 2. GET all session user watchlists
 @watchlists.route('/', methods=['GET'])
 @login_required
 def get_user_watchlists():  
@@ -33,54 +56,30 @@ def get_user_watchlists():
     return jsonify(watchlist_data), 200
 
 
-# 2. CREATE a new watchlist
-@watchlists.route('/', methods=['POST'])
+# 3. UPDATE an existing watchlist name
+@watchlists.route('/<int:id>', methods=['PUT'])
 @login_required
-def create_watchlist():
+def update_watchlist(id):
+    watchlist = Watchlist.query.filter_by(id=id, user_id=current_user.id).first()
+    
+    if not watchlist:
+        return jsonify({"error": "Watchlist not found"}), 404
+    
     data = request.json
     name = data.get('name')
     
     if not name:
         return jsonify({"errors": {"name": "Watchlist name is required"}}), 400
     
-    new_watchlist = Watchlist(
-        user_id=current_user.id,
-        name=name
-    )
-    
-    db.session.add(new_watchlist)
+    watchlist.name = name
     db.session.commit()
     
     return jsonify({
-        "id": new_watchlist.id,
-        "name": new_watchlist.name,
-        "stocks": []
-    }), 201
+        "id": watchlist.id,
+        "name": watchlist.name,
+        "stocks": [{"symbol": stock.symbol} for stock in watchlist.watchlist_stocks]
+    }), 200
 
-
-# 2. Create a new watchlist
-@watchlists.route('/', methods=['POST'])
-@login_required
-def create_watchlist():
-    data = request.json
-    name = data.get('name')
-    
-    if not name:
-        return jsonify({"errors": {"name": "Watchlist name is required"}}), 400
-    
-    new_watchlist = Watchlist(
-        user_id=current_user.id,
-        name=name
-    )
-    
-    db.session.add(new_watchlist)
-    db.session.commit()
-    
-    return jsonify({
-        "id": new_watchlist.id,
-        "name": new_watchlist.name,
-        "stocks": []
-    }), 201
 
 # 2. DELETE a session user's watchlist
 @watchlists.route('/<int:id>', methods=['DELETE'])
