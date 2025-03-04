@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { loadPortfolio } from "../../redux/portfolio";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -14,6 +14,10 @@ function Portfolio() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const [timeRange, setTimeRange] = useState('1D');
+  const [portfolioChartData, setPortfolioChartData] = useState([
+    {time: new Date().toISOString(), price: 0 }
+  ]);
+  const portfolioValueRef = useRef(null);
 
   const timeRanges = [
     { label: '1D', value: '1D' },
@@ -22,32 +26,60 @@ function Portfolio() {
     { label: '1Y', value: '1Y' }
   ];
 
-  // Prepare portfolio chart data with default $0 entry point
-  const preparePortfolioChartData = () => {
-    const portfolioHistory = portfolio.portfolioHistory?.[timeRange] || [];
-    
-    // If no history, create a default entry point
-    if (portfolioHistory.length === 0) {
-      return [{ time: new Date().toISOString(), price: 0 }];
-    }
-
-    return portfolioHistory;
-  };
-
-  const portfolioChartData = preparePortfolioChartData();
-  const latestPrice = portfolioChartData[portfolioChartData.length - 1]?.price || 0;
-  const startPrice = portfolioChartData[0]?.price || latestPrice;
-  const isPositive = latestPrice >= startPrice;
-
+  // Initial portfolio load and periodic price updates
   useEffect(() => {
     if (sessionUser) {
+      // Initial portfolio load
       dispatch(loadPortfolio(sessionUser.id));
+      dispatch(fetchPortfolioPrices(sessionUser.id));
+
+      // Fetch portfolio prices every 2 minutes
       const intervalId = setInterval(() => {
         dispatch(fetchPortfolioPrices(sessionUser.id));
-      }, 60000);
+      }, 60000); // 2 minutes = 120000 milliseconds
+
       return () => clearInterval(intervalId);
     }
   }, [dispatch, sessionUser]);
+
+  // Update chart data when live portfolio value changes
+  useEffect(() => {
+    if (sessionUser && portfolio.livePortfolioValue !== null) {
+      const currentTime = new Date().toISOString();
+      
+      // If this is the first time we're getting a live portfolio value
+      if (portfolioChartData.length === 0) {
+        setPortfolioChartData([
+          { time: currentTime, price: portfolio.livePortfolioValue }
+        ]);
+        portfolioValueRef.current = portfolio.livePortfolioValue;
+      } 
+      // If the portfolio value has changed
+      else if (portfolio.livePortfolioValue !== portfolioValueRef.current) {
+        setPortfolioChartData(prevData => {
+          // Create a new array with the existing data and new data point
+          const newData = [
+            ...prevData, 
+            { 
+              time: currentTime, 
+              price: portfolio.livePortfolioValue 
+            }
+          ];
+
+          // Limit to last 50 data points to prevent memory issues
+          return newData.slice(-50);
+        });
+
+        // Update the ref to current value
+        portfolioValueRef.current = portfolio.livePortfolioValue;
+      }
+    }
+  }, [portfolio.livePortfolioValue,portfolioChartData.length, sessionUser]);
+
+  // Calculation for chart color and trend
+  const latestPrice = portfolioChartData[portfolioChartData.length - 1]?.price || 0;
+  const startPrice = portfolioChartData[0]?.price || 0;
+  const isPositive = latestPrice >= startPrice;
 
   if (!sessionUser) {
     return <Navigate to="/login" replace={true} />;
@@ -160,6 +192,9 @@ function Portfolio() {
               ) : (
                 <div className="no-stocks-message">
                   <p>You haven&apos;t purchased any stocks yet.</p>
+                  <button onClick={() => navigate('/stocks')}>
+                    Browse Stocks
+                  </button>
                 </div>
               )}
             </div>

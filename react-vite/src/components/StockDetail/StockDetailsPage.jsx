@@ -1,18 +1,31 @@
-import { useState, useEffect } from 'react';
-import { useDispatch, useSelector } from 'react-redux';
-import { useParams } from 'react-router-dom';
-import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import { faDollarSign, faSpinner, faArrowUp, faArrowDown } from '@fortawesome/free-solid-svg-icons';
+import { useState, useEffect } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { useParams } from "react-router-dom";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  Tooltip,
+  ResponsiveContainer,
+} from "recharts";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faDollarSign,
+  faSpinner,
+  faArrowUp,
+  faArrowDown,
+} from "@fortawesome/free-solid-svg-icons";
 import { getStockDetails, executeTrade } from "../../redux/stocks";
 import "./StockDetails.css";
+import { fetchPortfolioPrices, loadPortfolio } from "../../redux/portfolio";
 
 const StockChart = ({ stockDetails, timeRange, onTimeRangeChange }) => {
   const timeRanges = [
-    { label: '1D', value: '1D' },
-    { label: '1W', value: '1W' },
-    { label: '1M', value: '1M' },
-    { label: '1Y', value: '1Y' }
+    { label: "1D", value: "1D" },
+    { label: "1W", value: "1W" },
+    { label: "1M", value: "1M" },
+    { label: "1Y", value: "1Y" },
   ];
 
   const chartData = stockDetails?.priceHistory?.[timeRange] || [];
@@ -23,10 +36,12 @@ const StockChart = ({ stockDetails, timeRange, onTimeRangeChange }) => {
   return (
     <div className="chart-section">
       <div className="time-range-selector">
-        {timeRanges.map(range => (
+        {timeRanges.map((range) => (
           <button
             key={range.value}
-            className={`time-range-button ${timeRange === range.value ? 'active' : ''}`}
+            className={`time-range-button ${
+              timeRange === range.value ? "active" : ""
+            }`}
             onClick={() => onTimeRangeChange(range.value)}
           >
             {range.label}
@@ -35,65 +50,75 @@ const StockChart = ({ stockDetails, timeRange, onTimeRangeChange }) => {
       </div>
       <div className="chart-container">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart 
+          <LineChart
             data={chartData}
             margin={{ top: 10, right: 30, left: 10, bottom: 30 }}
           >
-            <Line 
-              type="monotone" 
-              dataKey="price" 
-              stroke={isPositive ? "rgb(0, 200, 5)" : "rgb(255, 80, 0)"} 
-              strokeWidth={2} 
+            <Line
+              type="monotone"
+              dataKey="price"
+              stroke={isPositive ? "rgb(0, 200, 5)" : "rgb(255, 80, 0)"}
+              strokeWidth={2}
               dot={false}
               isAnimationActive={false}
             />
-            <XAxis 
-              dataKey="time" 
+            <XAxis
+              dataKey="time"
               tickFormatter={(time) => {
                 const date = new Date(time);
-                return timeRange === '1D' 
-                  ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
-                  : date.toLocaleDateString([], { month: 'numeric', day: 'numeric' });
+                return timeRange === "1D"
+                  ? date.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
+                  : date.toLocaleDateString([], {
+                      month: "numeric",
+                      day: "numeric",
+                    });
               }}
-              tick={{ fontSize: 12, fill: '#666' }}
+              tick={{ fontSize: 12, fill: "#666" }}
               tickLine={false}
               axisLine={false}
               dy={10}
             />
-            <YAxis 
-              domain={['auto', 'auto']}
+            <YAxis
+              domain={["auto", "auto"]}
               tickFormatter={(value) => `$${value.toFixed(2)}`}
               orientation="right"
-              tick={{ fontSize: 12, fill: '#666' }}
+              tick={{ fontSize: 12, fill: "#666" }}
               tickLine={false}
               axisLine={false}
               dx={10}
             />
-            <Tooltip 
+            <Tooltip
               contentStyle={{
-                backgroundColor: 'white',
-                border: 'none',
-                borderRadius: '4px',
-                boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
-                padding: '8px 12px',
-                fontSize: '14px'
+                backgroundColor: "white",
+                border: "none",
+                borderRadius: "4px",
+                boxShadow: "0 2px 8px rgba(0, 0, 0, 0.1)",
+                padding: "8px 12px",
+                fontSize: "14px",
               }}
-              formatter={(value) => [`$${value.toFixed(2)}`, '']}
+              formatter={(value) => [`$${value.toFixed(2)}`, ""]}
               labelFormatter={(label) => {
                 const date = new Date(label);
-                return timeRange === '1D' 
-                  ? date.toLocaleTimeString([], { 
-                      hour: '2-digit', 
-                      minute: '2-digit',
-                      hour12: true 
+                return timeRange === "1D"
+                  ? date.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                      hour12: true,
                     })
-                  : date.toLocaleDateString([], { 
-                      month: 'short',
-                      day: 'numeric',
-                      year: 'numeric'
+                  : date.toLocaleDateString([], {
+                      month: "short",
+                      day: "numeric",
+                      year: "numeric",
                     });
               }}
-              cursor={{ stroke: '#ccc', strokeWidth: 1, strokeDasharray: '5 5' }}
+              cursor={{
+                stroke: "#ccc",
+                strokeWidth: 1,
+                strokeDasharray: "5 5",
+              }}
             />
           </LineChart>
         </ResponsiveContainer>
@@ -105,47 +130,57 @@ const StockChart = ({ stockDetails, timeRange, onTimeRangeChange }) => {
 const StockDetailsPage = () => {
   const { ticker } = useParams();
   const dispatch = useDispatch();
-  
+
   // const stockId = useSelector((state) => state.session.user.id)
-  const stockDetails = useSelector(state => state.stocks.currentStock);
-  const loading = useSelector(state => state.stocks.loading);
-  const error = useSelector(state => state.stocks.error);
-  const tradeSuccess = useSelector(state => state.stocks.tradeSuccess);
-  const tradeError = useSelector(state => state.stocks.tradeError);
-  const tradeLoading = useSelector(state => state.stocks.tradeLoading);
-  const [timeRange, setTimeRange] = useState('1D');
+  const sessionUser = useSelector((state) => state.session.user);
+  const stockDetails = useSelector((state) => state.stocks.currentStock);
+  const loading = useSelector((state) => state.stocks.loading);
+  const error = useSelector((state) => state.stocks.error);
+  const tradeSuccess = useSelector((state) => state.stocks.tradeSuccess);
+  const tradeError = useSelector((state) => state.stocks.tradeError);
+  const tradeLoading = useSelector((state) => state.stocks.tradeLoading);
+  const [timeRange, setTimeRange] = useState("1D");
   const [tradeForm, setTradeForm] = useState({
-    orderType: 'Market Order',
-    buyIn: 'Dollars',
-    shares: '',
-    amount: '',
-    limitPrice: 0
+    orderType: "Market Order",
+    buyIn: "Dollars",
+    shares: "",
+    amount: "",
+    limitPrice: 0,
   });
 
+  useEffect(() => {
+    if (sessionUser) {
+      dispatch(loadPortfolio(sessionUser.id));
+      dispatch(fetchPortfolioPrices(sessionUser.id));
+    }
+  }, [dispatch, sessionUser, sessionUser.id]);
   useEffect(() => {
     if (ticker) {
       dispatch(getStockDetails(ticker));
     }
   }, [dispatch, ticker]);
 
-  if (loading) return (
-    <div className="loading">
-      <FontAwesomeIcon icon={faSpinner} spin />
-      <span>Loading stock details...</span>
-    </div>
-  );
-  
-  if (error) return (
-    <div className="error-message">
-      <h2>Error Loading Stock Details</h2>
-      <p>{error}</p>
-    </div>
-  );
-  
+  if (loading)
+    return (
+      <div className="loading">
+        <FontAwesomeIcon icon={faSpinner} spin />
+        <span>Loading stock details...</span>
+      </div>
+    );
+
+  if (error)
+    return (
+      <div className="error-message">
+        <h2>Error Loading Stock Details</h2>
+        <p>{error}</p>
+      </div>
+    );
+
   if (!stockDetails) return null;
 
   // Get latest price from 1D data
-  const currentPriceData = stockDetails.priceHistory?.["1D"]?.slice(-1)[0] || {};
+  const currentPriceData =
+    stockDetails.priceHistory?.["1D"]?.slice(-1)[0] || {};
   const regularMarketPrice = currentPriceData.price || 0;
   const sharesOwned = stockDetails.shares_owned || 0;
   const estimatedCost = stockDetails.estimated_cost || 0;
@@ -156,7 +191,7 @@ const StockDetailsPage = () => {
   // Calculate price change
   const previousClose = stockDetails.previousClose || 0;
   const priceChange = regularMarketPrice - previousClose;
-  const priceChangePercent = ((priceChange / previousClose) * 100);
+  const priceChangePercent = (priceChange / previousClose) * 100;
   const isPositive = priceChange >= 0;
 
   const handleTradeSubmit = async (e) => {
@@ -165,58 +200,63 @@ const StockDetailsPage = () => {
     if (tradeLoading) return;
 
     // Form validation
-    if (tradeForm.buyIn === 'Dollars' && (!tradeForm.amount || tradeForm.amount <= 0)) {
-        return;
+    if (
+      tradeForm.buyIn === "Dollars" &&
+      (!tradeForm.amount || tradeForm.amount <= 0)
+    ) {
+      return;
     }
-    if (tradeForm.buyIn === 'Shares' && (!tradeForm.shares ||  tradeForm.shares <= 0)) {
-        return;
+    if (
+      tradeForm.buyIn === "Shares" &&
+      (!tradeForm.shares || tradeForm.shares <= 0)
+    ) {
+      return;
     }
 
     const tradeData = {
-        order_type: tradeForm.orderType,
-        buy_in: tradeForm.buyIn,
-        shares: tradeForm.buyIn === 'Shares' ? Number(tradeForm.shares) : null,
-        amount: tradeForm.buyIn === 'Dollars' ? Number(tradeForm.amount) : null,
-        limit_price: tradeForm.limitPrice || 0,
-        ticker: stockDetails.ticker
+      order_type: tradeForm.orderType,
+      buy_in: tradeForm.buyIn,
+      shares: tradeForm.buyIn === "Shares" ? Number(tradeForm.shares) : null,
+      amount: tradeForm.buyIn === "Dollars" ? Number(tradeForm.amount) : null,
+      limit_price: tradeForm.limitPrice || 0,
+      ticker: stockDetails.ticker,
     };
 
     try {
-        // Get the stockId from stockDetails
-        if (!stockDetails ||  !stockDetails.id) {
-            console.error('No stock ID available');
-            return;
-        }
+      // Get the stockId from stockDetails
+      if (!stockDetails || !stockDetails.id) {
+        console.error("No stock ID available");
+        return;
+      }
 
-        const success = await dispatch(executeTrade(stockDetails.id, tradeData));
+      const success = await dispatch(executeTrade(stockDetails.id, tradeData));
 
-        if (success) {
-            setTradeForm(prev => ({
-                ...prev,
-                shares: '',
-                amount: '',
-                limitPrice: 0
-            }));
+      if (success) {
+        setTradeForm((prev) => ({
+          ...prev,
+          shares: "",
+          amount: "",
+          limitPrice: 0,
+        }));
 
-            // Refresh stock details after successful trade
-            dispatch(getStockDetails(ticker));
-        }
+        // Refresh stock details after successful trade
+        dispatch(getStockDetails(ticker));
+      }
     } catch (error) {
-        console.error('Trade failed:', error);
+      console.error("Trade failed:", error);
     }
-};
+  };
 
   return (
     <div className="stock-details">
       <div className="stock-header">
         <h1>{stockDetails.ticker}</h1>
-        <div className="current-price">
-          ${regularMarketPrice.toFixed(2)}
-        </div>
-        <div className={`price-change ${isPositive ? 'positive' : 'negative'}`}>
+        <div className="current-price">${regularMarketPrice.toFixed(2)}</div>
+        <div className={`price-change ${isPositive ? "positive" : "negative"}`}>
           <FontAwesomeIcon icon={isPositive ? faArrowUp : faArrowDown} />
           <span>
-            ${Math.abs(priceChange).toFixed(2)} ({Math.abs(priceChangePercent).toFixed(2)}%)
+            ${Math.abs(priceChange).toFixed(2)} (
+            {Math.abs(priceChangePercent).toFixed(2)}%)
           </span>
         </div>
       </div>
@@ -224,27 +264,35 @@ const StockDetailsPage = () => {
       <div className="main-content">
         <div className="chart-section-wrapper">
           {stockDetails && (
-            <StockChart 
+            <StockChart
               stockDetails={stockDetails}
               timeRange={timeRange}
               onTimeRangeChange={setTimeRange}
             />
           )}
         </div>
-        
+
         <div className="trade-form">
           <div className="trade-type-buttons">
-            <button 
+            <button
               type="button"
-              className={`trade-button ${tradeForm.orderType === 'Market Order' ? 'active' : ''}`}
-              onClick={() => setTradeForm(prev => ({...prev, orderType: 'Market Order'}))}
+              className={`trade-button ${
+                tradeForm.orderType === "Market Order" ? "active" : ""
+              }`}
+              onClick={() =>
+                setTradeForm((prev) => ({ ...prev, orderType: "Market Order" }))
+              }
             >
               Buy {stockDetails.ticker}
             </button>
-            <button 
+            <button
               type="button"
-              className={`trade-button ${tradeForm.orderType === 'Limit Order' ? 'active' : ''}`}
-              onClick={() => setTradeForm(prev => ({...prev, orderType: 'Limit Order'}))}
+              className={`trade-button ${
+                tradeForm.orderType === "Limit Order" ? "active" : ""
+              }`}
+              onClick={() =>
+                setTradeForm((prev) => ({ ...prev, orderType: "Limit Order" }))
+              }
             >
               Sell {stockDetails.ticker}
             </button>
@@ -253,38 +301,50 @@ const StockDetailsPage = () => {
           <form onSubmit={handleTradeSubmit}>
             <div className="radio-group">
               <label>
-                <input 
+                <input
                   type="radio"
                   name="buyIn"
                   value="Dollars"
-                  checked={tradeForm.buyIn === 'Dollars'}
-                  onChange={(e) => setTradeForm(prev => ({...prev, buyIn: e.target.value}))}
+                  checked={tradeForm.buyIn === "Dollars"}
+                  onChange={(e) =>
+                    setTradeForm((prev) => ({ ...prev, buyIn: e.target.value }))
+                  }
                 />
                 <span>Dollars</span>
               </label>
               <label>
-                <input 
+                <input
                   type="radio"
                   name="buyIn"
                   value="Shares"
-                  checked={tradeForm.buyIn === 'Shares'}
-                  onChange={(e) => setTradeForm(prev => ({...prev, buyIn: e.target.value}))}
+                  checked={tradeForm.buyIn === "Shares"}
+                  onChange={(e) =>
+                    setTradeForm((prev) => ({ ...prev, buyIn: e.target.value }))
+                  }
                 />
                 <span>Shares</span>
               </label>
             </div>
 
-            {tradeForm.buyIn === 'Dollars' ? (
+            {tradeForm.buyIn === "Dollars" ? (
               <div className="input-group">
                 <label>Amount</label>
                 <div className="dollar-input">
-                  <FontAwesomeIcon icon={faDollarSign} className="dollar-sign" />
+                  <FontAwesomeIcon
+                    icon={faDollarSign}
+                    className="dollar-sign"
+                  />
                   <input
                     type="number"
                     min="0"
                     step="0.01"
                     value={tradeForm.amount}
-                    onChange={(e) => setTradeForm(prev => ({...prev, amount: e.target.value}))}
+                    onChange={(e) =>
+                      setTradeForm((prev) => ({
+                        ...prev,
+                        amount: e.target.value,
+                      }))
+                    }
                     placeholder="0.00"
                   />
                 </div>
@@ -297,23 +357,36 @@ const StockDetailsPage = () => {
                   min="0"
                   step="1"
                   value={tradeForm.shares}
-                  onChange={(e) => setTradeForm(prev => ({...prev, shares: e.target.value}))}
+                  onChange={(e) =>
+                    setTradeForm((prev) => ({
+                      ...prev,
+                      shares: e.target.value,
+                    }))
+                  }
                   placeholder="0"
                 />
               </div>
             )}
 
-            {tradeForm.orderType === 'Limit Order' && (
+            {tradeForm.orderType === "Limit Order" && (
               <div className="input-group">
                 <label>Limit Price</label>
                 <div className="dollar-input">
-                  <FontAwesomeIcon icon={faDollarSign} className="dollar-sign" />
+                  <FontAwesomeIcon
+                    icon={faDollarSign}
+                    className="dollar-sign"
+                  />
                   <input
                     type="number"
                     min="0"
                     step="0.01"
                     value={tradeForm.limitPrice}
-                    onChange={(e) => setTradeForm(prev => ({...prev, limitPrice: e.target.value}))}
+                    onChange={(e) =>
+                      setTradeForm((prev) => ({
+                        ...prev,
+                        limitPrice: e.target.value,
+                      }))
+                    }
                     placeholder="0.00"
                   />
                 </div>
@@ -321,17 +394,23 @@ const StockDetailsPage = () => {
             )}
 
             {(tradeError || tradeSuccess) && (
-              <div className={`message ${tradeError ? 'error-message' : 'success-message'}`}>
+              <div
+                className={`message ${
+                  tradeError ? "error-message" : "success-message"
+                }`}
+              >
                 {tradeError || tradeSuccess}
               </div>
             )}
 
-            <button 
-              type="submit" 
+            <button
+              type="submit"
               className="submit-button"
               disabled={
-                (tradeForm.buyIn === 'Dollars' && (!tradeForm.amount || tradeForm.amount <= 0)) ||
-                (tradeForm.buyIn === 'Shares' && (!tradeForm.shares || tradeForm.shares <= 0))
+                (tradeForm.buyIn === "Dollars" &&
+                  (!tradeForm.amount || tradeForm.amount <= 0)) ||
+                (tradeForm.buyIn === "Shares" &&
+                  (!tradeForm.shares || tradeForm.shares <= 0))
               }
             >
               Review {tradeForm.orderType}
@@ -358,7 +437,11 @@ const StockDetailsPage = () => {
             </div>
             <div>
               <p className="label">Total Return</p>
-              <p className={`value ${totalReturn >= 0 ? 'positive' : 'negative'}`}>
+              <p
+                className={`value ${
+                  totalReturn >= 0 ? "positive" : "negative"
+                }`}
+              >
                 ${totalReturn.toFixed(2)}
               </p>
             </div>
@@ -372,7 +455,11 @@ const StockDetailsPage = () => {
               <div key={order.id} className="order-item">
                 <div>
                   <p className="order-type">{order.order_type}</p>
-                  <p className="order-date">{order.date ? new Date(order.date).toLocaleDateString() : 'N/A'}</p>
+                  <p className="order-date">
+                    {order.date
+                      ? new Date(order.date).toLocaleDateString()
+                      : "N/A"}
+                  </p>
                 </div>
                 <div className="order-details">
                   <p>{order.shares} shares</p>
@@ -382,8 +469,6 @@ const StockDetailsPage = () => {
             ))}
           </div>
         </div>
-
-        
       </div>
     </div>
   );
