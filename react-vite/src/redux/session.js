@@ -11,9 +11,9 @@ const removeUser = () => ({
   type: REMOVE_USER
 });
 
-const deleteUser = () => ({
-  type: DELETE_USER
-})
+// const deleteUser = () => ({
+//   type: DELETE_USER
+// })
 
 export const thunkAuthenticate = () => async (dispatch) => {
 	const response = await fetch("/api/auth/");
@@ -76,7 +76,7 @@ export const thunkLogout = () => async (dispatch) => {
 
 export const thunkDelete = (userId) => async (dispatch) => {
   const response = await fetch(`/api/users/${userId}/delete`);
-  const data = await response.json()
+  // const data = await response.json()
   dispatch(removeUser());
   return response
 };
