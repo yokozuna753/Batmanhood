@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useModal } from "../../context/Modal";
-//import "./WatchlistModals.css";
+import "./WatchlistModals.css";
 
 function EditWatchlistModal({ watchlist, onSuccess }) {
     const [name, setName] = useState(watchlist.name);

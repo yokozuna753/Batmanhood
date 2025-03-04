@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useModal } from "../../context/Modal";
-//import "./WatchlistModals.css";
+import "./WatchlistModals.css";
 
 function AddStockModal({ watchlistId, onSuccess }) {
     const [query, setQuery] = useState("");
