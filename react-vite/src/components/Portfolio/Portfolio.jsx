@@ -1,5 +1,4 @@
-import { useEffect, useRef } from "react";
-import Chart from "chart.js/auto";
+import { useEffect, useState } from "react";
 import { loadPortfolio } from "../../redux/portfolio";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -7,146 +6,48 @@ import { fetchPortfolioPrices } from "../../redux/portfolio";
 import WatchlistComponent from "../../components/WatchlistComponent";
 import "./Portfolio.css";
 
+import { LineChart, Line, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+
 function Portfolio() {
   const sessionUser = useSelector((state) => state.session.user);
   const portfolio = useSelector((state) => state.portfolio);
   const dispatch = useDispatch();
   const navigate = useNavigate();
+  const [timeRange, setTimeRange] = useState('1D');
 
-  const chartRef = useRef(null);
-  const stockChartRefs = useRef([]);
+  const timeRanges = [
+    { label: '1D', value: '1D' },
+    { label: '1W', value: '1W' },
+    { label: '1M', value: '1M' },
+    { label: '1Y', value: '1Y' }
+  ];
+
+  // Prepare portfolio chart data with default $0 entry point
+  const preparePortfolioChartData = () => {
+    const portfolioHistory = portfolio.portfolioHistory?.[timeRange] || [];
+    
+    // If no history, create a default entry point
+    if (portfolioHistory.length === 0) {
+      return [{ time: new Date().toISOString(), price: 0 }];
+    }
+
+    return portfolioHistory;
+  };
+
+  const portfolioChartData = preparePortfolioChartData();
+  const latestPrice = portfolioChartData[portfolioChartData.length - 1]?.price || 0;
+  const startPrice = portfolioChartData[0]?.price || latestPrice;
+  const isPositive = latestPrice >= startPrice;
 
   useEffect(() => {
     if (sessionUser) {
       dispatch(loadPortfolio(sessionUser.id));
       const intervalId = setInterval(() => {
         dispatch(fetchPortfolioPrices(sessionUser.id));
-      }, 10000);
+      }, 60000);
       return () => clearInterval(intervalId);
     }
   }, [dispatch, sessionUser]);
-
-  useEffect(() => {
-    const data = [
-      { year: 2010, count: 10 },
-      { year: 2011, count: 20 },
-      { year: 2012, count: 15 },
-      { year: 2013, count: 25 },
-      { year: 2014, count: 22 },
-      { year: 2015, count: 30 },
-      { year: 2016, count: 28 },
-    ];
-    const portfolioData = [];
-    portfolioData.push(portfolio.livePortfolioValue);
-
-    if (chartRef.current) {
-      chartRef.current.destroy();
-    }
-
-    chartRef.current = new Chart(document.getElementById("acquisitions"), {
-      type: "line",
-      data: {
-        labels: data.map(() => ""),
-        datasets: [
-          {
-            label: "Portfolio Performance",
-            data: [0, 0, ...portfolioData],
-          },
-        ],
-      },
-      options: {
-        plugins: {
-          legend: {
-            display: false,
-          },
-        },
-        responsive: false,
-        maintainAspectRatio: false,
-        scales: {
-          x: {
-            ticks: {
-              font: {
-                size: 10,
-              },
-            },
-          },
-          y: {
-            display: false,
-          },
-        },
-      },
-    });
-
-    return () => {
-      if (chartRef.current) {
-        chartRef.current.destroy();
-      }
-    };
-  }, [sessionUser, portfolio, dispatch]);
-
-  useEffect(() => {
-    if (portfolio.tickers) {
-      portfolio.tickers.forEach((stock, index) => {
-        const history = stock.historical_data || [];
-        const chartData = {
-          labels: history.map((_, i) => `Day ${i + 1}`),
-          datasets: [
-            {
-              label: `${stock.ticker} Performance`,
-              data: history,
-              borderColor: "rgb(22, 228, 60)",
-              backgroundColor: "rgb(39, 235, 13)",
-              fill: false,
-              pointRadius: 0,
-            },
-          ],
-        };
-
-        const canvas = stockChartRefs.current[index];
-
-        if (canvas && canvas.chartInstance) {
-          canvas.chartInstance.destroy();
-        }
-
-        if (canvas) {
-          canvas.chartInstance = new Chart(canvas, {
-            type: "line",
-            data: chartData,
-            options: {
-              plugins: {
-                legend: {
-                  display: false,
-                },
-              },
-              responsive: true,
-              maintainAspectRatio: false,
-              scales: {
-                x: {
-                  type: "category",
-                  ticks: {
-                    font: {
-                      size: 3,
-                    },
-                  },
-                },
-                y: {
-                  display: false,
-                },
-              },
-              layout: {
-                padding: {
-                  top: 0,
-                  right: 0,
-                  bottom: 0,
-                  left: 0,
-                },
-              },
-            },
-          });
-        }
-      });
-    }
-  }, [portfolio.tickers]);
 
   if (!sessionUser) {
     return <Navigate to="/login" replace={true} />;
@@ -157,31 +58,96 @@ function Portfolio() {
       {sessionUser ? (
         <>
           <div className="left-column">
-            <div id="canvas-div">
-              <canvas id="acquisitions" width="400" height="250"></canvas>
+            <div className="chart-section-wrapper">
+              <div className="chart-section">
+                <div className="time-range-selector">
+                  {timeRanges.map(range => (
+                    <button
+                      key={range.value}
+                      className={`time-range-button ${timeRange === range.value ? 'active' : ''}`}
+                      onClick={() => setTimeRange(range.value)}
+                    >
+                      {range.label}
+                    </button>
+                  ))}
+                </div>
+                <div className="chart-container">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <LineChart 
+                      data={portfolioChartData}
+                      margin={{ top: 10, right: 30, left: 10, bottom: 30 }}
+                    >
+                      <Line 
+                        type="monotone" 
+                        dataKey="price" 
+                        stroke={isPositive ? "rgb(0, 200, 5)" : "rgb(255, 80, 0)"} 
+                        strokeWidth={2} 
+                        dot={false}
+                        isAnimationActive={false}
+                      />
+                      <XAxis 
+                        dataKey="time" 
+                        tickFormatter={(time) => {
+                          const date = new Date(time);
+                          return timeRange === '1D' 
+                            ? date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+                            : date.toLocaleDateString([], { month: 'numeric', day: 'numeric' });
+                        }}
+                        tick={{ fontSize: 12, fill: '#666' }}
+                        tickLine={false}
+                        axisLine={false}
+                        dy={10}
+                      />
+                      <YAxis 
+                        domain={['auto', 'auto']}
+                        tickFormatter={(value) => `$${value.toFixed(2)}`}
+                        orientation="right"
+                        tick={{ fontSize: 12, fill: '#666' }}
+                        tickLine={false}
+                        axisLine={false}
+                        dx={10}
+                      />
+                      <Tooltip 
+                        contentStyle={{
+                          backgroundColor: 'white',
+                          border: 'none',
+                          borderRadius: '4px',
+                          boxShadow: '0 2px 8px rgba(0, 0, 0, 0.1)',
+                          padding: '8px 12px',
+                          fontSize: '14px'
+                        }}
+                        formatter={(value) => [`$${value.toFixed(2)}`, '']}
+                        labelFormatter={(label) => {
+                          const date = new Date(label);
+                          return timeRange === '1D' 
+                            ? date.toLocaleTimeString([], { 
+                                hour: '2-digit', 
+                                minute: '2-digit',
+                                hour12: true 
+                              })
+                            : date.toLocaleDateString([], { 
+                                month: 'short',
+                                day: 'numeric',
+                                year: 'numeric'
+                              });
+                        }}
+                        cursor={{ stroke: '#ccc', strokeWidth: 1, strokeDasharray: '5 5' }}
+                      />
+                    </LineChart>
+                  </ResponsiveContainer>
+                </div>
+              </div>
             </div>
             
             <div>
               <h3>Holdings</h3>
-              {portfolio.tickers ? (
+              {portfolio.tickers && portfolio.tickers.length > 0 ? (
                 <ul>
-                  {portfolio.tickers.map((stock, index) => (
+                  {portfolio.tickers.map((stock) => (
                     <li key={stock.id}>
                       <div>
                         <p>{stock.ticker}</p>
                         <p>{stock.shares_owned} shares</p>
-                      </div>
-                      <div>
-                        <canvas
-                          ref={(el) => (stockChartRefs.current[index] = el)}
-                          width="200"
-                          height="100"
-                          style={{
-                            display: "block",
-                            maxWidth: "180px",
-                            maxHeight: "100px",
-                          }}
-                        ></canvas>
                       </div>
                       <div>
                         <h5>
@@ -192,7 +158,9 @@ function Portfolio() {
                   ))}
                 </ul>
               ) : (
-                <h1>Loading...</h1>
+                <div className="no-stocks-message">
+                  <p>You haven&apos;t purchased any stocks yet.</p>
+                </div>
               )}
             </div>
 
@@ -221,9 +189,7 @@ function Portfolio() {
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <h1>Loading...</h1>
-              )}
+              ) : null}
             </div>
           </div>
 
