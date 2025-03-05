@@ -7,6 +7,7 @@ import LoginFormModal from "../LoginFormModal";
 import SignupFormModal from "../SignupFormModal";
 import "./ProfileButton.css";
 import { redirect } from "react-router-dom";
+import { thunkClearPortfolio } from "../../redux/portfolio";
 
 
 function ProfileButton() {
@@ -38,7 +39,9 @@ function ProfileButton() {
 
   const logout = (e) => {
     e.preventDefault();
+    dispatch(thunkClearPortfolio());
     dispatch(thunkLogout());
+    // add a thunk action to clear the user portfolio and stocks data
     closeMenu();
   };
 

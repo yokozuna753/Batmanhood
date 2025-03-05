@@ -1,45 +1,57 @@
-const SET_USER = 'session/setUser';
-const REMOVE_USER = 'session/removeUser';
-const DELETE_USER = 'session/deleteUser';
+const SET_USER = "session/setUser";
+const REMOVE_USER = "session/removeUser";
+const DELETE_USER = "session/deleteUser";
+const UPDATE_USER = "session/updateUser";
 
 const setUser = (user) => ({
   type: SET_USER,
-  payload: user
+  payload: user,
 });
 
 const removeUser = () => ({
-  type: REMOVE_USER
+  type: REMOVE_USER,
 });
 
-const deleteUser = () => ({
-  type: DELETE_USER
-})
+const updateUserAccountBalance = (payload) => ({
+  type: UPDATE_USER,
+  payload
+});
+
+export const thunkUpdateUserInfo = (userId) => async (dispatch) => {
+  const response = await fetch(`/api/users/${userId}`);
+  if (response.ok) {
+    const data = await response.json();
+    console.log("UPDATE USER THUNK ===>  ", data);
+    dispatch(updateUserAccountBalance(data));
+  }
+  return response;
+};
 
 export const thunkAuthenticate = () => async (dispatch) => {
-	const response = await fetch("/api/auth/");
-	if (response.ok) {
-		const data = await response.json();
-		if (data.errors) {
-			return;
-		}
+  const response = await fetch("/api/auth/");
+  if (response.ok) {
+    const data = await response.json();
+    if (data.errors) {
+      return;
+    }
 
-		dispatch(setUser(data));
-	}
+    dispatch(setUser(data));
+  }
 };
 
 export const thunkLogin = (credentials) => async (dispatch) => {
-  const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1];  // Get the CSRF token from the cookies
+  const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1]; // Get the CSRF token from the cookies
 
   const response = await fetch("/api/auth/login", {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
-      "X-CSRFToken": csrfToken  // Include the CSRF token in the headers
+      "X-CSRFToken": csrfToken, // Include the CSRF token in the headers
     },
     body: JSON.stringify(credentials),
   });
 
-  if(response.ok) {
+  if (response.ok) {
     const data = await response.json();
     dispatch(setUser(data));
   } else if (response.status < 500) {
@@ -54,21 +66,18 @@ export const thunkSignup = (user) => async (dispatch) => {
   const csrfToken = document.cookie.match(/csrf_token=([^;]+)/)?.[1];
   const response = await fetch("/api/auth/signup", {
     method: "POST",
-    headers: { 
-      "Content-Type": "application/json",
-      "X-CSRFToken": csrfToken  // Include the CSRF token in the headers
-     },  
-    
-    body: JSON.stringify(user)
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(user),
   });
-  if(response.ok) {
+
+  if (response.ok) {
     const data = await response.json();
     dispatch(setUser(data));
   } else if (response.status < 500) {
     const errorMessages = await response.json();
-    return errorMessages
+    return errorMessages;
   } else {
-    return { server: "Something went wrong. Please try again" }
+    return { server: "Something went wrong. Please try again" };
   }
 };
 
@@ -77,15 +86,12 @@ export const thunkLogout = () => async (dispatch) => {
   dispatch(removeUser());
 };
 
-
 export const thunkDelete = (userId) => async (dispatch) => {
   const response = await fetch(`/api/users/${userId}/delete`);
-  const data = await response.json()
+  // const data = await response.json()
   dispatch(removeUser());
-  return response
+  return response;
 };
-
-
 
 const initialState = { user: null };
 
@@ -96,7 +102,10 @@ function sessionReducer(state = initialState, action) {
     case REMOVE_USER:
       return { ...state, user: null };
     case DELETE_USER:
-      return {...state, user: null}
+      return { ...state, user: null };
+    case UPDATE_USER: {
+      return { ...state, user: action.payload };
+    }
     default:
       return state;
   }

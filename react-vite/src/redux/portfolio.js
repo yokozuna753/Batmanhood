@@ -1,5 +1,6 @@
 const GET_PORTFOLIO = "portfolio/getPortfolio";
 const LOAD_PRICES = "portfolio/loadPortfolioPrices";
+const CLEAR_PORTFOLIO = "portfolio/clearPortfolio";
 
 const getPortfolio = (data) => {
   return {
@@ -8,6 +9,18 @@ const getPortfolio = (data) => {
   };
 };
 
+const clearPortfolio = () => {
+  return {
+    type: CLEAR_PORTFOLIO,
+  }
+}
+
+export const thunkClearPortfolio = () => async (dispatch) => {
+  await dispatch(clearPortfolio());
+  return {"message": "success"}
+
+}
+
 export const loadPortfolio = (userId) => async (dispatch) => {
   try {
     const response = await fetch(`/api/${userId}/stocks`);
@@ -15,6 +28,7 @@ export const loadPortfolio = (userId) => async (dispatch) => {
       throw new Error('Failed to load portfolio');
     }
     const data = await response.json();
+    console.log('     DATA FROM LOAD PORTFOLIO ==>    ', data);
     dispatch(getPortfolio(data));
     return data;
   } catch (error) {
@@ -47,6 +61,8 @@ export const portfolioReducer = (state = initialState, action) => {
   switch (action.type) {
     case GET_PORTFOLIO:
       return { ...state, ...action.payload };
+    case CLEAR_PORTFOLIO:
+      return { ...state, ...initialState };
     case LOAD_PRICES:{
       let tickersArray = action.payload.tickers;
       // shares
