@@ -1,5 +1,4 @@
 instance/*
-instance
 node_modules
 .env
 .venv
