@@ -3,7 +3,7 @@ import { loadPortfolio } from "../../redux/portfolio";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPortfolioPrices } from "../../redux/portfolio";
-import WatchlistComponent from "../../components/WatchlistComponent";
+import WatchlistComponent from "../WatchlistComponent";
 import "./Portfolio.css";
 
 import {

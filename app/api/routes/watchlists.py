@@ -4,14 +4,41 @@ from flask import Blueprint, request, jsonify
 from flask_login import current_user, login_required
 from app.models import db, Watchlist, WatchlistStock
 
+
 # Set up logging
 logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
+
 watchlists = Blueprint("watchlists", __name__)
 
 
+# 1. CREATE a new watchlist
+@watchlists.route('/', methods=['POST'])
+@login_required
+def create_watchlist():
+    data = request.json
+    name = data.get('name')
+    
+    if not name:
+        return jsonify({"errors": {"name": "Watchlist name is required"}}), 400
+    
+    new_watchlist = Watchlist(
+        user_id=current_user.id,
+        name=name
+    )
+    
+    db.session.add(new_watchlist)
+    db.session.commit()
+    
+    return jsonify({
+        "id": new_watchlist.id,
+        "name": new_watchlist.name,
+        "stocks": []
+    }), 201
 
+
+# 2. GET all session user watchlists
 @watchlists.route('/', methods=['GET'])
 @login_required
 def get_user_watchlists():  
@@ -33,9 +60,32 @@ def get_user_watchlists():
     return jsonify(watchlist_data), 200
 
 
+# 3. UPDATE an existing watchlist name
+@watchlists.route('/<int:id>', methods=['PUT'])
+@login_required
+def update_watchlist(id):
+    watchlist = Watchlist.query.filter_by(id=id, user_id=current_user.id).first()
+    
+    if not watchlist:
+        return jsonify({"error": "Watchlist not found"}), 404
+    
+    data = request.json
+    name = data.get('name')
+    
+    if not name:
+        return jsonify({"errors": {"name": "Watchlist name is required"}}), 400
+    
+    watchlist.name = name
+    db.session.commit()
+    
+    return jsonify({
+        "id": watchlist.id,
+        "name": watchlist.name,
+        "stocks": [{"symbol": stock.symbol} for stock in watchlist.watchlist_stocks]
+    }), 200
 
 
-# 2. DELETE a session user's watchlist
+# 4. DELETE a session user's watchlist
 @watchlists.route('/<int:id>', methods=['DELETE'])
 @login_required
 def delete_watchlist(id):
@@ -52,10 +102,7 @@ def delete_watchlist(id):
     return jsonify({"message": "Watchlist dropped successfully"}), 200
 
 
-
-
-
-
+# 5. ADD a stock to a session user's watchlist(s) - [supports simultaneous add/remove stock, checkbox modal]
 @watchlists.route('/stocks/<string:symbol>', methods=['POST'])
 @login_required
 def add_stock_to_watchlists(symbol):
@@ -68,6 +115,11 @@ def add_stock_to_watchlists(symbol):
         return jsonify({"error": "Invalid data format, expected a list"}), 400
 
     for watchlist_id in watchlist_ids:
+        # Verify the watchlist belongs to the current user
+        watchlist = Watchlist.query.filter_by(id=watchlist_id, user_id=current_user.id).first()
+        if not watchlist:
+            continue
+            
         existing_entry = WatchlistStock.query.filter_by(
             watchlist_id=watchlist_id, symbol=symbol
         ).first()
@@ -82,35 +134,7 @@ def add_stock_to_watchlists(symbol):
     return jsonify({"message": "Stock added to watchlists successfully"}), 200
 
 
-# 5. DELETE stock from a session user's watchlist(s)
-@watchlists.route("/stocks/<string:symbol>", methods=["DELETE"])
-@login_required
-def remove_stock_from_watchlists(symbol):
-    logger.info("Attempting to remove stock %s from user's watchlists", symbol)
-    data = request.json
-    watchlist_ids = data.get("watchlist_ids", [])
-
-    if not isinstance(watchlist_ids, list):
-        logger.error("Invalid data format for watchlist_ids. Expected a list, received: %s", type(watchlist_ids))
-        return jsonify({"error": "Invalid watchlist_ids format, expected a list"}), 400
-
-    if not watchlist_ids:
-        logger.info("No watchlist IDs provided for stock %s removal, nothing to remove", symbol)
-        return jsonify({"message": "No watchlist IDs provided, nothing to remove"}), 200
-
-    WatchlistStock.query.filter(
-        WatchlistStock.watchlist_id.in_(watchlist_ids),
-        WatchlistStock.symbol == symbol
-    ).delete(synchronize_session=False)
-    
-    db.session.commit()
-    logger.info("Successfully removed stock %s from selected watchlists", symbol)
-    return jsonify({"message": "Stock removed from watchlists successfully"}), 200
-
-
-
-
-# 6. GET all session user watchlists that contain a specific stock symbol
+# 6. GET all session user watchlists that contain a specific stock symbol - [supports simultaneous add/remove stock, checkbox modal]
 @watchlists.route('/stocks/<string:symbol>', methods=['GET'])
 @login_required
 def get_watchlists_with_stock(symbol):
@@ -126,6 +150,33 @@ def get_watchlists_with_stock(symbol):
     return jsonify([watchlist.to_dict() for watchlist in target_watchlists]), 200
 
 
+# 7. REMOVE stock from a session user's watchlist(s) 
+@watchlists.route("/stocks/<string:symbol>", methods=["DELETE"])
+@login_required
+def remove_stock_from_watchlists(symbol):
+    logger.info("Attempting to remove stock %s from user's watchlists", symbol)
+    data = request.json
+    watchlist_ids = data.get("watchlist_ids", [])
+
+    if not isinstance(watchlist_ids, list):
+        logger.error("Invalid data format for watchlist_ids. Expected a list, received: %s", type(watchlist_ids))
+        return jsonify({"error": "Invalid watchlist_ids format, expected a list"}), 400
+
+    if not watchlist_ids:
+        logger.info("No watchlist IDs provided for stock %s removal, nothing to remove", symbol)
+        return jsonify({"message": "No watchlist IDs provided, nothing to remove"}), 200
+ 
+    WatchlistStock.query.filter(
+        WatchlistStock.watchlist_id.in_(watchlist_ids),
+        WatchlistStock.symbol == symbol
+    ).delete(synchronize_session=False)
+    
+    db.session.commit()
+    logger.info("Successfully removed stock %s from selected watchlists", symbol)
+    return jsonify({"message": "Stock removed from watchlists successfully"}), 200
+
+
+# 8. REMOVE stock from a specific watchlist
 @watchlists.route('/<int:watchlistId>/stocks/<string:symbol>', methods=['DELETE'])
 @login_required
 def delete_stock_from_watchlist(watchlistId, symbol):
@@ -139,3 +190,27 @@ def delete_stock_from_watchlist(watchlistId, symbol):
     
     return jsonify({"message": "Stock removed from watchlist successfully"}), 200
 
+
+# 9. Add stock to a specific watchlist
+@watchlists.route('/<int:watchlist_id>/stocks/<string:symbol>', methods=['POST'])
+@login_required
+def add_stock_to_watchlist(watchlist_id, symbol):
+    watchlist = Watchlist.query.filter_by(id=watchlist_id, user_id=current_user.id).first()
+    if not watchlist:
+        return jsonify({"error": "Watchlist not found"}), 404
+    
+    existing_entry = WatchlistStock.query.filter_by(
+        watchlist_id=watchlist_id, symbol=symbol
+    ).first()
+    
+    if existing_entry:
+        return jsonify({"message": "Stock already in watchlist"}), 200
+    
+    new_entry = WatchlistStock(watchlist_id=watchlist_id, symbol=symbol)
+    db.session.add(new_entry)
+    db.session.commit()
+    
+    return jsonify({"message": "Stock added to watchlist successfully"}), 201
+
+
+""" note: when ui does not ensure authroization, make sure all routes enforce auth... a few do not """
