@@ -11,6 +11,7 @@ search_bar = Blueprint('search_bar', __name__)
 @search_bar.route('/search', methods=['GET'])
 def search():
     query = request.args.get('query')  # Get the search query from the request
+    print('           !!!!!!! QUERY HERE     ==>    ', query)
     max_results = int(request.args.get('max_results', 5))  # Default to 5 results, but can be modified for more
 
     if not query:

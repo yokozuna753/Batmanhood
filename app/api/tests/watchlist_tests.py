@@ -1,6 +1,12 @@
 # Browser console fetch commands to test the ORIGINAL watchlist routes
 
 """
+function getCsrfToken() {
+    return document.cookie.split('; ').find(row => row.startsWith('csrf_token='))?.split('=')[1];
+}
+"""
+
+"""
 #1 - Fetch-> GET session user's watchlists test
 fetch('/api/watchlists/', {
   method: 'GET',
@@ -15,11 +21,44 @@ fetch('/api/watchlists/', {
 """
 
 """
-#2 - Fetch-> DELETE a session user's watchlist test
+#2 - Fetch-> CREATE a watchlist
+fetch('/api/watchlists/', {
+  method: 'POST',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCsrfToken()
+  },
+  credentials: 'include',  // Ensures cookies (e.g., session authentication) are sent
+  body: JSON.stringify({ name: 'My New Watchlist' })  // Replace with desired watchlist name
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+"""
+
+"""
+#3 - Fetch-> UPDATE a watchlist name
+fetch('/api/watchlists/1', {  // Replace "1" with the actual watchlist ID you want to update
+  method: 'PUT',
+  headers: {
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCsrfToken()
+  },
+  credentials: 'include',  // Ensures cookies (e.g., session authentication) are sent
+  body: JSON.stringify({ name: 'Updated Watchlist Name' })  // Replace with the new name
+})
+.then(response => response.json())
+.then(data => console.log(data))
+.catch(error => console.error('Error:', error));
+"""
+
+"""
+#4 - Fetch-> DELETE a session user's watchlist
 fetch('/api/watchlists/2', {
   method: 'DELETE',
   headers: {
-    'Content-Type': 'application/json'
+    'Content-Type': 'application/json',
+    'X-CSRFToken': getCsrfToken()
   },
   credentials: 'include'
 })
@@ -41,7 +80,7 @@ fetch('/api/watchlists/stocks/MDB', {
         'X-CSRFToken': getCsrfToken()
     },
     credentials: 'include',
-    body: JSON.stringify({ watchlist_ids: [2] })
+    body: JSON.stringify({ watchlist_ids: [5, 7] })
 })
 .then(response => response.json())
 .then(data => console.log('Success:', data))
@@ -61,7 +100,7 @@ fetch('/api/watchlists/stocks/NVDA', {
         'X-CSRFToken': getCsrfToken()
     },
     credentials: 'include',
-    body: JSON.stringify({ watchlist_ids: [6, 5] })
+    body: JSON.stringify({ watchlist_ids: [5] })
 })
 .then(response => response.json())
 .then(data => console.log('Success:', data))

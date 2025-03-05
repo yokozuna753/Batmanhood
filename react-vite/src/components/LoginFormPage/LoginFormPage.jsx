@@ -2,8 +2,8 @@ import { useState } from "react";
 import { thunkLogin } from "../../redux/session";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate } from "react-router-dom";
-import OpenModalButton from "../OpenModalButton";
-import SignupFormModal from "../SignupFormModal";
+// import OpenModalButton from "../OpenModalButton";
+// import SignupFormModal from "../SignupFormModal";
 import "./LoginForm.css";
 
 function LoginFormPage() {
@@ -37,6 +37,16 @@ function LoginFormPage() {
     }
   };
 
+  const handleDemoLogin = async (e) => {
+    e.preventDefault();
+    await dispatch(
+      thunkLogin({
+        email: 'demo@aa.io',
+        password: 'password'
+      })
+    )
+  }
+
   return (
     <div className='container'>
       <div className='left-half'>
@@ -67,13 +77,8 @@ function LoginFormPage() {
             />
           </label>
           {errors.password && <p>{errors.password}</p>}
-          <div className="button-container">
-            <button type="submit">Log In</button>
-            <OpenModalButton
-              buttonText="Sign Up"
-              modalComponent={<SignupFormModal />}
-            />
-          </div>
+          <button type="submit">Log In</button>
+          <button type="button" onClick={handleDemoLogin}>Log In as Demo</button>
         </form>
       </div>
     </div>

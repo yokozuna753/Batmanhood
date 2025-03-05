@@ -1,16 +1,27 @@
-import { NavLink } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import ProfileButton from "./ProfileButton";
-import SearchBar from '../SearchBar/SearchBar'
+import SearchBar from "../SearchBar/SearchBar";
+import { useDispatch, useSelector } from "react-redux";
 import "./Navigation.css";
+import { thunkUpdateUserInfo } from "../../redux/session";
 
 function Navigation() {
+  const sessionUser = useSelector((state) => state.session.user);
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+
+  async function handleHomeClick(e){
+    e.preventDefault();
+    await dispatch(thunkUpdateUserInfo(sessionUser.id))
+    navigate('/');
+  }
   return (
     <nav>
       <ul>
         <li>
-          <NavLink to="/">Home</NavLink>
+          <button style={{ background: 'transparent', border: 'none', color: 'white', cursor: "pointer" }} onClick={handleHomeClick}>Home</button>
         </li>
-        
+
         <li>
           <SearchBar />
         </li>
@@ -24,7 +35,6 @@ function Navigation() {
 }
 
 export default Navigation;
-
 
 /*
 import { useState } from 'react';

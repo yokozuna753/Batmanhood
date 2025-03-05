@@ -133,7 +133,7 @@
   gap: 16px;
 }
 
-.news-section li {
+.news-section{
   margin: 0;
   background: white;
   border: 1px solid #e6e9ed;

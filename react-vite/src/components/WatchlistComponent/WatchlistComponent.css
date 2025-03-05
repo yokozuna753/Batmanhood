@@ -1,105 +1,213 @@
-/* Watchlist container styling */
+/* Full Crud Watchlist style */
 .watchlist-container {
-    width: 200px;
+    width: 100%;
     max-width: 300px;
     background-color: white;
-    color: #1a1a1a;
-    border-radius: 12px;
-    padding: 0px 0px;
-    font-family: Arial, sans-serif;
-    border: 1px solid rgb(229, 231, 235);
-    border-radius: 2px;
-    box-shadow: 0 2.5px 3px rgba(0, 0, 0.8, 0.22);
+    border-radius: 8px;
+    border: 1px solid #e0e0e0;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    overflow: hidden;
+}
+  
+.watchlist-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 16px;
 }
 
-.watchlist-container h2 {
-    padding: 10px 20px;
+.watchlist-header h2 {
+    margin: 0;
+    font-size: 1rem;
+    font-weight: 600;
+    color: #333;
 }
 
-.watchlist-container hr {
+.add-watchlist-button {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    border: 1px solid #d1d5db;
+    border-radius: 4px;
+    background-color: white;
+    color: #374151;
+    font-size: 0.7rem;
+    cursor: pointer;
+}
+
+.add-watchlist-button:hover {
+    background-color: #f3f4f6;
+}
+
+hr {
+    margin: 0;
     border: none;
-    border-top: 1px solid rgb(229, 231, 235);
-    width: 100%;
-    margin: 0px;
+    border-top: 1px solid #e0e0e0;
 }
 
-/* Header styling */
-.watchlist-container-header {
-    border-radius: 2px;
-    font-size: 16px;
-    font-weight: bold;
-    margin-bottom: 10px;
-}
-
-/* Watchlist items */
 .watchlist {
-    list-style: none;
+    list-style-type: none;
     padding: 0;
     margin: 0;
     display: flex;
     flex-direction: column;
+    width: 100%;
 }
 
-/* Individual watchlist title */
 .list-title {
-    border-bottom: 1px solid rgb(229, 231, 235);
-    cursor: pointer;
-    transition: background-color 0.2s;
+    border-bottom: 1px solid #e0e0e0;
+    width: 100%;
 }
 
-.list-title > div {
-    padding: 12px 16px;
+.list-title:last-child {
+    border-bottom: none;
 }
 
-.list-title:hover {
-    background-color: whitesmoke;
-}
-
-/* Watchlist stocks - Hidden by default */
-.list-title ul {
-    display: none;
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    background-color: #f8f8f8;
-}
-
-/* Show stocks when expanded */
-.list-title.expanded ul {
-    display: block;
-}
-
-.list-title ul li {
-    padding: 8px 16px 8px 24px;
-    font-size: 12px;
-    color: #2b2b2b;
-    transition: color 0.2s;
-    border-top: 1px solid #e6e9ed;
+.watchlist-item-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
+    padding: 12px 16px;
+    cursor: pointer;
 }
 
-.list-title ul li:hover {
-    color: green;
+.watchlist-item-header:hover {
+    background-color: #f9fafb;
 }
 
-/* Delete button */
-.list-title ul li button {
+.watchlist-name {
+    display: flex;
+    /*align-items: center;*/
+    gap: 8px;
+    font-weight: 500;
+    font-size: 0.9rem;
+    color: #111827;
+}
+
+.watchlist-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.edit-button, .delete-button {
     background: none;
     border: none;
+    color: #6b7280;
     cursor: pointer;
-    color: #6c7693;
-    font-size: 16px;
     padding: 4px;
+    font-size: 0.7rem;
+}
+
+.edit-button:hover, .delete-button:hover {
+    color: #111827;
+}
+
+.stocks-list {
+    display: flex;
+    flex-direction: column;
+    list-style-type: none;
+    /*justify-content: left;*/
+    align-items: start;
+    width: 100%;
+    padding: 0;
+    margin: 0;
+    background-color: #f9fafb58;
+}
+
+.stock-item {
+    display: flex;
+    flex-direction: row;
+    width: 100%;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 16px 8px 36px;
+    border-bottom: 1px dotted #e0e0e0;
+}
+
+/* Return to issue later*/
+
+/*.stock-item:last-child {
+border-bottom: none;
+}*/
+
+/*.stocks-list li.stock-item:last-of-type {
+    border-bottom: none;
+}*/
+
+.stock-symbol {
+    font-size: 0.7rem;
+}
+
+.stock-item:hover .stock-symbol {
+    color: #22c55e;
+    transition: color 0.2s ease;
+}
+
+.no-stocks{
+    font-size: 0.65rem;
+    display: flex;
+    justify-content: center;
+    align-content: center;
+    width: 100%;
+}
+
+.no-watchlists {
+    font-size: 0.65rem;
+}
+
+.delete-stock-button {
+    display: block;
+    align-content: end;
+    background: none;
+    border: none;
+    padding-right: 7px;
+    color: #6b7280;
+    font-size: 0.7rem;
+    cursor: pointer;
     opacity: 0;
     transition: opacity 0.2s;
 }
 
-.list-title ul li:hover button {
+.stock-item:hover .delete-stock-button {
     opacity: 1;
 }
 
-.list-title ul li button:hover {
-    color: #ff3b30;
+.no-stocks, .no-watchlists {
+    padding: 12px 16px;
+    color: #6b7280;
+    font-style: italic;
+    text-align: center;
 }
+
+.add-stock-item {
+    padding: 4px 11px;
+    display: flex;
+    justify-content: right;
+    width: 100%;
+}
+
+.add-stock-button {
+    display: flex;
+    flex-direction: row;
+    /*align-items: center;
+    justify-content: center;*/
+    gap: 4px;
+    padding: 4px 8px;
+    border: none;
+    background: none;
+    color: #2563eb;
+    font-size: 0.6rem;
+    cursor: pointer;
+}
+
+.add-stock-button:hover {
+    text-decoration: underline;
+}
+
+/* next steps
+
+    add real time data
+    when list has no stocks, add stock button share row
+
+*/

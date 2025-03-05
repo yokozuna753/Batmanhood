@@ -31,27 +31,33 @@ grab the shares_owned & price_purchased from the orders table - relationship wit
 def stocks_portfolio(userId):
     # get all the investments owned by the current logged in user => news = [{},{}]
     final_news = []
-    user = User.query.filter(User.id == int(userId)).all()
-    user_stocks = user[0].to_dict()["stocks_owned"]
+    user = User.query.filter(User.id == int(userId)).first()
+    user_stocks = user.to_dict()["stocks_owned"]
 
     stock_dict = {"tickers": [], "portfolio_value": 0}
     # ** for loop to show each stock the user owns
     for ticker in user_stocks:
         # * grab the symbol of the stock from ticker
+        # print('THIS IS TICKER !!!!!!!!!     ', ticker)
         symbol = ticker["ticker"]  # * ==> 'AAPL'
 
         # #* set the stock dictionary values to the data returned
-        # ! stock_dict['tickers'][symbol] = ticker
 
         # #* set the portfolio value from the stocks_owned table
         stock_dict["portfolio_value"] += int(ticker["total_cost"])
 
         # #* set the data for the stock (data, percent gain)
         dat = yf.Ticker(f"{symbol}")
+        # print(' DATA HERE ===> !!!!!!!  ', dat)
+
+
         history = dat.history(period="1mo")
+        # print('      HISTORY HERE !!!!!!!   ', history)
         ticker["historical_data"] = [row[0] for index, row in history.iterrows()]
 
+        # print(' TICKER   HERE       !!!!!!!!     ', ticker)
         dat = dat.info
+        # print(' WE MADE IT PAST TICKER       !!!!!!!!     ', dat)
         del dat["companyOfficers"]
         # del dat['']
 
@@ -66,6 +72,7 @@ def stocks_portfolio(userId):
         ticker["percent_gain/loss"] = round(percent_gain, 2)
 
         news = yf.Search(f"{symbol}", news_count=3).news
+        # print( '     NEWS !!!!!!!!   -> ', news)
         final_news.append(news)
 
         # i need to append the ticker object to the stock_dict at the end
