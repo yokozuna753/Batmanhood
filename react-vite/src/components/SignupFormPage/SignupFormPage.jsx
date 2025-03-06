@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import { Navigate, useNavigate } from "react-router-dom";
-import { thunkSignup } from "../../redux/session";
+import { thunkSignup, thunkUpdateUserInfo } from "../../redux/session";
 
 function SignupFormPage() {
   const dispatch = useDispatch();
@@ -36,6 +36,7 @@ function SignupFormPage() {
     if (serverResponse) {
       setErrors(serverResponse);
     } else {
+      await dispatch(thunkUpdateUserInfo(sessionUser.id))
       navigate("/");
     }
   };
