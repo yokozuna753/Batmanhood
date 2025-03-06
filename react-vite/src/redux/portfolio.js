@@ -16,6 +16,7 @@ const clearPortfolio = () => {
 }
 
 export const thunkClearPortfolio = () => async (dispatch) => {
+  console.log('IN THUNK CLEAR PORTFOLIO');
   await dispatch(clearPortfolio());
   return {"message": "success"}
 
