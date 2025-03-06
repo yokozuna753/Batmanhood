@@ -448,3 +448,166 @@ def sell_all_shares(stockId):
         db.session.rollback()
         logger.error(f"Error processing sale: {e}")
         return jsonify({"message": "Error processing sale", "error": str(e)}), 500
+
+# Add this new route to your stock_details_routes.py file
+
+@stock_details_routes.route("/stocks/<string:ticker>/trade", methods=["POST"])
+@login_required
+def trade_new_stock(ticker):
+    """
+    Buy or sell a stock by ticker symbol (supports buying new stocks not yet owned)
+    """
+    request_id = request.headers.get("X-Request-ID")
+    try:
+        # Check for duplicate request
+        if request_id:
+            if request_id in processed_requests:
+                logger.info(f"Duplicate request detected: {request_id}")
+                return jsonify({"message": "Request already processed"}), 409
+            processed_requests.add(request_id)
+
+        data = request.get_json()
+        if not data:
+            logger.error("No data provided in request")
+            return jsonify({"errors": ["No data provided"]}), 400
+
+        # Input validation
+        if "order_type" not in data:
+            return jsonify({"message": "Order type is required"}), 400
+        if "buy_in" not in data:
+            return jsonify({"message": "Buy in type is required"}), 400
+        if data["buy_in"] == "Dollars" and not data.get("amount"):
+            return jsonify({"message": "Amount is required for dollar-based trades"}), 400
+        if data["buy_in"] == "Shares" and not data.get("shares"):
+            return jsonify({"message": "Number of shares is required for share-based trades"}), 400
+
+        # Get market data with retry
+        retries = 3
+        current_price = None
+        for attempt in range(retries):
+            try:
+                market_data = get_cached_market_data(ticker)
+                current_price = market_data.get("regularMarketPrice")
+                if current_price:
+                    break
+            except Exception as e:
+                logger.warning(f"Attempt {attempt + 1} failed: {e}")
+                if attempt == retries - 1:
+                    logger.error(f"Failed to get market data after {retries} attempts")
+                    return jsonify({
+                        "message": "Unable to fetch market price",
+                        "details": f"Price data unavailable for {ticker} after multiple attempts"
+                    }), 500
+                continue
+
+        if not current_price:
+            return jsonify({"message": "Unable to fetch current price"}), 500
+
+        try:
+            # Calculate shares based on dollars if needed
+            shares_to_trade = data.get("shares", 0)
+            if data.get("buy_in") == "Dollars":
+                amount = float(data.get("amount", 0))
+                shares_to_trade = amount / current_price
+            else:
+                shares_to_trade = float(shares_to_trade or 0)
+
+            # Validate the calculated shares
+            if shares_to_trade <= 0:
+                return jsonify({"message": "Invalid number of shares"}), 400
+
+            # Calculate total transaction value
+            transaction_value = shares_to_trade * current_price
+        except (ValueError, TypeError) as e:
+            logger.error(f"Error calculating trade values: {e}")
+            return jsonify({"message": "Invalid trade values"}), 400
+
+        # Determine if it's a buy or sell based on order type
+        is_buy = data.get("order_type") == "Market Order"
+
+        # Find existing stock or create new one for buys
+        stock = StocksOwned.query.filter_by(owner_id=current_user.id, ticker=ticker).first()
+        
+        # For sell orders, the stock must exist
+        if not is_buy and (not stock or stock.shares_owned < shares_to_trade):
+            return jsonify({"message": "Cannot sell shares you don't own"}), 400
+
+        # Create a new order record
+        new_order = Order(
+            owner_id=current_user.id,
+            ticker=ticker,
+            price_purchased=current_price,
+            shares_purchased=shares_to_trade,
+            order_type="Buy Order" if is_buy else "Sell Order",
+        )
+
+        try:
+            # Buying logic
+            if is_buy:
+                if transaction_value > current_user.account_balance:
+                    return jsonify({"message": "Insufficient funds"}), 400
+
+                if stock:
+                    # Calculate new average cost for existing position
+                    total_existing_cost = stock.total_cost * stock.shares_owned
+                    total_new_cost = total_existing_cost + transaction_value
+                    
+                    # Update stock details
+                    stock.total_cost = total_new_cost
+                    stock.shares_owned += shares_to_trade
+                else:
+                    # Create new stock record for this user
+                    stock = StocksOwned(
+                        owner_id=current_user.id,
+                        ticker=ticker,
+                        shares_owned=shares_to_trade,
+                        total_cost=transaction_value
+                    )
+                    db.session.add(stock)
+                
+                # Update user balance
+                current_user.account_balance -= transaction_value
+
+            # Selling logic (stock must already exist due to check above)
+            else:
+                # Update user balance
+                current_user.account_balance += transaction_value
+                stock.shares_owned -= shares_to_trade
+
+                # Recalculate total cost if shares remain
+                if stock.shares_owned > 0:
+                    stock.total_cost = (stock.total_cost * stock.shares_owned) / (
+                        stock.shares_owned + shares_to_trade
+                    )
+                else:
+                    stock.total_cost = 0
+
+            # Add the new order to the session
+            db.session.add(new_order)
+            db.session.commit()
+
+            # Get the ID of the stock (either existing or newly created)
+            stock_id = stock.id
+
+            return jsonify({
+                "message": "Transaction successful",
+                "shares_traded": shares_to_trade,
+                "price": current_price,
+                "total_value": transaction_value,
+                "new_total_cost": stock.total_cost,
+                "ticker": ticker,
+                "stock_id": stock_id
+            })
+
+        except Exception as db_error:
+            db.session.rollback()
+            logger.error(f"Database error during trade: {db_error}")
+            if request_id:
+                processed_requests.remove(request_id)
+            return jsonify({"message": "Database error during trade"}), 500
+
+    except Exception as e:
+        if request_id:
+            processed_requests.remove(request_id)
+        logger.error(f"Unexpected error in trade_new_stock: {e}")
+        return jsonify({"message": "Unexpected error", "error": str(e)}), 500
