@@ -480,4 +480,6 @@ const StockDetailsPage = () => {
   );
 };
 
+//
+
 export default StockDetailsPage;
