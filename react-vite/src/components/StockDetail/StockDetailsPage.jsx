@@ -164,6 +164,10 @@ const StockDetailsPage = () => {
     }
   }, [dispatch, ticker]);
 
+  // useEffect(() => {
+  //   if (!stockDetails) return null;
+  // }, [stockDetails]);
+
   if (loading)
     return (
       <div className="loading">

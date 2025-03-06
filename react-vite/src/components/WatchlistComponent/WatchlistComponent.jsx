@@ -335,7 +335,7 @@ const WatchlistComponent = () => {
                           }}
                           onClick={(e) => {
                             e.preventDefault();
-
+                            e.stopPropagation();
                             navigate(`/stocks/${stock.symbol}`);
                           }}
                         >
