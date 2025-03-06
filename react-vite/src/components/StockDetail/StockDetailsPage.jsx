@@ -461,22 +461,20 @@ const StockDetailsPage = () => {
         <div className="history-card">
           <h2>Order History</h2>
           <div className="order-list">
-            {(stockDetails.OrderHistory || []).map((order) => (
-              <div key={order.id} className="order-item">
-                <div>
-                  <p className="order-type">{order.order_type}</p>
-                  <p className="order-date">
-                    {order.date
-                      ? new Date(order.date).toLocaleDateString()
-                      : "N/A"}
-                  </p>
+            {(stockDetails.OrderHistory || []).map((order) => {
+
+              return (
+                <div key={order.id} className="order-item">
+                  <div>
+                    <p className="order-type">{order.order_type}</p>
+                  </div>
+                  <div className="order-details">
+                    <p>{order.shares} shares</p>
+                    <p className="price">${order.price}</p>
+                  </div>
                 </div>
-                <div className="order-details">
-                  <p>{order.shares} shares</p>
-                  <p className="price">${order.price}</p>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         </div>
       </div>

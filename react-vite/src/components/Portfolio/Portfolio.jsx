@@ -203,9 +203,14 @@ function Portfolio() {
               {portfolio.tickers && portfolio.tickers.length > 0 ? (
                 <ul>
                   {portfolio.tickers.map((stock) => (
-                    <li key={stock.id}>
+                    <li key={`${stock.id}-${stock.ticker}`}>
                       <div>
-                        <p>{stock.ticker}</p>
+                        <p style={{cursor: "pointer"}} onClick={(e)=>{
+                      console.log('STOCK HERE ==> ', stock);
+                          e.preventDefault();
+                          e.stopPropagation();
+                          navigate(`/stocks/${stock?.ticker}`);
+                        }}>{stock.ticker}</p>
                         <p>{stock.shares_owned} shares</p>
                       </div>
                       <div>
@@ -221,9 +226,6 @@ function Portfolio() {
               ) : (
                 <div className="no-stocks-message">
                   <p>You haven&apos;t purchased any stocks yet.</p>
-                  <button onClick={() => navigate("/stocks")}>
-                    Browse Stocks
-                  </button>
                 </div>
               )}
             </div>
