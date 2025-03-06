@@ -43,7 +43,7 @@ function Portfolio() {
     if (sessionUser) {
       // Initial portfolio load
       dispatch(loadPortfolio(sessionUser?.id));
-      dispatch(fetchPortfolioPrices(sessionUser?.id));
+      // dispatch(fetchPortfolioPrices(sessionUser?.id));
 
       // Fetch portfolio prices every 2 minutes
       const intervalId = setInterval(() => {
