@@ -102,7 +102,7 @@
 #     run_migrations_online()
 
 
-# # !COMMENT BELOW BACK IN FOR PRODUCTION AND ABOVE COMMENT OUT
+# !COMMENT BELOW BACK IN FOR PRODUCTION AND ABOVE COMMENT OUT
 from flask import current_app
 from alembic import context
 import logging
