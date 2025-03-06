@@ -155,10 +155,6 @@ const StockDetailsPage = () => {
     }
   }, [dispatch, stockId]);
 
-  // useEffect(() => {
-  //   if (!stockDetails) return null;
-  // }, [stockDetails]);
-
   if (loading)
     return (
       <div className="loading">
@@ -483,7 +479,5 @@ const StockDetailsPage = () => {
     </div>
   );
 };
-
-//
 
 export default StockDetailsPage;
