@@ -33,7 +33,7 @@ function LoginFormPage() {
       setErrors(serverResponse);
     } else {
       // If login is successful, redirect to portfolio page
-      dispatch(thunkUpdateUserInfo(sessionUser.id));
+      dispatch(thunkUpdateUserInfo(sessionUser?.id));
       navigate("/portfolio");
     }
   };
@@ -46,7 +46,7 @@ function LoginFormPage() {
         password: "password",
       })
     );
-    await dispatch(thunkUpdateUserInfo(sessionUser.id));
+    await dispatch(thunkUpdateUserInfo(sessionUser?.id));
   };
 
   return (

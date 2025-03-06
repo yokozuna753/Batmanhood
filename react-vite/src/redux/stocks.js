@@ -45,26 +45,22 @@ const getCsrfToken = () => {
 };
 
 // Thunk Actions
-export const getStockDetails = (stockIdOrTicker) => async (dispatch) => {
+export const getStockDetails = (stockId) => async (dispatch) => {
   dispatch(setLoading(true));
   dispatch(setError(null));
 
   try {
     const csrf_token = getCsrfToken();
-
-    // Determine if we're using an ID (number) or ticker symbol (string)
-    const isId = !isNaN(stockIdOrTicker);
-    const endpoint = isId
-      ? `http://localhost:8000/api/stock_details/${stockIdOrTicker}`
-      : `http://localhost:8000/api/stock-details/stocks/${stockIdOrTicker}`;
-
-    const response = await fetch(endpoint, {
-      credentials: "include",
-      headers: {
-        "Content-Type": "application/json",
-        "X-CSRF-Token": csrf_token || "",
-      },
-    });
+    const response = await fetch(
+      `http://localhost:8000/api/stock_details/${stockId}`,
+      {
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrf_token || "",
+        },
+      }
+    );
 
     if (!response.ok) {
       const errorData = await response.json();
@@ -133,58 +129,6 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
     );
 
     await dispatch(getStockDetails(stockId));
-    return true;
-  } catch (err) {
-    console.error("Trade execution error:", err);
-    dispatch(setTradeError(err.message));
-    return false;
-  } finally {
-    dispatch(setTradeLoading(false));
-  }
-};
-
-export const executeTradeByTicker = (ticker, tradeData) => async (dispatch) => {
-  dispatch(setTradeLoading(true));
-  dispatch(setTradeError(null));
-  dispatch(setTradeSuccess(null));
-
-  try {
-    const requestId = Date.now().toString();
-    const csrf_token = getCsrfToken();
-
-    const response = await fetch(
-      `http://localhost:8000/api/stock-details/stocks/${ticker}/trade`,
-      {
-        method: "POST",
-        credentials: "include",
-        headers: {
-          "Content-Type": "application/json",
-          "X-CSRF-Token": csrf_token,
-          "X-Request-ID": requestId,
-        },
-        body: JSON.stringify(tradeData),
-      }
-    );
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      throw new Error(errorData.message || "Trade failed");
-    }
-
-    const data = await response.json();
-    dispatch(
-      setTradeSuccess(
-        `Transaction successful! ${
-          tradeData.buy_in === "Shares"
-            ? `${data.shares_traded.toFixed(2)} shares at $${data.price.toFixed(
-                2
-              )}`
-            : `$${data.total_value.toFixed(2)} worth of shares`
-        }`
-      )
-    );
-
-    await dispatch(getStockDetails(ticker));
     return true;
   } catch (err) {
     console.error("Trade execution error:", err);

@@ -16,12 +16,10 @@ import {
   faArrowUp,
   faArrowDown,
 } from "@fortawesome/free-solid-svg-icons";
-import {
-  getStockDetails,
-  executeTrade,
-  executeTradeByTicker,
-} from "../../redux/stocks";
+import { getStockDetails, executeTrade } from "../../redux/stocks";
 import "./StockDetails.css";
+import { fetchPortfolioPrices, loadPortfolio } from "../../redux/portfolio";
+// import { thunkUpdateUserInfo } from "../../redux/session";
 
 const StockChart = ({ stockDetails, timeRange, onTimeRangeChange }) => {
   const timeRanges = [
@@ -131,9 +129,11 @@ const StockChart = ({ stockDetails, timeRange, onTimeRangeChange }) => {
 };
 
 const StockDetailsPage = () => {
-  const { stockId } = useParams();
+  const { ticker } = useParams();
   const dispatch = useDispatch();
 
+  // const stockId = useSelector((state) => state.session.user.id)
+  const sessionUser = useSelector((state) => state.session.user);
   const stockDetails = useSelector((state) => state.stocks.currentStock);
   const loading = useSelector((state) => state.stocks.loading);
   const error = useSelector((state) => state.stocks.error);
@@ -148,12 +148,21 @@ const StockDetailsPage = () => {
     amount: "",
     limitPrice: 0,
   });
+  // useEffect(()=>{
+  //   dispatch(thunkUpdateUserInfo(sessionUser?.id));
+  // },[sessionUser?.id])
 
   useEffect(() => {
-    if (stockId) {
-      dispatch(getStockDetails(stockId));
+    if (sessionUser) {
+      dispatch(loadPortfolio(sessionUser?.id));
+      dispatch(fetchPortfolioPrices(sessionUser?.id));
     }
-  }, [dispatch, stockId]);
+  }, [dispatch, sessionUser, sessionUser?.id]);
+  useEffect(() => {
+    if (ticker) {
+      dispatch(getStockDetails(ticker));
+    }
+  }, [dispatch, ticker]);
 
   if (loading)
     return (
@@ -192,10 +201,7 @@ const StockDetailsPage = () => {
   const handleTradeSubmit = async (e) => {
     e.preventDefault();
 
-    // Prevent submission if already submitting
-    if (tradeLoading) {
-      return;
-    }
+    if (tradeLoading) return;
 
     // Form validation
     if (
@@ -221,17 +227,13 @@ const StockDetailsPage = () => {
     };
 
     try {
-      let success;
-
-      // If we have a stockId parameter (existing position), use the original route
-      if (stockId) {
-        success = await dispatch(executeTrade(stockId, tradeData));
-      } else {
-        // Otherwise use the ticker-based route for new positions
-        success = await dispatch(
-          executeTradeByTicker(stockDetails.ticker, tradeData)
-        );
+      // Get the stockId from stockDetails
+      if (!stockDetails || !stockDetails.id) {
+        console.error("No stock ID available");
+        return;
       }
+
+      const success = await dispatch(executeTrade(stockDetails.id, tradeData));
 
       if (success) {
         setTradeForm((prev) => ({
@@ -241,12 +243,8 @@ const StockDetailsPage = () => {
           limitPrice: 0,
         }));
 
-        // Refresh stock details
-        if (stockId) {
-          dispatch(getStockDetails(stockId));
-        } else {
-          dispatch(getStockDetails(stockDetails.ticker));
-        }
+        // Refresh stock details after successful trade
+        dispatch(getStockDetails(ticker));
       }
     } catch (error) {
       console.error("Trade failed:", error);
