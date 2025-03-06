@@ -37,9 +37,9 @@ function ProfileButton() {
 
   const closeMenu = () => setShowMenu(false);
 
-  const logout = (e) => {
+  const logout = async (e) => {
     e.preventDefault();
-    dispatch(thunkClearPortfolio());
+   await dispatch(thunkClearPortfolio());
     dispatch(thunkLogout());
     // add a thunk action to clear the user portfolio and stocks data
     closeMenu();

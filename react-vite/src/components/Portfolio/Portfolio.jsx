@@ -3,7 +3,7 @@ import { loadPortfolio } from "../../redux/portfolio";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPortfolioPrices } from "../../redux/portfolio";
-import WatchlistComponent from "../WatchlistComponent";
+import WatchlistComponent from "../../components/WatchlistComponent";
 import "./Portfolio.css";
 
 import {
@@ -43,7 +43,7 @@ function Portfolio() {
     if (sessionUser) {
       // Initial portfolio load
       dispatch(loadPortfolio(sessionUser?.id));
-      dispatch(fetchPortfolioPrices(sessionUser?.id));
+      // dispatch(fetchPortfolioPrices(sessionUser?.id));
 
       // Fetch portfolio prices every 2 minutes
       const intervalId = setInterval(() => {
