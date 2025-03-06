@@ -1,76 +1,89 @@
 // Action Types
-const SET_STOCK_DETAILS = 'stocks/SET_STOCK_DETAILS';
-const SET_LOADING = 'stocks/SET_LOADING';
-const SET_ERROR = 'stocks/SET_ERROR';
-const SET_TRADE_SUCCESS = 'stocks/SET_TRADE_SUCCESS';
-const SET_TRADE_ERROR = 'stocks/SET_TRADE_ERROR';
-const SET_TRADE_LOADING = 'stocks/SET_TRADE_LOADING';
+const SET_STOCK_DETAILS = "stocks/SET_STOCK_DETAILS";
+const SET_LOADING = "stocks/SET_LOADING";
+const SET_ERROR = "stocks/SET_ERROR";
+const SET_TRADE_SUCCESS = "stocks/SET_TRADE_SUCCESS";
+const SET_TRADE_ERROR = "stocks/SET_TRADE_ERROR";
+const SET_TRADE_LOADING = "stocks/SET_TRADE_LOADING";
 
 // Action Creators
 const setStockDetails = (details) => ({
   type: SET_STOCK_DETAILS,
-  payload: details
+  payload: details,
 });
 
 const setLoading = (isLoading) => ({
   type: SET_LOADING,
-  payload: isLoading
+  payload: isLoading,
 });
 
 const setError = (error) => ({
   type: SET_ERROR,
-  payload: error
+  payload: error,
 });
 
 const setTradeSuccess = (message) => ({
   type: SET_TRADE_SUCCESS,
-  payload: message
+  payload: message,
 });
 
 const setTradeError = (error) => ({
   type: SET_TRADE_ERROR,
-  payload: error
+  payload: error,
 });
 
 const setTradeLoading = (isLoading) => ({
   type: SET_TRADE_LOADING,
-  payload: isLoading
+  payload: isLoading,
 });
 
 const getCsrfToken = () => {
-  return document.cookie.split('; ').find(row => row.startsWith('csrf_token='))?.split('=')[1];
+  return document.cookie
+    .split("; ")
+    .find((row) => row.startsWith("csrf_token="))
+    ?.split("=")[1];
 };
 
 // Thunk Actions
-export const getStockDetails = (stockId) => async (dispatch) => {
+export const getStockDetails = (stockIdOrTicker) => async (dispatch) => {
   dispatch(setLoading(true));
   dispatch(setError(null));
-  
+
   try {
     const csrf_token = getCsrfToken();
-    const response = await fetch(`http://localhost:8000/api/stock_details/${stockId}`, {
-      credentials: 'include',
+
+    // Determine if we're using an ID (number) or ticker symbol (string)
+    const isId = !isNaN(stockIdOrTicker);
+    const endpoint = isId
+      ? `http://localhost:8000/api/stock_details/${stockIdOrTicker}`
+      : `http://localhost:8000/api/stock-details/stocks/${stockIdOrTicker}`;
+
+    const response = await fetch(endpoint, {
+      credentials: "include",
       headers: {
-        'Content-Type': 'application/json',
-        'X-CSRF-Token': csrf_token || '',
-      }
+        "Content-Type": "application/json",
+        "X-CSRF-Token": csrf_token || "",
+      },
     });
-    
+
     if (!response.ok) {
       const errorData = await response.json();
-      throw new Error(errorData.message || 'Failed to fetch stock details');
+      throw new Error(errorData.message || "Failed to fetch stock details");
     }
-    
+
     const stockData = await response.json();
-    
-    if (!stockData.ticker || typeof stockData.regularMarketPrice === 'undefined') {
-      throw new Error('Invalid stock data received');
+
+    if (
+      !stockData.ticker ||
+      typeof stockData.regularMarketPrice === "undefined"
+    ) {
+      throw new Error("Invalid stock data received");
     }
-    
+
     dispatch(setStockDetails(stockData));
     return true;
   } catch (err) {
-    console.error('Stock details error:', err);
+    console.error("Stock details error:", err);
     dispatch(setError(err.message));
     return false;
   } finally {
@@ -84,42 +97,101 @@ export const executeTrade = (stockId, tradeData) => async (dispatch) => {
   dispatch(setTradeSuccess(null));
 
   try {
-      const requestId = Date.now().toString();
-      const csrf_token = getCsrfToken();
-      
-      const response = await fetch(`http://localhost:8000/api/stock_details/${stockId}/trade`, {
-          method: 'POST',
-          credentials: 'include',  
-          headers: {
-              'Content-Type': 'application/json',
-              'X-CSRF-Token': csrf_token,
-              'X-Request-ID': requestId
-          },
-          body: JSON.stringify(tradeData),
-      });
+    const requestId = Date.now().toString();
+    const csrf_token = getCsrfToken();
 
-      if (!response.ok) {
-          const errorData = await response.json();
-          throw new Error(errorData.message || 'Trade failed');
+    const response = await fetch(
+      `http://localhost:8000/api/stock_details/${stockId}/trade`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrf_token,
+          "X-Request-ID": requestId,
+        },
+        body: JSON.stringify(tradeData),
       }
-      
-      const data = await response.json();
-      dispatch(setTradeSuccess(
-          `Transaction successful! ${
-              tradeData.buy_in === 'Shares' 
-                  ? `${data.shares_traded.toFixed(2)} shares at $${data.price.toFixed(2)}` 
-                  : `$${data.total_value.toFixed(2)} worth of shares`
-          }`
-      ));
+    );
 
-      await dispatch(getStockDetails(stockId));
-      return true;
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Trade failed");
+    }
+
+    const data = await response.json();
+    dispatch(
+      setTradeSuccess(
+        `Transaction successful! ${
+          tradeData.buy_in === "Shares"
+            ? `${data.shares_traded.toFixed(2)} shares at $${data.price.toFixed(
+                2
+              )}`
+            : `$${data.total_value.toFixed(2)} worth of shares`
+        }`
+      )
+    );
+
+    await dispatch(getStockDetails(stockId));
+    return true;
   } catch (err) {
-      console.error('Trade execution error:', err);
-      dispatch(setTradeError(err.message));
-      return false;
+    console.error("Trade execution error:", err);
+    dispatch(setTradeError(err.message));
+    return false;
   } finally {
-      dispatch(setTradeLoading(false));
+    dispatch(setTradeLoading(false));
+  }
+};
+
+export const executeTradeByTicker = (ticker, tradeData) => async (dispatch) => {
+  dispatch(setTradeLoading(true));
+  dispatch(setTradeError(null));
+  dispatch(setTradeSuccess(null));
+
+  try {
+    const requestId = Date.now().toString();
+    const csrf_token = getCsrfToken();
+
+    const response = await fetch(
+      `http://localhost:8000/api/stock-details/stocks/${ticker}/trade`,
+      {
+        method: "POST",
+        credentials: "include",
+        headers: {
+          "Content-Type": "application/json",
+          "X-CSRF-Token": csrf_token,
+          "X-Request-ID": requestId,
+        },
+        body: JSON.stringify(tradeData),
+      }
+    );
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      throw new Error(errorData.message || "Trade failed");
+    }
+
+    const data = await response.json();
+    dispatch(
+      setTradeSuccess(
+        `Transaction successful! ${
+          tradeData.buy_in === "Shares"
+            ? `${data.shares_traded.toFixed(2)} shares at $${data.price.toFixed(
+                2
+              )}`
+            : `$${data.total_value.toFixed(2)} worth of shares`
+        }`
+      )
+    );
+
+    await dispatch(getStockDetails(ticker));
+    return true;
+  } catch (err) {
+    console.error("Trade execution error:", err);
+    dispatch(setTradeError(err.message));
+    return false;
+  } finally {
+    dispatch(setTradeLoading(false));
   }
 };
 
@@ -130,7 +202,7 @@ const initialState = {
   error: null,
   tradeSuccess: null,
   tradeError: null,
-  tradeLoading: false
+  tradeLoading: false,
 };
 
 // Reducer
@@ -140,42 +212,42 @@ export default function stocksReducer(state = initialState, action) {
       return {
         ...state,
         currentStock: action.payload,
-        error: null
+        error: null,
       };
-    
+
     case SET_LOADING:
       return {
         ...state,
-        loading: action.payload
+        loading: action.payload,
       };
-    
+
     case SET_ERROR:
       return {
         ...state,
         error: action.payload,
-        currentStock: state.currentStock
+        currentStock: state.currentStock,
       };
-    
+
     case SET_TRADE_SUCCESS:
       return {
         ...state,
         tradeSuccess: action.payload,
-        tradeError: null
+        tradeError: null,
       };
-    
+
     case SET_TRADE_ERROR:
       return {
         ...state,
         tradeError: action.payload,
-        tradeSuccess: null
+        tradeSuccess: null,
       };
 
     case SET_TRADE_LOADING:
       return {
         ...state,
-        tradeLoading: action.payload
+        tradeLoading: action.payload,
       };
-    
+
     default:
       return state;
   }
