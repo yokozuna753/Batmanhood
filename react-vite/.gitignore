@@ -88,7 +88,12 @@ db.sqlite3-journal
 
 # Flask stuff:
 instance/
+instance/*
+instance
 .webassets-cache
+
+# ignore the dev.db file
+dev.db
 
 # Scrapy stuff:
 .scrapy
