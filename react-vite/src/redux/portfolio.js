@@ -16,7 +16,7 @@ const clearPortfolio = () => {
 }
 
 export const thunkClearPortfolio = () => async (dispatch) => {
-  console.log('IN THUNK CLEAR PORTFOLIO');
+  // console.log('IN THUNK CLEAR PORTFOLIO');
   await dispatch(clearPortfolio());
   return {"message": "success"}
 
@@ -26,14 +26,18 @@ export const loadPortfolio = (userId) => async (dispatch) => {
   try {
     const response = await fetch(`/api/${userId}/stocks`);
     if (!response.ok) {
-      throw new Error('Failed to load portfolio');
+      const errorData = await response.json().catch(() => ({
+        error: 'Failed to load portfolio',
+      }));
+      throw new Error(errorData.error || 'Failed to load portfolio');
     }
     const data = await response.json();
-    console.log('     DATA FROM LOAD PORTFOLIO ==>    ', data);
+    // console.log('     DATA FROM LOAD PORTFOLIO ==>    ', data);
     dispatch(getPortfolio(data));
     return data;
   } catch (error) {
     console.error('Portfolio load error:', error);
+    // Optionally dispatch an error action here to display to the user
     return null;
   }
 };
