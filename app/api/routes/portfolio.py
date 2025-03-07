@@ -29,59 +29,87 @@ grab the shares_owned & price_purchased from the orders table - relationship wit
 @portfolio.route("/<int:userId>/stocks", methods=["GET", "POST"])
 @login_required
 def stocks_portfolio(userId):
-    # get all the investments owned by the current logged in user => news = [{},{}]
-    final_news = []
-    user = User.query.filter(User.id == int(userId)).first()
-    user_stocks = user.to_dict()["stocks_owned"]
+    try:
+        # get all the investments owned by the current logged in user => news = [{},{}]
+        final_news = []
+        user = User.query.filter(User.id == int(userId)).first()
+        
+        if not user:
+            return jsonify({"error": "User not found"}), 404
+            
+        user_stocks = user.to_dict()["stocks_owned"]
 
-    stock_dict = {"tickers": [], "portfolio_value": 0}
-    # ** for loop to show each stock the user owns
-    for ticker in user_stocks:
-        # * grab the symbol of the stock from ticker
-        # print('THIS IS TICKER !!!!!!!!!     ', ticker)
-        symbol = ticker["ticker"]  # * ==> 'AAPL'
+        stock_dict = {"tickers": [], "portfolio_value": 0}
+        # ** for loop to show each stock the user owns
+        for ticker in user_stocks:
+            try:
+                # * grab the symbol of the stock from ticker
+                symbol = ticker["ticker"]  # * ==> 'AAPL'
 
-        # #* set the stock dictionary values to the data returned
+                # #* set the portfolio value from the stocks_owned table
+                stock_dict["portfolio_value"] += int(ticker["total_cost"])
 
-        # #* set the portfolio value from the stocks_owned table
-        stock_dict["portfolio_value"] += int(ticker["total_cost"])
+                # #* set the data for the stock (data, percent gain)
+                dat = yf.Ticker(f"{symbol}")
+                
+                # Add error handling for history fetching
+                try:
+                    history = dat.history(period="1mo")
+                    ticker["historical_data"] = [float(row[0]) for index, row in history.iterrows()]
+                except Exception as e:
+                    ticker["historical_data"] = []
+                    print(f"Error fetching history for {symbol}: {str(e)}")
 
-        # #* set the data for the stock (data, percent gain)
-        dat = yf.Ticker(f"{symbol}")
-        # print(' DATA HERE ===> !!!!!!!  ', dat)
+                # Handle missing data with safer access
+                dat_info = dat.info
+                if "companyOfficers" in dat_info:
+                    del dat_info["companyOfficers"]
+                
+                ticker["stock_info"] = dat_info
 
+                # Safer calculation for percent gain
+                total_cost = ticker.get("total_cost", 0)
+                shares = ticker.get("shares_owned", 0)
+                
+                if shares > 0:
+                    avg_cost = total_cost / shares
+                    current_price = ticker["stock_info"].get("currentPrice", 0)
+                    
+                    if avg_cost > 0:
+                        percent_gain = ((current_price - avg_cost) / avg_cost) * 100
+                        ticker["percent_gain/loss"] = round(percent_gain, 2)
+                    else:
+                        ticker["percent_gain/loss"] = 0
+                else:
+                    ticker["percent_gain/loss"] = 0
 
-        history = dat.history(period="1mo")
-        # print('      HISTORY HERE !!!!!!!   ', history)
-        ticker["historical_data"] = [row[0] for index, row in history.iterrows()]
+                # Add error handling for news fetching
+                try:
+                    news = yf.Search(f"{symbol}", news_count=3).news
+                    final_news.append(news)
+                except Exception as e:
+                    print(f"Error fetching news for {symbol}: {str(e)}")
 
-        # print(' TICKER   HERE       !!!!!!!!     ', ticker)
-        dat = dat.info
-        # print(' WE MADE IT PAST TICKER       !!!!!!!!     ', dat)
-        del dat["companyOfficers"]
-        # del dat['']
+                # i need to append the ticker object to the stock_dict at the end
+                stock_dict["tickers"].append(ticker)
+                
+            except Exception as e:
+                print(f"Error processing ticker {ticker}: {str(e)}")
+                continue
+                
+        # flatten out the news matrix as one array of objects
+        try:
+            final_news = [x for subarr in final_news for x in subarr]
+            stock_dict["news"] = final_news
+        except Exception as e:
+            stock_dict["news"] = []
+            print(f"Error processing news: {str(e)}")
 
-        ticker["stock_info"] = dat
-
-        total_cost = ticker["total_cost"]
-        shares = ticker["shares_owned"]
-        avg_cost = total_cost / shares
-        percent_gain = (
-            (ticker["stock_info"]["currentPrice"] - avg_cost) / avg_cost
-        ) * 100
-        ticker["percent_gain/loss"] = round(percent_gain, 2)
-
-        news = yf.Search(f"{symbol}", news_count=3).news
-        # print( '     NEWS !!!!!!!!   -> ', news)
-        final_news.append(news)
-
-        # i need to append the ticker object to the stock_dict at the end
-        stock_dict["tickers"].append(ticker)
-    # flatten out the news matrix as one array of objects
-    final_news = [x for subarr in final_news for x in subarr]
-    stock_dict["news"] = final_news
-
-    return jsonify(stock_dict)
+        return jsonify(stock_dict)
+        
+    except Exception as e:
+        print(f"Error in stocks_portfolio: {str(e)}")
+        return jsonify({"error": str(e)}), 500
 
 
 # @portfolio.route('/<int:userId>/stocks/news', methods=['GET'])

@@ -3,6 +3,7 @@ import { loadPortfolio } from "../../redux/portfolio";
 import { Navigate, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchPortfolioPrices } from "../../redux/portfolio";
+import { thunkUpdateUserInfo } from "../../redux/session";
 import WatchlistComponent from "../../components/WatchlistComponent";
 import "./Portfolio.css";
 
@@ -14,7 +15,6 @@ import {
   Tooltip,
   ResponsiveContainer,
 } from "recharts";
-import { thunkUpdateUserInfo } from "../../redux/session";
 
 function Portfolio() {
   const sessionUser = useSelector((state) => state.session.user);
@@ -47,12 +47,11 @@ function Portfolio() {
     if (sessionUser) {
       // Initial portfolio load
       dispatch(loadPortfolio(sessionUser?.id));
-      dispatch(fetchPortfolioPrices(sessionUser?.id));
 
       // Fetch portfolio prices every 2 minutes
       const intervalId = setInterval(() => {
         dispatch(fetchPortfolioPrices(sessionUser?.id));
-      }, 60000); // 1 minute = 60000 milliseconds
+      },  3600000); // 1 minute = 60000 milliseconds
 
       return () => clearInterval(intervalId);
     }
@@ -120,6 +119,20 @@ function Portfolio() {
   if (!sessionUser) {
     return <Navigate to="/login" replace={true} />;
   }
+
+  let requestCounter = 0;
+const maxRequestsPerMinute = 5;
+
+const fetchWithThrottle = (ticker) => {
+  if (requestCounter < maxRequestsPerMinute) {
+    requestCounter++;
+    dispatch(fetchPortfolioPrices(ticker));
+  } else {
+    setTimeout(() => {
+      fetchWithThrottle(ticker); // Try again after a delay
+    }, 60000); // Wait for 1 minute
+  }
+};
 
   return (
     <div id="portfolio-base">
@@ -233,9 +246,9 @@ function Portfolio() {
               {portfolio.tickers && portfolio.tickers.length > 0 ? (
                 <>
                   <ul>
-                    {currentHoldings.map((stock) => (
-                      <li key={`${stock.id}-${stock.ticker}`}>
-                        <div>
+                    {currentHoldings.map((stock, index) => (
+                      <li key={`holding-${stock.id}-${stock.ticker}-${index}`}>
+                        <div >
                           <p
                             style={{ cursor: "pointer" }}
                             onClick={(e) => {
@@ -287,8 +300,8 @@ function Portfolio() {
               <h3>News</h3>
               {portfolio.news ? (
                 <ul className="news-section">
-                  {portfolio.news.map((ele) => (
-                    <li key={ele.providerPublishTime} className="news-section-li">
+                  {portfolio.news.map((ele,index) => (
+                    <li key={`news-${ele.providerPublishTime}-${index}`} className="news-section-li">
                       <button
                         onClick={() => {
                           let link = ele.link;
