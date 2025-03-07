@@ -26,6 +26,10 @@ function Portfolio() {
     { time: new Date().toISOString(), price: 0 },
   ]);
   const portfolioValueRef = useRef(null);
+  
+  // Pagination state
+  const [currentPage, setCurrentPage] = useState(1);
+  const holdingsPerPage = 5;
 
   const timeRanges = [
     { label: "1D", value: "1D" },
@@ -48,7 +52,7 @@ function Portfolio() {
       // Fetch portfolio prices every 2 minutes
       const intervalId = setInterval(() => {
         dispatch(fetchPortfolioPrices(sessionUser?.id));
-      }, 60000); // 2 minutes = 120000 milliseconds
+      }, 60000); // 1 minute = 60000 milliseconds
 
       return () => clearInterval(intervalId);
     }
@@ -86,13 +90,32 @@ function Portfolio() {
         portfolioValueRef.current = portfolio.livePortfolioValue;
       }
     }
-  }, [portfolio,portfolio.livePortfolioValue, portfolioChartData.length, sessionUser]);
+  }, [portfolio, portfolio.livePortfolioValue, portfolioChartData.length, sessionUser]);
 
   // Calculation for chart color and trend
   const latestPrice =
     portfolioChartData[portfolioChartData.length - 1]?.price || 0;
   const startPrice = portfolioChartData[0]?.price || 0;
   const isPositive = latestPrice >= startPrice;
+
+  // Pagination logic
+  const indexOfLastHolding = currentPage * holdingsPerPage;
+  const indexOfFirstHolding = indexOfLastHolding - holdingsPerPage;
+  const currentHoldings = portfolio.tickers ? portfolio.tickers.slice(indexOfFirstHolding, indexOfLastHolding) : [];
+  
+  const totalPages = portfolio.tickers ? Math.ceil(portfolio.tickers.length / holdingsPerPage) : 0;
+  
+  const nextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage(currentPage + 1);
+    }
+  };
+  
+  const prevPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage(currentPage - 1);
+    }
+  };
 
   if (!sessionUser) {
     return <Navigate to="/login" replace={true} />;
@@ -199,30 +222,60 @@ function Portfolio() {
             </div>
 
             <div className="holdings-section">
-              <h3>Holdings</h3>
+              <div className="holdings-header">
+                <h3>Holdings</h3>
+                <div className="pagination-info">
+                  {portfolio.tickers && portfolio.tickers.length > 0 && (
+                    <span>Page {currentPage} of {totalPages}</span>
+                  )}
+                </div>
+              </div>
               {portfolio.tickers && portfolio.tickers.length > 0 ? (
-                <ul>
-                  {portfolio.tickers.map((stock) => (
-                    <li key={`${stock.id}-${stock.ticker}`}>
-                      <div>
-                        <p style={{cursor: "pointer"}} onClick={(e)=>{
-                      console.log('STOCK HERE ==> ', stock);
-                          e.preventDefault();
-                          e.stopPropagation();
-                          navigate(`/stocks/${stock?.ticker}`);
-                        }}>{stock.ticker}</p>
-                        <p>{stock.shares_owned} shares</p>
-                      </div>
-                      <div>
-                        <h5>
-                          $
-                          {Math.round(stock.stock_info.currentPrice * 100) /
-                            100}
-                        </h5>
-                      </div>
-                    </li>
-                  ))}
-                </ul>
+                <>
+                  <ul>
+                    {currentHoldings.map((stock) => (
+                      <li key={`${stock.id}-${stock.ticker}`}>
+                        <div>
+                          <p
+                            style={{ cursor: "pointer" }}
+                            onClick={(e) => {
+                              console.log('STOCK HERE ==> ', stock);
+                              e.preventDefault();
+                              e.stopPropagation();
+                              navigate(`/stocks/${stock?.ticker}`);
+                            }}
+                          >
+                            {stock.ticker}
+                          </p>
+                          <p>{stock.shares_owned} shares</p>
+                        </div>
+                        <div>
+                          <h5>
+                            $
+                            {Math.round(stock.stock_info.currentPrice * 100) /
+                              100}
+                          </h5>
+                        </div>
+                      </li>
+                    ))}
+                  </ul>
+                  <div className="pagination-controls">
+                    <button 
+                      className="pagination-button" 
+                      onClick={prevPage} 
+                      disabled={currentPage === 1}
+                    >
+                      &#8592;
+                    </button>
+                    <button 
+                      className="pagination-button" 
+                      onClick={nextPage} 
+                      disabled={currentPage === totalPages || totalPages === 0}
+                    >
+                      &#8594;
+                    </button>
+                  </div>
+                </>
               ) : (
                 <div className="no-stocks-message">
                   <p>You haven&apos;t purchased any stocks yet.</p>
