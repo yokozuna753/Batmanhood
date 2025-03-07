@@ -120,19 +120,19 @@ function Portfolio() {
     return <Navigate to="/login" replace={true} />;
   }
 
-  let requestCounter = 0;
-const maxRequestsPerMinute = 5;
+//   let requestCounter = 0;
+// const maxRequestsPerMinute = 5;
 
-const fetchWithThrottle = (ticker) => {
-  if (requestCounter < maxRequestsPerMinute) {
-    requestCounter++;
-    dispatch(fetchPortfolioPrices(ticker));
-  } else {
-    setTimeout(() => {
-      fetchWithThrottle(ticker); // Try again after a delay
-    }, 60000); // Wait for 1 minute
-  }
-};
+// const fetchWithThrottle = (ticker) => {
+//   if (requestCounter < maxRequestsPerMinute) {
+//     requestCounter++;
+//     dispatch(fetchPortfolioPrices(ticker));
+//   } else {
+//     setTimeout(() => {
+//       fetchWithThrottle(ticker); // Try again after a delay
+//     }, 60000); // Wait for 1 minute
+//   }
+// };
 
   return (
     <div id="portfolio-base">
